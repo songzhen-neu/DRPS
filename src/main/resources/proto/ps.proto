@@ -1,0 +1,84 @@
+syntax = "proto3";
+package net;
+option java_package = "net";
+option java_outer_classname = "Ps";
+option java_multiple_files = true;
+
+service PS {
+    rpc SayHello (HelloRequest) returns (HelloReply){}
+//    rpc get (GetMessage) returns (GetMessage) {}
+//    rpc getList (GetListMessage) returns (GetListMessage) {}
+//    rpc upsert (UpdateMessage) returns (UpdateMessage) {}
+//    rpc upsertList (UpdateListMessage) returns (UpdateListMessage) {}
+//    rpc push (GradientMessage) returns (GradientMessage) {}
+//    rpc barrier(BarrierMessage) returns (BarrierMessage) {}
+}
+
+
+message HelloRequest{
+    string name=1;
+}
+message HelloReply{
+    string message=1;
+}
+
+
+//message Matrix {
+//    string key = 1;
+//    int32 row = 2;
+//    int32 cols = 3;
+//    repeated float data = 4;
+//    // 是否覆盖
+//    bool update = 5;
+//}
+//
+//message Resp {
+//    int32 ec = 1;
+//    string em = 2;
+//}
+//
+//message RequestMeta {
+//    string host = 1;
+//}
+//
+//
+//
+//message GetMessage {
+//    RequestMeta meta = 1;
+//    Matrix weights = 2;
+//    Resp resp = 3;
+//}
+
+//message GetListMessage {
+//    RequestMeta meta = 1;
+//    repeated Matrix weights = 2;
+//    Resp resp = 3;
+//}
+//
+//message UpdateMessage {
+//    RequestMeta meta = 1;
+//    Matrix  weights = 2;
+//    Resp resp = 3;
+//    bool replace = 4;
+//}
+//
+//message UpdateListMessage {
+//    RequestMeta meta = 1;
+//    repeated Matrix  weights = 2;
+//    Resp resp = 3;
+//    bool replace = 4;
+//}
+//
+//message GradientMessage {
+//    RequestMeta meta = 1;
+//    Matrix  gradient = 2;
+//    bool isAsync = 3;
+//    string updaterKey = 4;
+//    Resp resp = 5;
+//}
+//
+//message BarrierMessage {
+//    RequestMeta meta = 1;
+//    Resp resp = 2;
+//}
+
