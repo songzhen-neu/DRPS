@@ -36,6 +36,15 @@ public class PSGrpc {
               "net.PS", "SayHello"),
           io.grpc.protobuf.ProtoUtils.marshaller(net.HelloRequest.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(net.HelloReply.getDefaultInstance()));
+  @io.grpc.ExperimentalApi
+  public static final io.grpc.MethodDescriptor<net.HelloRequest,
+      net.Gradient> METHOD_GET_GRADIENT =
+      io.grpc.MethodDescriptor.create(
+          io.grpc.MethodDescriptor.MethodType.UNARY,
+          generateFullMethodName(
+              "net.PS", "GetGradient"),
+          io.grpc.protobuf.ProtoUtils.marshaller(net.HelloRequest.getDefaultInstance()),
+          io.grpc.protobuf.ProtoUtils.marshaller(net.Gradient.getDefaultInstance()));
 
   /**
    * Creates a new async stub that supports all call types for the service
@@ -68,6 +77,11 @@ public class PSGrpc {
      */
     public void sayHello(net.HelloRequest request,
         io.grpc.stub.StreamObserver<net.HelloReply> responseObserver);
+
+    /**
+     */
+    public void getGradient(net.HelloRequest request,
+        io.grpc.stub.StreamObserver<net.Gradient> responseObserver);
   }
 
   @io.grpc.ExperimentalApi
@@ -77,6 +91,12 @@ public class PSGrpc {
     public void sayHello(net.HelloRequest request,
         io.grpc.stub.StreamObserver<net.HelloReply> responseObserver) {
       asyncUnimplementedUnaryCall(METHOD_SAY_HELLO, responseObserver);
+    }
+
+    @java.lang.Override
+    public void getGradient(net.HelloRequest request,
+        io.grpc.stub.StreamObserver<net.Gradient> responseObserver) {
+      asyncUnimplementedUnaryCall(METHOD_GET_GRADIENT, responseObserver);
     }
 
     @java.lang.Override public io.grpc.ServerServiceDefinition bindService() {
@@ -91,6 +111,10 @@ public class PSGrpc {
     /**
      */
     public net.HelloReply sayHello(net.HelloRequest request);
+
+    /**
+     */
+    public net.Gradient getGradient(net.HelloRequest request);
   }
 
   /**
@@ -100,6 +124,11 @@ public class PSGrpc {
     /**
      */
     public com.google.common.util.concurrent.ListenableFuture<net.HelloReply> sayHello(
+        net.HelloRequest request);
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<net.Gradient> getGradient(
         net.HelloRequest request);
   }
 
@@ -126,6 +155,13 @@ public class PSGrpc {
       asyncUnaryCall(
           getChannel().newCall(METHOD_SAY_HELLO, getCallOptions()), request, responseObserver);
     }
+
+    @java.lang.Override
+    public void getGradient(net.HelloRequest request,
+        io.grpc.stub.StreamObserver<net.Gradient> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(METHOD_GET_GRADIENT, getCallOptions()), request, responseObserver);
+    }
   }
 
   public static class PSBlockingStub extends io.grpc.stub.AbstractStub<PSBlockingStub>
@@ -149,6 +185,12 @@ public class PSGrpc {
     public net.HelloReply sayHello(net.HelloRequest request) {
       return blockingUnaryCall(
           getChannel(), METHOD_SAY_HELLO, getCallOptions(), request);
+    }
+
+    @java.lang.Override
+    public net.Gradient getGradient(net.HelloRequest request) {
+      return blockingUnaryCall(
+          getChannel(), METHOD_GET_GRADIENT, getCallOptions(), request);
     }
   }
 
@@ -175,9 +217,17 @@ public class PSGrpc {
       return futureUnaryCall(
           getChannel().newCall(METHOD_SAY_HELLO, getCallOptions()), request);
     }
+
+    @java.lang.Override
+    public com.google.common.util.concurrent.ListenableFuture<net.Gradient> getGradient(
+        net.HelloRequest request) {
+      return futureUnaryCall(
+          getChannel().newCall(METHOD_GET_GRADIENT, getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_SAY_HELLO = 0;
+  private static final int METHODID_GET_GRADIENT = 1;
 
   private static class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -199,6 +249,10 @@ public class PSGrpc {
         case METHODID_SAY_HELLO:
           serviceImpl.sayHello((net.HelloRequest) request,
               (io.grpc.stub.StreamObserver<net.HelloReply>) responseObserver);
+          break;
+        case METHODID_GET_GRADIENT:
+          serviceImpl.getGradient((net.HelloRequest) request,
+              (io.grpc.stub.StreamObserver<net.Gradient>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -226,6 +280,13 @@ public class PSGrpc {
               net.HelloRequest,
               net.HelloReply>(
                 serviceImpl, METHODID_SAY_HELLO)))
+        .addMethod(
+          METHOD_GET_GRADIENT,
+          asyncUnaryCall(
+            new MethodHandlers<
+              net.HelloRequest,
+              net.Gradient>(
+                serviceImpl, METHODID_GET_GRADIENT)))
         .build();
   }
 }

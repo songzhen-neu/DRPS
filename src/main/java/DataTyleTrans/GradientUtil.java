@@ -13,11 +13,15 @@ import java.util.Map;
  * @author: SongZhen
  * @create: 2018-12-02 21:07
  */
-public class ListUtil {
-    public static void gradientMapToProtoGradient(GradientStructure gradient){
+public class GradientUtil {
+    public static Gradient.Builder gradientMapToProtoGradient(GradientStructure gradient){
         Gradient.Builder protoGradient=Gradient.newBuilder();
-        for (<String,Float> pair:gradient.getGradient()){
-            protoGradient.addData(map.)
+        for (Map.Entry<String,Float> entry:gradient.getGradient().entrySet()){
+            net.Map.Builder map=net.Map.newBuilder();
+            map.setKey(entry.getKey());
+            map.setValue(entry.getValue());
+            protoGradient.addGradient(map);
         }
+        return protoGradient;
     }
 }

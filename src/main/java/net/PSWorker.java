@@ -1,5 +1,6 @@
 package net;
 
+import Gradient.GradientStructure;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -28,7 +29,15 @@ public class PSWorker {
 
     }
 
+    public void getGradient(String name){
+        HelloRequest request=HelloRequest.newBuilder().setName(name).build();
+        Gradient response;
+        response=blockingStub.getGradient(request);
+    }
+
     public void shutdown() throws InterruptedException{
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
+
+
 }

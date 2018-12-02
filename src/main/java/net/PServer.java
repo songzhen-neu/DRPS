@@ -1,5 +1,6 @@
 package net;
 
+import DataTyleTrans.GradientUtil;
 import com.google.common.collect.Maps;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import Gradient.GradientStructure;
 
 /**
  * @program: simplePsForModelPartition
@@ -57,6 +59,21 @@ public class PServer implements net.PSGrpc.PS {
         HelloReply reply=HelloReply.newBuilder().setMessage("Hello"+req.getName()).build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getGradient(HelloRequest req, StreamObserver<Gradient> responseObserver) {
+        GradientStructure gradient = new GradientStructure();
+        for (int i = 0; i < 10; i++) {
+            gradient.getGradient().put("test" + i, Float.parseFloat(i + ""));
+        }
+        Gradient.Builder potoGradient=GradientUtil.gradientMapToProtoGradient(gradient);
+        Gradient protoGradient=potoGradient.build();
+        responseObserver.onNext(protoGradient);
+        responseObserver.onCompleted();
+
+
+
     }
 
 

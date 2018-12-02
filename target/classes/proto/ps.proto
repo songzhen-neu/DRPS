@@ -6,6 +6,7 @@ option java_multiple_files = true;
 
 service PS {
     rpc SayHello (HelloRequest) returns (HelloReply){}
+    rpc GetGradient (HelloRequest) returns (Gradient){}
 //    rpc get (GetMessage) returns (GetMessage) {}
 //    rpc getList (GetListMessage) returns (GetListMessage) {}
 //    rpc upsert (UpdateMessage) returns (UpdateMessage) {}
@@ -20,6 +21,15 @@ message HelloRequest{
 }
 message HelloReply{
     string message=1;
+}
+
+message Map{
+    string key=1;
+    float value=2;
+}
+
+message Gradient{
+    repeated Map gradient=1;
 }
 
 
