@@ -9,25 +9,30 @@ public final class Ps {
       com.google.protobuf.ExtensionRegistry registry) {
   }
   static com.google.protobuf.Descriptors.Descriptor
-    internal_static_net_HelloRequest_descriptor;
+    internal_static_net_RequestMetaMessage_descriptor;
   static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_net_HelloRequest_fieldAccessorTable;
+      internal_static_net_RequestMetaMessage_fieldAccessorTable;
   static com.google.protobuf.Descriptors.Descriptor
-    internal_static_net_HelloReply_descriptor;
+    internal_static_net_PartitionMessage_descriptor;
   static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_net_HelloReply_fieldAccessorTable;
+      internal_static_net_PartitionMessage_fieldAccessorTable;
   static com.google.protobuf.Descriptors.Descriptor
-    internal_static_net_Map_descriptor;
+    internal_static_net_PartitionListMessage_descriptor;
   static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_net_Map_fieldAccessorTable;
+      internal_static_net_PartitionListMessage_fieldAccessorTable;
   static com.google.protobuf.Descriptors.Descriptor
-    internal_static_net_Gradient_descriptor;
+    internal_static_net_MatrixMessage_descriptor;
   static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_net_Gradient_fieldAccessorTable;
+      internal_static_net_MatrixMessage_fieldAccessorTable;
+  static com.google.protobuf.Descriptors.Descriptor
+    internal_static_net_AFMatrixMessage_descriptor;
+  static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_net_AFMatrixMessage_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -37,13 +42,17 @@ public final class Ps {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\010ps.proto\022\003net\"\034\n\014HelloRequest\022\014\n\004name\030" +
-      "\001 \001(\t\"\035\n\nHelloReply\022\017\n\007message\030\001 \001(\t\"!\n\003" +
-      "Map\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\002\"&\n\010Gradi" +
-      "ent\022\032\n\010gradient\030\001 \003(\0132\010.net.Map2i\n\002PS\0220\n" +
-      "\010SayHello\022\021.net.HelloRequest\032\017.net.Hello" +
-      "Reply\"\000\0221\n\013GetGradient\022\021.net.HelloReques" +
-      "t\032\r.net.Gradient\"\000B\013\n\003netB\002PsP\001b\006proto3"
+      "\n\010ps.proto\022\003net\"\"\n\022RequestMetaMessage\022\014\n" +
+      "\004host\030\001 \001(\t\".\n\020PartitionMessage\022\013\n\003key\030\001" +
+      " \001(\t\022\r\n\005value\030\002 \003(\005\";\n\024PartitionListMess" +
+      "age\022#\n\004Data\030\001 \003(\0132\025.net.PartitionMessage" +
+      "\"E\n\rMatrixMessage\022\013\n\003key\030\001 \001(\t\022\013\n\003row\030\002 " +
+      "\001(\005\022\014\n\004cols\030\003 \001(\005\022\014\n\004data\030\004 \003(\002\"^\n\017AFMat" +
+      "rixMessage\022%\n\004meta\030\001 \001(\0132\027.net.RequestMe" +
+      "taMessage\022$\n\010AFMatrix\030\002 \001(\0132\022.net.Matrix" +
+      "Message2>\n\002PS\0228\n\014PushAFMatrix\022\022.net.Matr" +
+      "ixMessage\032\022.net.MatrixMessage\"\000B\013\n\003netB\002",
+      "PsP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -57,30 +66,36 @@ public final class Ps {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_net_HelloRequest_descriptor =
+    internal_static_net_RequestMetaMessage_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_net_HelloRequest_fieldAccessorTable = new
+    internal_static_net_RequestMetaMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_net_HelloRequest_descriptor,
-        new java.lang.String[] { "Name", });
-    internal_static_net_HelloReply_descriptor =
+        internal_static_net_RequestMetaMessage_descriptor,
+        new java.lang.String[] { "Host", });
+    internal_static_net_PartitionMessage_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_net_HelloReply_fieldAccessorTable = new
+    internal_static_net_PartitionMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_net_HelloReply_descriptor,
-        new java.lang.String[] { "Message", });
-    internal_static_net_Map_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_net_Map_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_net_Map_descriptor,
+        internal_static_net_PartitionMessage_descriptor,
         new java.lang.String[] { "Key", "Value", });
-    internal_static_net_Gradient_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_net_Gradient_fieldAccessorTable = new
+    internal_static_net_PartitionListMessage_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_net_PartitionListMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_net_Gradient_descriptor,
-        new java.lang.String[] { "Gradient", });
+        internal_static_net_PartitionListMessage_descriptor,
+        new java.lang.String[] { "Data", });
+    internal_static_net_MatrixMessage_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_net_MatrixMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_net_MatrixMessage_descriptor,
+        new java.lang.String[] { "Key", "Row", "Cols", "Data", });
+    internal_static_net_AFMatrixMessage_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_net_AFMatrixMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_net_AFMatrixMessage_descriptor,
+        new java.lang.String[] { "Meta", "AFMatrix", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

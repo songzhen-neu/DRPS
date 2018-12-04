@@ -4,18 +4,18 @@
 package net;
 
 /**
- * Protobuf type {@code net.HelloReply}
+ * Protobuf type {@code net.RequestMetaMessage}
  */
-public  final class HelloReply extends
+public  final class RequestMetaMessage extends
     com.google.protobuf.GeneratedMessage implements
-    // @@protoc_insertion_point(message_implements:net.HelloReply)
-    HelloReplyOrBuilder {
-  // Use HelloReply.newBuilder() to construct.
-  private HelloReply(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    // @@protoc_insertion_point(message_implements:net.RequestMetaMessage)
+    RequestMetaMessageOrBuilder {
+  // Use RequestMetaMessage.newBuilder() to construct.
+  private RequestMetaMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
     super(builder);
   }
-  private HelloReply() {
-    message_ = "";
+  private RequestMetaMessage() {
+    host_ = "";
   }
 
   @java.lang.Override
@@ -23,7 +23,7 @@ public  final class HelloReply extends
   getUnknownFields() {
     return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
   }
-  private HelloReply(
+  private RequestMetaMessage(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) {
     this();
@@ -45,7 +45,7 @@ public  final class HelloReply extends
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            message_ = s;
+            host_ = s;
             break;
           }
         }
@@ -62,44 +62,44 @@ public  final class HelloReply extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return net.Ps.internal_static_net_HelloReply_descriptor;
+    return net.Ps.internal_static_net_RequestMetaMessage_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return net.Ps.internal_static_net_HelloReply_fieldAccessorTable
+    return net.Ps.internal_static_net_RequestMetaMessage_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            net.HelloReply.class, net.HelloReply.Builder.class);
+            net.RequestMetaMessage.class, net.RequestMetaMessage.Builder.class);
   }
 
-  public static final int MESSAGE_FIELD_NUMBER = 1;
-  private volatile java.lang.Object message_;
+  public static final int HOST_FIELD_NUMBER = 1;
+  private volatile java.lang.Object host_;
   /**
-   * <code>optional string message = 1;</code>
+   * <code>optional string host = 1;</code>
    */
-  public java.lang.String getMessage() {
-    java.lang.Object ref = message_;
+  public java.lang.String getHost() {
+    java.lang.Object ref = host_;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
-      message_ = s;
+      host_ = s;
       return s;
     }
   }
   /**
-   * <code>optional string message = 1;</code>
+   * <code>optional string host = 1;</code>
    */
   public com.google.protobuf.ByteString
-      getMessageBytes() {
-    java.lang.Object ref = message_;
+      getHostBytes() {
+    java.lang.Object ref = host_;
     if (ref instanceof java.lang.String) {
       com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
-      message_ = b;
+      host_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
@@ -118,8 +118,8 @@ public  final class HelloReply extends
 
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getMessageBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessage.writeString(output, 1, message_);
+    if (!getHostBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessage.writeString(output, 1, host_);
     }
   }
 
@@ -128,61 +128,61 @@ public  final class HelloReply extends
     if (size != -1) return size;
 
     size = 0;
-    if (!getMessageBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessage.computeStringSize(1, message_);
+    if (!getHostBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessage.computeStringSize(1, host_);
     }
     memoizedSize = size;
     return size;
   }
 
   private static final long serialVersionUID = 0L;
-  public static net.HelloReply parseFrom(
+  public static net.RequestMetaMessage parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static net.HelloReply parseFrom(
+  public static net.RequestMetaMessage parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static net.HelloReply parseFrom(byte[] data)
+  public static net.RequestMetaMessage parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static net.HelloReply parseFrom(
+  public static net.RequestMetaMessage parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static net.HelloReply parseFrom(java.io.InputStream input)
+  public static net.RequestMetaMessage parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return PARSER.parseFrom(input);
   }
-  public static net.HelloReply parseFrom(
+  public static net.RequestMetaMessage parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return PARSER.parseFrom(input, extensionRegistry);
   }
-  public static net.HelloReply parseDelimitedFrom(java.io.InputStream input)
+  public static net.RequestMetaMessage parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return PARSER.parseDelimitedFrom(input);
   }
-  public static net.HelloReply parseDelimitedFrom(
+  public static net.RequestMetaMessage parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return PARSER.parseDelimitedFrom(input, extensionRegistry);
   }
-  public static net.HelloReply parseFrom(
+  public static net.RequestMetaMessage parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return PARSER.parseFrom(input);
   }
-  public static net.HelloReply parseFrom(
+  public static net.RequestMetaMessage parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -193,7 +193,7 @@ public  final class HelloReply extends
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(net.HelloReply prototype) {
+  public static Builder newBuilder(net.RequestMetaMessage prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   public Builder toBuilder() {
@@ -208,25 +208,25 @@ public  final class HelloReply extends
     return builder;
   }
   /**
-   * Protobuf type {@code net.HelloReply}
+   * Protobuf type {@code net.RequestMetaMessage}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:net.HelloReply)
-      net.HelloReplyOrBuilder {
+      // @@protoc_insertion_point(builder_implements:net.RequestMetaMessage)
+      net.RequestMetaMessageOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return net.Ps.internal_static_net_HelloReply_descriptor;
+      return net.Ps.internal_static_net_RequestMetaMessage_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return net.Ps.internal_static_net_HelloReply_fieldAccessorTable
+      return net.Ps.internal_static_net_RequestMetaMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              net.HelloReply.class, net.HelloReply.Builder.class);
+              net.RequestMetaMessage.class, net.RequestMetaMessage.Builder.class);
     }
 
-    // Construct using net.HelloReply.newBuilder()
+    // Construct using net.RequestMetaMessage.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -242,48 +242,48 @@ public  final class HelloReply extends
     }
     public Builder clear() {
       super.clear();
-      message_ = "";
+      host_ = "";
 
       return this;
     }
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return net.Ps.internal_static_net_HelloReply_descriptor;
+      return net.Ps.internal_static_net_RequestMetaMessage_descriptor;
     }
 
-    public net.HelloReply getDefaultInstanceForType() {
-      return net.HelloReply.getDefaultInstance();
+    public net.RequestMetaMessage getDefaultInstanceForType() {
+      return net.RequestMetaMessage.getDefaultInstance();
     }
 
-    public net.HelloReply build() {
-      net.HelloReply result = buildPartial();
+    public net.RequestMetaMessage build() {
+      net.RequestMetaMessage result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
       return result;
     }
 
-    public net.HelloReply buildPartial() {
-      net.HelloReply result = new net.HelloReply(this);
-      result.message_ = message_;
+    public net.RequestMetaMessage buildPartial() {
+      net.RequestMetaMessage result = new net.RequestMetaMessage(this);
+      result.host_ = host_;
       onBuilt();
       return result;
     }
 
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof net.HelloReply) {
-        return mergeFrom((net.HelloReply)other);
+      if (other instanceof net.RequestMetaMessage) {
+        return mergeFrom((net.RequestMetaMessage)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(net.HelloReply other) {
-      if (other == net.HelloReply.getDefaultInstance()) return this;
-      if (!other.getMessage().isEmpty()) {
-        message_ = other.message_;
+    public Builder mergeFrom(net.RequestMetaMessage other) {
+      if (other == net.RequestMetaMessage.getDefaultInstance()) return this;
+      if (!other.getHost().isEmpty()) {
+        host_ = other.host_;
         onChanged();
       }
       onChanged();
@@ -298,11 +298,11 @@ public  final class HelloReply extends
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      net.HelloReply parsedMessage = null;
+      net.RequestMetaMessage parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (net.HelloReply) e.getUnfinishedMessage();
+        parsedMessage = (net.RequestMetaMessage) e.getUnfinishedMessage();
         throw e;
       } finally {
         if (parsedMessage != null) {
@@ -312,71 +312,71 @@ public  final class HelloReply extends
       return this;
     }
 
-    private java.lang.Object message_ = "";
+    private java.lang.Object host_ = "";
     /**
-     * <code>optional string message = 1;</code>
+     * <code>optional string host = 1;</code>
      */
-    public java.lang.String getMessage() {
-      java.lang.Object ref = message_;
+    public java.lang.String getHost() {
+      java.lang.Object ref = host_;
       if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        message_ = s;
+        host_ = s;
         return s;
       } else {
         return (java.lang.String) ref;
       }
     }
     /**
-     * <code>optional string message = 1;</code>
+     * <code>optional string host = 1;</code>
      */
     public com.google.protobuf.ByteString
-        getMessageBytes() {
-      java.lang.Object ref = message_;
+        getHostBytes() {
+      java.lang.Object ref = host_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        message_ = b;
+        host_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
     /**
-     * <code>optional string message = 1;</code>
+     * <code>optional string host = 1;</code>
      */
-    public Builder setMessage(
+    public Builder setHost(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
   
-      message_ = value;
+      host_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional string message = 1;</code>
+     * <code>optional string host = 1;</code>
      */
-    public Builder clearMessage() {
+    public Builder clearHost() {
       
-      message_ = getDefaultInstance().getMessage();
+      host_ = getDefaultInstance().getHost();
       onChanged();
       return this;
     }
     /**
-     * <code>optional string message = 1;</code>
+     * <code>optional string host = 1;</code>
      */
-    public Builder setMessageBytes(
+    public Builder setHostBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
       
-      message_ = value;
+      host_ = value;
       onChanged();
       return this;
     }
@@ -391,27 +391,27 @@ public  final class HelloReply extends
     }
 
 
-    // @@protoc_insertion_point(builder_scope:net.HelloReply)
+    // @@protoc_insertion_point(builder_scope:net.RequestMetaMessage)
   }
 
-  // @@protoc_insertion_point(class_scope:net.HelloReply)
-  private static final net.HelloReply DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:net.RequestMetaMessage)
+  private static final net.RequestMetaMessage DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new net.HelloReply();
+    DEFAULT_INSTANCE = new net.RequestMetaMessage();
   }
 
-  public static net.HelloReply getDefaultInstance() {
+  public static net.RequestMetaMessage getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<HelloReply>
-      PARSER = new com.google.protobuf.AbstractParser<HelloReply>() {
-    public HelloReply parsePartialFrom(
+  private static final com.google.protobuf.Parser<RequestMetaMessage>
+      PARSER = new com.google.protobuf.AbstractParser<RequestMetaMessage>() {
+    public RequestMetaMessage parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       try {
-        return new HelloReply(input, extensionRegistry);
+        return new RequestMetaMessage(input, extensionRegistry);
       } catch (RuntimeException e) {
         if (e.getCause() instanceof
             com.google.protobuf.InvalidProtocolBufferException) {
@@ -423,16 +423,16 @@ public  final class HelloReply extends
     }
   };
 
-  public static com.google.protobuf.Parser<HelloReply> parser() {
+  public static com.google.protobuf.Parser<RequestMetaMessage> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<HelloReply> getParserForType() {
+  public com.google.protobuf.Parser<RequestMetaMessage> getParserForType() {
     return PARSER;
   }
 
-  public net.HelloReply getDefaultInstanceForType() {
+  public net.RequestMetaMessage getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

@@ -1,17 +1,19 @@
 package net;
 
-import DataTyleTrans.GradientUtil;
+import Util.MatrixUtil;
 import com.google.common.collect.Maps;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Data;
+import org.jblas.FloatMatrix;
+import store.KVStore;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import Gradient.GradientStructure;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @program: simplePsForModelPartition
@@ -23,13 +25,15 @@ import Gradient.GradientStructure;
 @Data
 public class PServer implements net.PSGrpc.PS {
     private Server server;
-    private int workNum;
     private Executor updateThread= Executors.newSingleThreadExecutor();
     private Map<String,String> updateKeys= Maps.newConcurrentMap();
+    private KVStore store=new KVStore();
 
-    public PServer(int port, int workNum){
+    private AtomicLong globalStep=new AtomicLong(0);
+    private AtomicLong workerStep=new AtomicLong(0);
+
+    public PServer(int port){
         this.server = ServerBuilder.forPort(port).addService(net.PSGrpc.bindService(this)).build();
-        this.workNum=workNum;
     }
 
     public void start() throws  IOException{
@@ -54,24 +58,23 @@ public class PServer implements net.PSGrpc.PS {
             server.awaitTermination();
         }
     }
-    @Override
-    public void sayHello(HelloRequest req,StreamObserver<HelloReply> responseObserver){
-        HelloReply reply=HelloReply.newBuilder().setMessage("Hello"+req.getName()).build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
-    }
 
     @Override
-    public void getGradient(HelloRequest req, StreamObserver<Gradient> responseObserver) {
-        GradientStructure gradient = new GradientStructure();
-        for (int i = 0; i < 10; i++) {
-            gradient.getGradient().put("test" + i, Float.parseFloat(i + ""));
+    public void pushAFMatrix(MatrixMessage req,StreamObserver<MatrixMessage> responseObject){
+        FloatMatrix afMatrix=MatrixUtil.MatrixMessage_2_FloatMatrix(req);
+        long step=globalStep.get();
+        long wStep=workerStep.incrementAndGet();
+        while (wStep<step+2){
+            try {
+                Thread.sleep(100);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            wStep=workerStep.get();
         }
-        Gradient.Builder potoGradient=GradientUtil.gradientMapToProtoGradient(gradient);
-        Gradient protoGradient=potoGradient.build();
-        responseObserver.onNext(protoGradient);
-        responseObserver.onCompleted();
 
+        store.sumAFMatrix(afMatrix);
 
 
     }

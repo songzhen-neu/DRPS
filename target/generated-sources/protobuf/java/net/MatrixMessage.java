@@ -4,19 +4,21 @@
 package net;
 
 /**
- * Protobuf type {@code net.Map}
+ * Protobuf type {@code net.MatrixMessage}
  */
-public  final class Map extends
+public  final class MatrixMessage extends
     com.google.protobuf.GeneratedMessage implements
-    // @@protoc_insertion_point(message_implements:net.Map)
-    MapOrBuilder {
-  // Use Map.newBuilder() to construct.
-  private Map(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    // @@protoc_insertion_point(message_implements:net.MatrixMessage)
+    MatrixMessageOrBuilder {
+  // Use MatrixMessage.newBuilder() to construct.
+  private MatrixMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
     super(builder);
   }
-  private Map() {
+  private MatrixMessage() {
     key_ = "";
-    value_ = 0F;
+    row_ = 0;
+    cols_ = 0;
+    data_ = java.util.Collections.emptyList();
   }
 
   @java.lang.Override
@@ -24,7 +26,7 @@ public  final class Map extends
   getUnknownFields() {
     return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
   }
-  private Map(
+  private MatrixMessage(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) {
     this();
@@ -49,9 +51,35 @@ public  final class Map extends
             key_ = s;
             break;
           }
-          case 21: {
+          case 16: {
 
-            value_ = input.readFloat();
+            row_ = input.readInt32();
+            break;
+          }
+          case 24: {
+
+            cols_ = input.readInt32();
+            break;
+          }
+          case 37: {
+            if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              data_ = new java.util.ArrayList<java.lang.Float>();
+              mutable_bitField0_ |= 0x00000008;
+            }
+            data_.add(input.readFloat());
+            break;
+          }
+          case 34: {
+            int length = input.readRawVarint32();
+            int limit = input.pushLimit(length);
+            if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
+              data_ = new java.util.ArrayList<java.lang.Float>();
+              mutable_bitField0_ |= 0x00000008;
+            }
+            while (input.getBytesUntilLimit() > 0) {
+              data_.add(input.readFloat());
+            }
+            input.popLimit(limit);
             break;
           }
         }
@@ -63,21 +91,25 @@ public  final class Map extends
           new com.google.protobuf.InvalidProtocolBufferException(
               e.getMessage()).setUnfinishedMessage(this));
     } finally {
+      if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        data_ = java.util.Collections.unmodifiableList(data_);
+      }
       makeExtensionsImmutable();
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return net.Ps.internal_static_net_Map_descriptor;
+    return net.Ps.internal_static_net_MatrixMessage_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return net.Ps.internal_static_net_Map_fieldAccessorTable
+    return net.Ps.internal_static_net_MatrixMessage_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            net.Map.class, net.Map.Builder.class);
+            net.MatrixMessage.class, net.MatrixMessage.Builder.class);
   }
 
+  private int bitField0_;
   public static final int KEY_FIELD_NUMBER = 1;
   private volatile java.lang.Object key_;
   /**
@@ -112,14 +144,46 @@ public  final class Map extends
     }
   }
 
-  public static final int VALUE_FIELD_NUMBER = 2;
-  private float value_;
+  public static final int ROW_FIELD_NUMBER = 2;
+  private int row_;
   /**
-   * <code>optional float value = 2;</code>
+   * <code>optional int32 row = 2;</code>
    */
-  public float getValue() {
-    return value_;
+  public int getRow() {
+    return row_;
   }
+
+  public static final int COLS_FIELD_NUMBER = 3;
+  private int cols_;
+  /**
+   * <code>optional int32 cols = 3;</code>
+   */
+  public int getCols() {
+    return cols_;
+  }
+
+  public static final int DATA_FIELD_NUMBER = 4;
+  private java.util.List<java.lang.Float> data_;
+  /**
+   * <code>repeated float data = 4;</code>
+   */
+  public java.util.List<java.lang.Float>
+      getDataList() {
+    return data_;
+  }
+  /**
+   * <code>repeated float data = 4;</code>
+   */
+  public int getDataCount() {
+    return data_.size();
+  }
+  /**
+   * <code>repeated float data = 4;</code>
+   */
+  public float getData(int index) {
+    return data_.get(index);
+  }
+  private int dataMemoizedSerializedSize = -1;
 
   private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
@@ -133,11 +197,22 @@ public  final class Map extends
 
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
+    getSerializedSize();
     if (!getKeyBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessage.writeString(output, 1, key_);
     }
-    if (value_ != 0F) {
-      output.writeFloat(2, value_);
+    if (row_ != 0) {
+      output.writeInt32(2, row_);
+    }
+    if (cols_ != 0) {
+      output.writeInt32(3, cols_);
+    }
+    if (getDataList().size() > 0) {
+      output.writeRawVarint32(34);
+      output.writeRawVarint32(dataMemoizedSerializedSize);
+    }
+    for (int i = 0; i < data_.size(); i++) {
+      output.writeFloatNoTag(data_.get(i));
     }
   }
 
@@ -149,62 +224,77 @@ public  final class Map extends
     if (!getKeyBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessage.computeStringSize(1, key_);
     }
-    if (value_ != 0F) {
+    if (row_ != 0) {
       size += com.google.protobuf.CodedOutputStream
-        .computeFloatSize(2, value_);
+        .computeInt32Size(2, row_);
+    }
+    if (cols_ != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt32Size(3, cols_);
+    }
+    {
+      int dataSize = 0;
+      dataSize = 4 * getDataList().size();
+      size += dataSize;
+      if (!getDataList().isEmpty()) {
+        size += 1;
+        size += com.google.protobuf.CodedOutputStream
+            .computeInt32SizeNoTag(dataSize);
+      }
+      dataMemoizedSerializedSize = dataSize;
     }
     memoizedSize = size;
     return size;
   }
 
   private static final long serialVersionUID = 0L;
-  public static net.Map parseFrom(
+  public static net.MatrixMessage parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static net.Map parseFrom(
+  public static net.MatrixMessage parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static net.Map parseFrom(byte[] data)
+  public static net.MatrixMessage parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static net.Map parseFrom(
+  public static net.MatrixMessage parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static net.Map parseFrom(java.io.InputStream input)
+  public static net.MatrixMessage parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return PARSER.parseFrom(input);
   }
-  public static net.Map parseFrom(
+  public static net.MatrixMessage parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return PARSER.parseFrom(input, extensionRegistry);
   }
-  public static net.Map parseDelimitedFrom(java.io.InputStream input)
+  public static net.MatrixMessage parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return PARSER.parseDelimitedFrom(input);
   }
-  public static net.Map parseDelimitedFrom(
+  public static net.MatrixMessage parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return PARSER.parseDelimitedFrom(input, extensionRegistry);
   }
-  public static net.Map parseFrom(
+  public static net.MatrixMessage parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return PARSER.parseFrom(input);
   }
-  public static net.Map parseFrom(
+  public static net.MatrixMessage parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -215,7 +305,7 @@ public  final class Map extends
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(net.Map prototype) {
+  public static Builder newBuilder(net.MatrixMessage prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   public Builder toBuilder() {
@@ -230,25 +320,25 @@ public  final class Map extends
     return builder;
   }
   /**
-   * Protobuf type {@code net.Map}
+   * Protobuf type {@code net.MatrixMessage}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:net.Map)
-      net.MapOrBuilder {
+      // @@protoc_insertion_point(builder_implements:net.MatrixMessage)
+      net.MatrixMessageOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return net.Ps.internal_static_net_Map_descriptor;
+      return net.Ps.internal_static_net_MatrixMessage_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return net.Ps.internal_static_net_Map_fieldAccessorTable
+      return net.Ps.internal_static_net_MatrixMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              net.Map.class, net.Map.Builder.class);
+              net.MatrixMessage.class, net.MatrixMessage.Builder.class);
     }
 
-    // Construct using net.Map.newBuilder()
+    // Construct using net.MatrixMessage.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -266,53 +356,79 @@ public  final class Map extends
       super.clear();
       key_ = "";
 
-      value_ = 0F;
+      row_ = 0;
 
+      cols_ = 0;
+
+      data_ = java.util.Collections.emptyList();
+      bitField0_ = (bitField0_ & ~0x00000008);
       return this;
     }
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return net.Ps.internal_static_net_Map_descriptor;
+      return net.Ps.internal_static_net_MatrixMessage_descriptor;
     }
 
-    public net.Map getDefaultInstanceForType() {
-      return net.Map.getDefaultInstance();
+    public net.MatrixMessage getDefaultInstanceForType() {
+      return net.MatrixMessage.getDefaultInstance();
     }
 
-    public net.Map build() {
-      net.Map result = buildPartial();
+    public net.MatrixMessage build() {
+      net.MatrixMessage result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
       return result;
     }
 
-    public net.Map buildPartial() {
-      net.Map result = new net.Map(this);
+    public net.MatrixMessage buildPartial() {
+      net.MatrixMessage result = new net.MatrixMessage(this);
+      int from_bitField0_ = bitField0_;
+      int to_bitField0_ = 0;
       result.key_ = key_;
-      result.value_ = value_;
+      result.row_ = row_;
+      result.cols_ = cols_;
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        data_ = java.util.Collections.unmodifiableList(data_);
+        bitField0_ = (bitField0_ & ~0x00000008);
+      }
+      result.data_ = data_;
+      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
 
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof net.Map) {
-        return mergeFrom((net.Map)other);
+      if (other instanceof net.MatrixMessage) {
+        return mergeFrom((net.MatrixMessage)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(net.Map other) {
-      if (other == net.Map.getDefaultInstance()) return this;
+    public Builder mergeFrom(net.MatrixMessage other) {
+      if (other == net.MatrixMessage.getDefaultInstance()) return this;
       if (!other.getKey().isEmpty()) {
         key_ = other.key_;
         onChanged();
       }
-      if (other.getValue() != 0F) {
-        setValue(other.getValue());
+      if (other.getRow() != 0) {
+        setRow(other.getRow());
+      }
+      if (other.getCols() != 0) {
+        setCols(other.getCols());
+      }
+      if (!other.data_.isEmpty()) {
+        if (data_.isEmpty()) {
+          data_ = other.data_;
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          ensureDataIsMutable();
+          data_.addAll(other.data_);
+        }
+        onChanged();
       }
       onChanged();
       return this;
@@ -326,11 +442,11 @@ public  final class Map extends
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      net.Map parsedMessage = null;
+      net.MatrixMessage parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (net.Map) e.getUnfinishedMessage();
+        parsedMessage = (net.MatrixMessage) e.getUnfinishedMessage();
         throw e;
       } finally {
         if (parsedMessage != null) {
@@ -339,6 +455,7 @@ public  final class Map extends
       }
       return this;
     }
+    private int bitField0_;
 
     private java.lang.Object key_ = "";
     /**
@@ -409,28 +526,120 @@ public  final class Map extends
       return this;
     }
 
-    private float value_ ;
+    private int row_ ;
     /**
-     * <code>optional float value = 2;</code>
+     * <code>optional int32 row = 2;</code>
      */
-    public float getValue() {
-      return value_;
+    public int getRow() {
+      return row_;
     }
     /**
-     * <code>optional float value = 2;</code>
+     * <code>optional int32 row = 2;</code>
      */
-    public Builder setValue(float value) {
+    public Builder setRow(int value) {
       
-      value_ = value;
+      row_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional float value = 2;</code>
+     * <code>optional int32 row = 2;</code>
      */
-    public Builder clearValue() {
+    public Builder clearRow() {
       
-      value_ = 0F;
+      row_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private int cols_ ;
+    /**
+     * <code>optional int32 cols = 3;</code>
+     */
+    public int getCols() {
+      return cols_;
+    }
+    /**
+     * <code>optional int32 cols = 3;</code>
+     */
+    public Builder setCols(int value) {
+      
+      cols_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>optional int32 cols = 3;</code>
+     */
+    public Builder clearCols() {
+      
+      cols_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private java.util.List<java.lang.Float> data_ = java.util.Collections.emptyList();
+    private void ensureDataIsMutable() {
+      if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        data_ = new java.util.ArrayList<java.lang.Float>(data_);
+        bitField0_ |= 0x00000008;
+       }
+    }
+    /**
+     * <code>repeated float data = 4;</code>
+     */
+    public java.util.List<java.lang.Float>
+        getDataList() {
+      return java.util.Collections.unmodifiableList(data_);
+    }
+    /**
+     * <code>repeated float data = 4;</code>
+     */
+    public int getDataCount() {
+      return data_.size();
+    }
+    /**
+     * <code>repeated float data = 4;</code>
+     */
+    public float getData(int index) {
+      return data_.get(index);
+    }
+    /**
+     * <code>repeated float data = 4;</code>
+     */
+    public Builder setData(
+        int index, float value) {
+      ensureDataIsMutable();
+      data_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated float data = 4;</code>
+     */
+    public Builder addData(float value) {
+      ensureDataIsMutable();
+      data_.add(value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated float data = 4;</code>
+     */
+    public Builder addAllData(
+        java.lang.Iterable<? extends java.lang.Float> values) {
+      ensureDataIsMutable();
+      com.google.protobuf.AbstractMessageLite.Builder.addAll(
+          values, data_);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated float data = 4;</code>
+     */
+    public Builder clearData() {
+      data_ = java.util.Collections.emptyList();
+      bitField0_ = (bitField0_ & ~0x00000008);
       onChanged();
       return this;
     }
@@ -445,27 +654,27 @@ public  final class Map extends
     }
 
 
-    // @@protoc_insertion_point(builder_scope:net.Map)
+    // @@protoc_insertion_point(builder_scope:net.MatrixMessage)
   }
 
-  // @@protoc_insertion_point(class_scope:net.Map)
-  private static final net.Map DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:net.MatrixMessage)
+  private static final net.MatrixMessage DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new net.Map();
+    DEFAULT_INSTANCE = new net.MatrixMessage();
   }
 
-  public static net.Map getDefaultInstance() {
+  public static net.MatrixMessage getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<Map>
-      PARSER = new com.google.protobuf.AbstractParser<Map>() {
-    public Map parsePartialFrom(
+  private static final com.google.protobuf.Parser<MatrixMessage>
+      PARSER = new com.google.protobuf.AbstractParser<MatrixMessage>() {
+    public MatrixMessage parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       try {
-        return new Map(input, extensionRegistry);
+        return new MatrixMessage(input, extensionRegistry);
       } catch (RuntimeException e) {
         if (e.getCause() instanceof
             com.google.protobuf.InvalidProtocolBufferException) {
@@ -477,16 +686,16 @@ public  final class Map extends
     }
   };
 
-  public static com.google.protobuf.Parser<Map> parser() {
+  public static com.google.protobuf.Parser<MatrixMessage> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<Map> getParserForType() {
+  public com.google.protobuf.Parser<MatrixMessage> getParserForType() {
     return PARSER;
   }
 
-  public net.Map getDefaultInstanceForType() {
+  public net.MatrixMessage getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

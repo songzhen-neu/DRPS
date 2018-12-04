@@ -1,8 +1,9 @@
 package net;
 
-import Gradient.GradientStructure;
+import Util.MatrixUtil;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.jblas.FloatMatrix;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,17 +23,24 @@ public class PSWorker {
 
     }
 
-    public void greet(String name){
-        HelloRequest request=HelloRequest.newBuilder().setName(name).build();
-        HelloReply response;
-        response=blockingStub.sayHello(request);
 
-    }
+    public void push(){
+        FloatMatrix floatMatrix=new FloatMatrix();
+        float[] data=new float[25];
+        for(int i=0;i<25;i++){
+            data[i]=1;
+        }
+        floatMatrix.data=data;
+        floatMatrix.columns=5;
+        floatMatrix.rows=5;
 
-    public void getGradient(String name){
-        HelloRequest request=HelloRequest.newBuilder().setName(name).build();
-        Gradient response;
-        response=blockingStub.getGradient(request);
+
+
+        MatrixMessage matrixMessage = blockingStub.pushAFMatrix(MatrixUtil.FloatMatrix_2_MatrixMessage(floatMatrix));
+
+
+
+
     }
 
     public void shutdown() throws InterruptedException{

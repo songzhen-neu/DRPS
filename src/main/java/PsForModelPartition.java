@@ -1,12 +1,11 @@
 
-import Gradient.GradientStructure;
 import context.Context;
 import net.PSWorker;
 import net.PServer;
+import org.jblas.FloatMatrix;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+
 
 /**
  * @program: simplePsForModelPartition
@@ -16,18 +15,15 @@ import java.util.Map;
  */
 public class PsForModelPartition {
     public static void main(String args[])throws IOException,InterruptedException {
-        if(Context.isServer){
-            PServer pServer=new PServer(Context.port,Context.workNum);
+        if(Context.isPServer){
+            // 当前server的端口号
+            int port=Integer.parseInt(Context.serverAddress.get(Context.currentServerPort));
+            PServer pServer=new PServer(port);
             pServer.start();
             pServer.blockUntilShutdown();
         }else {
-//            PSWorker worker=new PSWorker("202.199.6.30",Context.port);
-//            String user="worker1";
-//            worker.greet(user);
-//            worker.shutdown();
-            PSWorker worker=new PSWorker("202.199.6.30",Context.port);
-
-
+            PSWorker worker=new PSWorker(Context.serverAddress.get("firstServerIp"),Integer.parseInt(Context.serverAddress.get("firstServerPort")));
+            worker.push();
         }
 
 
