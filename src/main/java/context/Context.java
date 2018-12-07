@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class Context {
     /** 网络通信server的相关配置*/
-    public static Map<String,String> serverAddress;
+    public static Map<String,String> serverAddress=new HashMap<String, String>();
 
     /** 判断是否是服务器*/
     public static boolean isPServer;
@@ -32,12 +32,18 @@ public class Context {
     }
     public static Mode mode;
 
+    /** 判断是不是server的master机器，管参数分配的*/
+    public static boolean isMaster;
+
 
     /** 判断是否异步*/
     public static boolean isAsy=false;
 
+    /** 当前是几号机器*/
+    public static int workerId;
 
-    public void init(){
+
+    public static void init(){
         if (inited){
             return;
         }
@@ -51,11 +57,14 @@ public class Context {
         serverAddress.put("thirdServerPort","8999");
 
         isPServer=true;
+        isMaster=true;
         currentServerIp="firstServerIp";
         currentServerPort="firstServerPort";
 
         workerNum=3;
         serverNum=3;
+
+        workerId=1;
 
         mode=Mode.DISTRIBUTED;
     }

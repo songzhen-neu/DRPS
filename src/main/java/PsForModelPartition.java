@@ -2,7 +2,6 @@
 import context.Context;
 import net.PSWorker;
 import net.PServer;
-import org.jblas.FloatMatrix;
 
 import java.io.IOException;
 
@@ -15,6 +14,7 @@ import java.io.IOException;
  */
 public class PsForModelPartition {
     public static void main(String args[])throws IOException,InterruptedException {
+        Context.init();
         if(Context.isPServer){
             // 当前server的端口号
             int port=Integer.parseInt(Context.serverAddress.get(Context.currentServerPort));

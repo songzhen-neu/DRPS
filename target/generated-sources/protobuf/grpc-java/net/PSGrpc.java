@@ -36,6 +36,15 @@ public class PSGrpc {
               "net.PS", "PushAFMatrix"),
           io.grpc.protobuf.ProtoUtils.marshaller(net.MatrixMessage.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(net.MatrixMessage.getDefaultInstance()));
+  @io.grpc.ExperimentalApi
+  public static final io.grpc.MethodDescriptor<net.KeyValueListMessage,
+      net.PartitionListMessage> METHOD_AFMATRIX_DIM_PARTITION =
+      io.grpc.MethodDescriptor.create(
+          io.grpc.MethodDescriptor.MethodType.UNARY,
+          generateFullMethodName(
+              "net.PS", "AFMatrixDimPartition"),
+          io.grpc.protobuf.ProtoUtils.marshaller(net.KeyValueListMessage.getDefaultInstance()),
+          io.grpc.protobuf.ProtoUtils.marshaller(net.PartitionListMessage.getDefaultInstance()));
 
   /**
    * Creates a new async stub that supports all call types for the service
@@ -68,6 +77,11 @@ public class PSGrpc {
      */
     public void pushAFMatrix(net.MatrixMessage request,
         io.grpc.stub.StreamObserver<net.MatrixMessage> responseObserver);
+
+    /**
+     */
+    public void aFMatrixDimPartition(net.KeyValueListMessage request,
+        io.grpc.stub.StreamObserver<net.PartitionListMessage> responseObserver);
   }
 
   @io.grpc.ExperimentalApi
@@ -77,6 +91,12 @@ public class PSGrpc {
     public void pushAFMatrix(net.MatrixMessage request,
         io.grpc.stub.StreamObserver<net.MatrixMessage> responseObserver) {
       asyncUnimplementedUnaryCall(METHOD_PUSH_AFMATRIX, responseObserver);
+    }
+
+    @java.lang.Override
+    public void aFMatrixDimPartition(net.KeyValueListMessage request,
+        io.grpc.stub.StreamObserver<net.PartitionListMessage> responseObserver) {
+      asyncUnimplementedUnaryCall(METHOD_AFMATRIX_DIM_PARTITION, responseObserver);
     }
 
     @java.lang.Override public io.grpc.ServerServiceDefinition bindService() {
@@ -91,6 +111,10 @@ public class PSGrpc {
     /**
      */
     public net.MatrixMessage pushAFMatrix(net.MatrixMessage request);
+
+    /**
+     */
+    public net.PartitionListMessage aFMatrixDimPartition(net.KeyValueListMessage request);
   }
 
   /**
@@ -101,6 +125,11 @@ public class PSGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<net.MatrixMessage> pushAFMatrix(
         net.MatrixMessage request);
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<net.PartitionListMessage> aFMatrixDimPartition(
+        net.KeyValueListMessage request);
   }
 
   public static class PSStub extends io.grpc.stub.AbstractStub<PSStub>
@@ -126,6 +155,13 @@ public class PSGrpc {
       asyncUnaryCall(
           getChannel().newCall(METHOD_PUSH_AFMATRIX, getCallOptions()), request, responseObserver);
     }
+
+    @java.lang.Override
+    public void aFMatrixDimPartition(net.KeyValueListMessage request,
+        io.grpc.stub.StreamObserver<net.PartitionListMessage> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(METHOD_AFMATRIX_DIM_PARTITION, getCallOptions()), request, responseObserver);
+    }
   }
 
   public static class PSBlockingStub extends io.grpc.stub.AbstractStub<PSBlockingStub>
@@ -149,6 +185,12 @@ public class PSGrpc {
     public net.MatrixMessage pushAFMatrix(net.MatrixMessage request) {
       return blockingUnaryCall(
           getChannel(), METHOD_PUSH_AFMATRIX, getCallOptions(), request);
+    }
+
+    @java.lang.Override
+    public net.PartitionListMessage aFMatrixDimPartition(net.KeyValueListMessage request) {
+      return blockingUnaryCall(
+          getChannel(), METHOD_AFMATRIX_DIM_PARTITION, getCallOptions(), request);
     }
   }
 
@@ -175,9 +217,17 @@ public class PSGrpc {
       return futureUnaryCall(
           getChannel().newCall(METHOD_PUSH_AFMATRIX, getCallOptions()), request);
     }
+
+    @java.lang.Override
+    public com.google.common.util.concurrent.ListenableFuture<net.PartitionListMessage> aFMatrixDimPartition(
+        net.KeyValueListMessage request) {
+      return futureUnaryCall(
+          getChannel().newCall(METHOD_AFMATRIX_DIM_PARTITION, getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_PUSH_AFMATRIX = 0;
+  private static final int METHODID_AFMATRIX_DIM_PARTITION = 1;
 
   private static class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -199,6 +249,10 @@ public class PSGrpc {
         case METHODID_PUSH_AFMATRIX:
           serviceImpl.pushAFMatrix((net.MatrixMessage) request,
               (io.grpc.stub.StreamObserver<net.MatrixMessage>) responseObserver);
+          break;
+        case METHODID_AFMATRIX_DIM_PARTITION:
+          serviceImpl.aFMatrixDimPartition((net.KeyValueListMessage) request,
+              (io.grpc.stub.StreamObserver<net.PartitionListMessage>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -226,6 +280,13 @@ public class PSGrpc {
               net.MatrixMessage,
               net.MatrixMessage>(
                 serviceImpl, METHODID_PUSH_AFMATRIX)))
+        .addMethod(
+          METHOD_AFMATRIX_DIM_PARTITION,
+          asyncUnaryCall(
+            new MethodHandlers<
+              net.KeyValueListMessage,
+              net.PartitionListMessage>(
+                serviceImpl, METHODID_AFMATRIX_DIM_PARTITION)))
         .build();
   }
 }

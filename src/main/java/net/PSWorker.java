@@ -1,10 +1,13 @@
 package net;
 
-import Util.MatrixUtil;
+
+import Util.MessageDataTransUtil;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.jblas.FloatMatrix;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,12 +37,18 @@ public class PSWorker {
         floatMatrix.columns=5;
         floatMatrix.rows=5;
 
+        MatrixMessage matrixMessage = blockingStub.pushAFMatrix(MessageDataTransUtil.FloatMatrix_2_MatrixMessage(floatMatrix));
+    }
 
+    public void pushKeyValueMap() {
+        Map<Long, Integer> map = new HashMap<Long, Integer>();
+        map.put(1l, 5);
+        map.put(5l, 10);
+        map.put(18l, 5);
 
-        MatrixMessage matrixMessage = blockingStub.pushAFMatrix(MatrixUtil.FloatMatrix_2_MatrixMessage(floatMatrix));
-
-
-
+        KeyValueListMessage keyValueListMessage=MessageDataTransUtil.Map_2_KeyValueListMessage(map);
+        PartitionListMessage partitionListMessage=blockingStub.aFMatrixDimPartition(keyValueListMessage);
+        System.out.println("sss");
 
     }
 

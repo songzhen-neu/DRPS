@@ -6,6 +6,7 @@ option java_multiple_files = true;
 
 service PS {
     rpc PushAFMatrix (MatrixMessage) returns (MatrixMessage){}
+    rpc AFMatrixDimPartition(KeyValueListMessage) returns (PartitionListMessage){}
 
 }
 
@@ -22,6 +23,16 @@ message PartitionMessage{
 
 message PartitionListMessage{
     repeated PartitionMessage Data=1;
+}
+
+message KeyValueMessage{
+    int64 key=1;
+    int32 value=2;
+}
+
+message KeyValueListMessage{
+    int32 size=1;
+    repeated KeyValueMessage keyValueList=2;
 }
 
 message MatrixMessage{

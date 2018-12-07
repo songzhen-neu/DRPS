@@ -24,6 +24,16 @@ public final class Ps {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_net_PartitionListMessage_fieldAccessorTable;
   static com.google.protobuf.Descriptors.Descriptor
+    internal_static_net_KeyValueMessage_descriptor;
+  static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_net_KeyValueMessage_fieldAccessorTable;
+  static com.google.protobuf.Descriptors.Descriptor
+    internal_static_net_KeyValueListMessage_descriptor;
+  static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_net_KeyValueListMessage_fieldAccessorTable;
+  static com.google.protobuf.Descriptors.Descriptor
     internal_static_net_MatrixMessage_descriptor;
   static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -46,13 +56,18 @@ public final class Ps {
       "\004host\030\001 \001(\t\".\n\020PartitionMessage\022\013\n\003key\030\001" +
       " \001(\t\022\r\n\005value\030\002 \003(\005\";\n\024PartitionListMess" +
       "age\022#\n\004Data\030\001 \003(\0132\025.net.PartitionMessage" +
-      "\"E\n\rMatrixMessage\022\013\n\003key\030\001 \001(\t\022\013\n\003row\030\002 " +
-      "\001(\005\022\014\n\004cols\030\003 \001(\005\022\014\n\004data\030\004 \003(\002\"^\n\017AFMat" +
-      "rixMessage\022%\n\004meta\030\001 \001(\0132\027.net.RequestMe" +
-      "taMessage\022$\n\010AFMatrix\030\002 \001(\0132\022.net.Matrix" +
-      "Message2>\n\002PS\0228\n\014PushAFMatrix\022\022.net.Matr" +
-      "ixMessage\032\022.net.MatrixMessage\"\000B\013\n\003netB\002",
-      "PsP\001b\006proto3"
+      "\"-\n\017KeyValueMessage\022\013\n\003key\030\001 \001(\003\022\r\n\005valu" +
+      "e\030\002 \001(\005\"O\n\023KeyValueListMessage\022\014\n\004size\030\001" +
+      " \001(\005\022*\n\014keyValueList\030\002 \003(\0132\024.net.KeyValu" +
+      "eMessage\"E\n\rMatrixMessage\022\013\n\003key\030\001 \001(\t\022\013" +
+      "\n\003row\030\002 \001(\005\022\014\n\004cols\030\003 \001(\005\022\014\n\004data\030\004 \003(\002\"" +
+      "^\n\017AFMatrixMessage\022%\n\004meta\030\001 \001(\0132\027.net.R",
+      "equestMetaMessage\022$\n\010AFMatrix\030\002 \001(\0132\022.ne" +
+      "t.MatrixMessage2\215\001\n\002PS\0228\n\014PushAFMatrix\022\022" +
+      ".net.MatrixMessage\032\022.net.MatrixMessage\"\000" +
+      "\022M\n\024AFMatrixDimPartition\022\030.net.KeyValueL" +
+      "istMessage\032\031.net.PartitionListMessage\"\000B" +
+      "\013\n\003netB\002PsP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -84,14 +99,26 @@ public final class Ps {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_net_PartitionListMessage_descriptor,
         new java.lang.String[] { "Data", });
-    internal_static_net_MatrixMessage_descriptor =
+    internal_static_net_KeyValueMessage_descriptor =
       getDescriptor().getMessageTypes().get(3);
+    internal_static_net_KeyValueMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_net_KeyValueMessage_descriptor,
+        new java.lang.String[] { "Key", "Value", });
+    internal_static_net_KeyValueListMessage_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_net_KeyValueListMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_net_KeyValueListMessage_descriptor,
+        new java.lang.String[] { "Size", "KeyValueList", });
+    internal_static_net_MatrixMessage_descriptor =
+      getDescriptor().getMessageTypes().get(5);
     internal_static_net_MatrixMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_net_MatrixMessage_descriptor,
         new java.lang.String[] { "Key", "Row", "Cols", "Data", });
     internal_static_net_AFMatrixMessage_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_net_AFMatrixMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_net_AFMatrixMessage_descriptor,
