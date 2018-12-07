@@ -1,48 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="20016fea-4af9-45a0-bbaa-793ee0606d3a" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/resources/log4j.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/PsForModelPartition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/PsForModelPartition.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Util/MatrixUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Util/MessageDataTransUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/context/Context.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/context/Context.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/net/PSWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/PSWorker.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/net/PServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/PServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/store/KVStore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/store/KVStore.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/proto/ps.proto" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/proto/ps.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/DataTyleTrans/GradientUtil.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/PsForModelPartition.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/PsForModelPartition.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/context/Context.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/context/Context.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloReply$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloReply$Builder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloReply.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloReplyOrBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloRequest$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloRequest$Builder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloRequest.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/HelloRequestOrBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$AbstractPS.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$AbstractPS.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$MethodHandlers.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$MethodHandlers.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$PS.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$PS.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSBlockingClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSBlockingClient.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSBlockingStub.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSBlockingStub.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSFutureClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSFutureClient.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSFutureStub.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSFutureStub.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSStub.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc$PSStub.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSGrpc.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSGrpc.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PSWorker.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PSWorker.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PServer$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PServer$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/PServer.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/PServer.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/Ps$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/Ps$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/net/Ps.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/net/Ps.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/proto/ps.proto" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/proto/ps.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/ps.proto" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/ps.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/generated-sources/protobuf/grpc-java/net/PSGrpc.java" beforeDir="false" afterPath="$PROJECT_DIR$/target/generated-sources/protobuf/grpc-java/net/PSGrpc.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/generated-sources/protobuf/java/net/Ps.java" beforeDir="false" afterPath="$PROJECT_DIR$/target/generated-sources/protobuf/java/net/Ps.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-    </list>
+    <list default="true" id="20016fea-4af9-45a0-bbaa-793ee0606d3a" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -104,7 +63,7 @@
       <file leaf-file-name="PSWorker.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/net/PSWorker.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="388">
+            <state relative-caret-position="523">
               <caret line="50" column="34" selection-start-line="50" selection-start-column="34" selection-end-line="50" selection-end-column="34" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -463,12 +422,12 @@
       <option name="presentableId" value="Default" />
       <updated>1543735601680</updated>
       <workItem from="1543735604282" duration="19536000" />
-      <workItem from="1543761173165" duration="45883000" />
+      <workItem from="1543761173165" duration="46517000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="65419000" />
+    <option name="totallyTimeSpent" value="66053000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
@@ -731,7 +690,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/net/PSWorker.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="388">
+        <state relative-caret-position="523">
           <caret line="50" column="34" selection-start-line="50" selection-start-column="34" selection-end-line="50" selection-end-column="34" />
           <folding>
             <element signature="imports" expanded="true" />
