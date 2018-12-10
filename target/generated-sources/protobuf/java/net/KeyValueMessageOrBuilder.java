@@ -13,7 +13,7 @@ public interface KeyValueMessageOrBuilder extends
   long getKey();
 
   /**
-   * <code>optional int32 value = 2;</code>
+   * <code>optional int64 value = 2;</code>
    */
-  int getValue();
+  long getValue();
 }

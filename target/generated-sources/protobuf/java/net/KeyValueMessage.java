@@ -16,7 +16,7 @@ public  final class KeyValueMessage extends
   }
   private KeyValueMessage() {
     key_ = 0L;
-    value_ = 0;
+    value_ = 0L;
   }
 
   @java.lang.Override
@@ -50,7 +50,7 @@ public  final class KeyValueMessage extends
           }
           case 16: {
 
-            value_ = input.readInt32();
+            value_ = input.readInt64();
             break;
           }
         }
@@ -87,11 +87,11 @@ public  final class KeyValueMessage extends
   }
 
   public static final int VALUE_FIELD_NUMBER = 2;
-  private int value_;
+  private long value_;
   /**
-   * <code>optional int32 value = 2;</code>
+   * <code>optional int64 value = 2;</code>
    */
-  public int getValue() {
+  public long getValue() {
     return value_;
   }
 
@@ -110,8 +110,8 @@ public  final class KeyValueMessage extends
     if (key_ != 0L) {
       output.writeInt64(1, key_);
     }
-    if (value_ != 0) {
-      output.writeInt32(2, value_);
+    if (value_ != 0L) {
+      output.writeInt64(2, value_);
     }
   }
 
@@ -124,9 +124,9 @@ public  final class KeyValueMessage extends
       size += com.google.protobuf.CodedOutputStream
         .computeInt64Size(1, key_);
     }
-    if (value_ != 0) {
+    if (value_ != 0L) {
       size += com.google.protobuf.CodedOutputStream
-        .computeInt32Size(2, value_);
+        .computeInt64Size(2, value_);
     }
     memoizedSize = size;
     return size;
@@ -241,7 +241,7 @@ public  final class KeyValueMessage extends
       super.clear();
       key_ = 0L;
 
-      value_ = 0;
+      value_ = 0L;
 
       return this;
     }
@@ -285,7 +285,7 @@ public  final class KeyValueMessage extends
       if (other.getKey() != 0L) {
         setKey(other.getKey());
       }
-      if (other.getValue() != 0) {
+      if (other.getValue() != 0L) {
         setValue(other.getValue());
       }
       onChanged();
@@ -340,28 +340,28 @@ public  final class KeyValueMessage extends
       return this;
     }
 
-    private int value_ ;
+    private long value_ ;
     /**
-     * <code>optional int32 value = 2;</code>
+     * <code>optional int64 value = 2;</code>
      */
-    public int getValue() {
+    public long getValue() {
       return value_;
     }
     /**
-     * <code>optional int32 value = 2;</code>
+     * <code>optional int64 value = 2;</code>
      */
-    public Builder setValue(int value) {
+    public Builder setValue(long value) {
       
       value_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional int32 value = 2;</code>
+     * <code>optional int64 value = 2;</code>
      */
     public Builder clearValue() {
       
-      value_ = 0;
+      value_ = 0L;
       onChanged();
       return this;
     }

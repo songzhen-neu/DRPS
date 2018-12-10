@@ -7,7 +7,7 @@ option java_multiple_files = true;
 service PS {
     rpc PushAFMatrix (MatrixMessage) returns (MatrixMessage){}
     rpc AFMatrixDimPartition(KeyValueListMessage) returns (PartitionListMessage){}
-
+    rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
 }
 
 
@@ -27,7 +27,12 @@ message PartitionListMessage{
 
 message KeyValueMessage{
     int64 key=1;
-    int32 value=2;
+    int64 value=2;
+}
+
+message SLKVMessage{
+    string key=1;
+    int64 value=2;
 }
 
 message KeyValueListMessage{
@@ -46,6 +51,25 @@ message AFMatrixMessage{
     RequestMetaMessage meta=1;
     MatrixMessage AFMatrix=2;
 }
+
+message IntListMessage{
+    int32 size=1;
+    repeated int32 list=2;
+}
+
+message SListMessage{
+    int32 size=1;
+    repeated string list=2;
+}
+
+message SLKVListMessage{
+    int32 size=1;
+    repeated SLKVMessage list=2;
+}
+
+
+
+
 
 
 

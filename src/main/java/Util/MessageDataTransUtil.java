@@ -3,6 +3,7 @@ package Util;
 import net.KeyValueListMessage;
 import net.KeyValueMessage;
 import net.MatrixMessage;
+import net.SLKVListMessage;
 import org.jblas.FloatMatrix;
 
 import java.util.HashMap;
@@ -42,15 +43,15 @@ public class MessageDataTransUtil {
         return matrixMessage.build();
     }
 
-    public static Map<Long,Integer> KeyValueListMessage_2_Map(KeyValueListMessage KeyValueListMessage ){
-        Map<Long,Integer> map=new HashMap<Long, Integer>();
+    public static Map<Long,Long> KeyValueListMessage_2_Map(KeyValueListMessage KeyValueListMessage ){
+        Map<Long,Long> map=new HashMap<Long, Long>();
         for(int i=0;i<KeyValueListMessage.getSize();i++){
             map.put(KeyValueListMessage.getKeyValueList(i).getKey(),KeyValueListMessage.getKeyValueList(i).getValue());
         }
         return map;
     }
 
-    public static KeyValueListMessage Map_2_KeyValueListMessage(Map<Long,Integer> map){
+    public static KeyValueListMessage Map_2_KeyValueListMessage(Map<Long,Long> map){
         KeyValueListMessage.Builder keyValueListMessageBuild=KeyValueListMessage.newBuilder();
         for(long i:map.keySet()){
             KeyValueMessage.Builder keyValueMessageBuilder=KeyValueMessage.newBuilder();
@@ -60,6 +61,14 @@ public class MessageDataTransUtil {
         }
         keyValueListMessageBuild.setSize(map.size());
         return keyValueListMessageBuild.build();
+    }
+
+    public static Map<String,Long> SLKVListMessage_2_map(SLKVListMessage slkvListMessage){
+        Map<String,Long> map=new HashMap<String, Long>();
+        for(int i=0;i<slkvListMessage.getSize();i++){
+            map.put(slkvListMessage.getList(i).getKey(),slkvListMessage.getList(i).getValue());
+        }
+        return map;
     }
 
 }

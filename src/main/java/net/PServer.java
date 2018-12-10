@@ -11,6 +11,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Data;
+import org.iq80.leveldb.DB;
 import org.jblas.FloatMatrix;
 
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ public class PServer implements net.PSGrpc.PS {
     private AtomicLong workerStep=new AtomicLong(0);
     static Logger logger=LoggerFactory.getLogger((PServer.class));
     AtomicBoolean finished=new AtomicBoolean(false);
+
 
 
     public PServer(int port){
@@ -87,7 +89,7 @@ public class PServer implements net.PSGrpc.PS {
         floatMatrixMap.put(req.getKey(),afMatrix);
 
         store.sumAFMatrix(afMatrix);
-        while(store.getL().get()<2){
+        while(store.getL().get()<Context.workerNum){
             try{
                 Thread.sleep(10);
             }catch (Exception e){
@@ -104,25 +106,43 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void aFMatrixDimPartition(KeyValueListMessage req,StreamObserver<PartitionListMessage> responseObject){
-        Map<Long,Integer> map=MessageDataTransUtil.KeyValueListMessage_2_Map(req);
-        store.mergeDim(map);
-        store.getL().incrementAndGet();
+//        Map<Long,Integer> map=MessageDataTransUtil.KeyValueListMessage_2_Map(req);
+//        store.mergeDim(map);
+//        store.getL().incrementAndGet();
+//
+//        while(store.getL().get()< Context.workerNum){
+//            try{
+//                Thread.sleep(10);
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        responseObject.onNext(null);
+//        responseObject.onCompleted();
+        return;
 
-        while(store.getL().get()< Context.workerNum){
-            try{
-                Thread.sleep(10);
-            }catch (Exception e){
-                e.printStackTrace();
+    }
+
+    @Override
+    public void getIndexOfSparseDim(SListMessage req,StreamObserver<SLKVListMessage> responsedObject){
+        try{
+            Map<String,Long> map=Context.kvStoreForLevelDB.getIndex(req);
+            SLKVListMessage.Builder sLKVListMessage=SLKVListMessage.newBuilder();
+            sLKVListMessage.setSize(map.size());
+            for(String i:map.keySet()){
+                SLKVMessage.Builder sLKVMessage=SLKVMessage.newBuilder();
+                sLKVMessage.setKey(i);
+                sLKVMessage.setValue(map.get(i));
+                sLKVListMessage.addList(sLKVMessage);
             }
+            responsedObject.onNext(sLKVListMessage.build());
+            responsedObject.onCompleted();
+        }catch (IOException e){
+            e.printStackTrace();
+        }catch (ClassNotFoundException e){
+            e.printStackTrace();
         }
-
-        responseObject.onNext(null);
-        responseObject.onCompleted();
-
-
-
-
-
 
     }
 
