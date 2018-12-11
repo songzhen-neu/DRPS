@@ -128,15 +128,15 @@ public class PServer implements net.PSGrpc.PS {
     public void getIndexOfSparseDim(SListMessage req,StreamObserver<SLKVListMessage> responsedObject){
         try{
             Map<String,Long> map=Context.kvStoreForLevelDB.getIndex(req);
-            SLKVListMessage.Builder sLKVListMessage=SLKVListMessage.newBuilder();
-            sLKVListMessage.setSize(map.size());
+            SLKVListMessage.Builder slkvListMessage=SLKVListMessage.newBuilder();
+            slkvListMessage.setSize(map.size());
             for(String i:map.keySet()){
-                SLKVMessage.Builder sLKVMessage=SLKVMessage.newBuilder();
-                sLKVMessage.setKey(i);
-                sLKVMessage.setValue(map.get(i));
-                sLKVListMessage.addList(sLKVMessage);
+                SLKVMessage.Builder slkvMessage=SLKVMessage.newBuilder();
+                slkvMessage.setKey(i);
+                slkvMessage.setValue(map.get(i));
+                slkvListMessage.addList(slkvMessage);
             }
-            responsedObject.onNext(sLKVListMessage.build());
+            responsedObject.onNext(slkvListMessage.build());
             responsedObject.onCompleted();
         }catch (IOException e){
             e.printStackTrace();

@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.*;
 
 /**
  * @program: CtrForBigModel
@@ -189,6 +190,7 @@ public class DataProcessUtil {
             long[] cat = new long[catSize];
             boolean click = Boolean.parseBoolean(lineSplit[1]);
 
+
             // 给cat初始值全为-1，来表示上来所有cat属性都为missing value
             for (int i = 0; i < catSize; i++) {
                 cat[i] = -1;
@@ -202,8 +204,8 @@ public class DataProcessUtil {
                 } else {
                     feature[i - 2 - catSize] = Float.parseFloat(lineSplit[i]);
                 }
-
             }
+
 
             Sample sample = new Sample(feature, cat, click);
             if(batchSample.sampleList.size()!=Context.sampleBatchSize){
@@ -255,6 +257,98 @@ public class DataProcessUtil {
         }
 
         return cat_index;
+    }
+
+
+
+    public static long getBatchSampleListByBatchIndex(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
+        /**
+         *@Description:
+         *@Param: [fileName, featureSize, catSize]
+         *@return: ParaStructure.Sample.SampleList
+         *@Author: SongZhen
+         *@date: 下午10:26 18-11-13
+         */
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+        String readline = null;
+        br.readLine();
+        SampleList batchSample=new SampleList();
+        List<String[]> catList=new ArrayList<String[]>();
+        Set<String> catSet=new HashSet<String>();
+
+
+        long cat_index = 0;
+        int countSampleListSize = 0;
+        DB db=Context.kvStoreForLevelDB.getDb();
+
+        CurrentTimeUtil.setStartTime();
+
+        while ((readline = br.readLine()) != null && countSampleListSize < Context.sampleListSize) {
+            String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
+            float[] feature = new float[featureSize];
+            long[] cat = new long[catSize];
+            boolean click = Boolean.parseBoolean(lineSplit[1]);
+
+
+            // 给cat初始值全为-1，来表示上来所有cat属性都为missing value
+            for (int i = 0; i < catSize; i++) {
+                cat[i] = -1;
+            }
+
+            catList.add(getMetaCat(lineSplit,catSet));
+
+
+            for (int i = 2 + catSize; i < 2 + catSize + featureSize; i++) {
+                if (lineSplit[i].equals("")) {
+                    feature[i - 2 - catSize] = 0f;
+                } else {
+                    feature[i - 2 - catSize] = Float.parseFloat(lineSplit[i]);
+                }
+            }
+
+
+            Sample sample = new Sample(feature, cat, click);
+            if(batchSample.sampleList.size()!=Context.sampleBatchSize){
+                batchSample.sampleList.add(sample);
+
+            }else {
+                // 或者Map
+                Map<String,Long> dimMap=WorkerContext.psWorker.getCatDimMapBySet(catSet);
+                for(int i=0;i<catList.size();i++){
+                    for(int j=0;j<catList.get(i).length;j++){
+                        batchSample.sampleList.get(i).cat[j]=dimMap.get(catList.get(i)[j]);
+                    }
+                }
+
+                Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/Context.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+                batchSample.sampleList.clear();
+                batchSample.sampleList.add(sample);
+
+            }
+            countSampleListSize++;
+
+        }
+
+        if(batchSample.sampleList!=null){
+            Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/Context.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+        }
+
+
+
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("MetaDataTobatchSample:");
+        return cat_index;
+
+
+    }
+
+    public static String[] getMetaCat(String[] str,Set<String> catSet){
+        String[] cat=new String[Context.catSize];
+        for (int i=0;i<cat.length;i++){
+            cat[i]=str[i+2];
+            catSet.add(str[i+2]);
+        }
+        return cat;
     }
 
 

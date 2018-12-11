@@ -69,4 +69,23 @@ public class PSWorker {
     }
 
 
+    public Map<String,Long> getCatDimMapBySet(Set<String> catSet){
+        Map<String,Long> catDimMap=new HashMap<String, Long>();
+        SListMessage.Builder slistMessage=SListMessage.newBuilder();
+        for(String cat:catSet){
+            slistMessage.addList(cat);
+        }
+        slistMessage.setSize(catSet.size());
+        SLKVListMessage slkvListMessage=blockingStub.getIndexOfSparseDim(slistMessage.build());
+
+        for(int i=0;i<slkvListMessage.getSize();i++){
+            catDimMap.put(slkvListMessage.getList(i).getKey(),slkvListMessage.getList(i).getValue());
+        }
+        return catDimMap;
+    }
+
+
+
+
+
 }
