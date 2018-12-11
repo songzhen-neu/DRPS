@@ -41,8 +41,8 @@ public class DataProcessUtil {
         // 以下是离散特征在前连续特征在后的代码
         if (Context.isCatForwardFeature) {
 //            sparseDimSize=metaDataToSampleLevelDB(fileName, featureSize, catSize);
-            sparseDimSize=metaDataToBatchSampleLevelDB(fileName,featureSize,catSize);
-
+//            sparseDimSize=metaDataToBatchSampleLevelDB(fileName,featureSize,catSize);
+            getBatchSampleListByBatchIndex(fileName,featureSize,catSize);
 
         } else if (!Context.isCatForwardFeature) {
             // 下面是连续特征在前，离散特征在后的代码
@@ -295,7 +295,7 @@ public class DataProcessUtil {
                 cat[i] = -1;
             }
 
-            catList.add(getMetaCat(lineSplit,catSet));
+
 
 
             for (int i = 2 + catSize; i < 2 + catSize + featureSize; i++) {
@@ -309,6 +309,7 @@ public class DataProcessUtil {
 
             Sample sample = new Sample(feature, cat, click);
             if(batchSample.sampleList.size()!=Context.sampleBatchSize){
+                catList.add(getMetaCat(lineSplit,catSet));
                 batchSample.sampleList.add(sample);
 
             }else {
@@ -321,6 +322,7 @@ public class DataProcessUtil {
                 }
 
                 Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/Context.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+                catList.clear();
                 batchSample.sampleList.clear();
                 batchSample.sampleList.add(sample);
 
