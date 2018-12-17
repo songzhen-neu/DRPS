@@ -2,6 +2,7 @@ import Util.DataProcessUtil;
 import Util.PruneUtil;
 import context.Context;
 import context.WorkerContext;
+import javafx.concurrent.Worker;
 import net.PSWorker;
 import store.KVStoreForLevelDB;
 
@@ -25,7 +26,12 @@ public class PsForModelPartitionWorker {
 
         // 获取稀疏的维度个数，并发送给自己的本地服务器
         Context.sparseDimSize=WorkerContext.psWorker.getSparseDimSize();
-        System.out.println(Context.sparseDimSize);
+
+        WorkerContext.psWorker.setChannel("localhost",Integer.parseInt(Context.serverAddress.get(Context.currentServerPort)));
+        WorkerContext.psWorker.sentSparseDimSizeAndInitParams(Context.sparseDimSize);
+
+
+
 
         WorkerContext.psWorker.shutdown();
         Context.kvStoreForLevelDB.getDb().close();

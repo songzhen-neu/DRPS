@@ -1,8 +1,10 @@
 package store;
 
 import Util.FileUtil;
+import Util.RandomUtil;
 import Util.TypeExchangeUtil;
 import context.Context;
+import context.WorkerContext;
 import lombok.Data;
 import lombok.Synchronized;
 import net.IntListMessage;
@@ -52,6 +54,15 @@ public class KVStoreForLevelDB {
             }
         }
         return map;
+    }
+
+    public void initParams() throws IOException{
+        for(int i=0;i<Context.sparseDimSize;i++){
+            if(i%WorkerContext.workerId==0){
+                db.put(("catParam"+i).getBytes(),TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f,0.1f)));
+                System.out.println("params:"+i);
+            }
+        }
     }
 
 

@@ -88,6 +88,8 @@ public class Context {
     public static long sparseDimSize;
     public static String myDataPath;
 
+    public static int serverId;
+
 
 
     public static boolean isDist;
@@ -121,7 +123,9 @@ public class Context {
         workerNum=3;
         serverNum=3;
 
-        workerId=1;
+        serverId=1;
+
+
 
         mode=Mode.DISTRIBUTED;
 
@@ -137,14 +141,14 @@ public class Context {
         myDataPath="data/train"+workerId+".csv";
 
         isCatForwardFeature=true;
-        sampleListSize=50000;
+        sampleListSize=30000;
 
         kvStoreForLevelDB.init(levelDBPath);
 
         featureSize=10;
         catSize=12;
 
-        sampleBatchSize=5000;
+        sampleBatchSize=3000;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;

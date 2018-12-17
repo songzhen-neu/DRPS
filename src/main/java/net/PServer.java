@@ -82,8 +82,6 @@ public class PServer implements net.PSGrpc.PS {
     public void pushAFMatrix(MatrixMessage req,StreamObserver<MatrixMessage> responseObject){
         store.getL().set(0);
         FloatMatrix afMatrix=MessageDataTransUtil.MatrixMessage_2_FloatMatrix(req);
-        long step=globalStep.get();
-        long wStep=workerStep.incrementAndGet();
 
 
         floatMatrixMap.put(req.getKey(),afMatrix);
@@ -150,10 +148,56 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void getSparseDimSize(RequestMetaMessage req,StreamObserver<LongMessage> reponseObject){
         LongMessage.Builder sparseDimSize=LongMessage.newBuilder();
-        sparseDimSize.setL(Context.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
+
         logger.info("host:"+req.getHost());
+        workerStep.incrementAndGet();
+
+        while(workerStep.longValue()<Context.workerNum){
+            try {
+                Thread.sleep(10);
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
+        }
+
+        workerStep.set(0);
+        sparseDimSize.setL(Context.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
         reponseObject.onNext(sparseDimSize.build());
         reponseObject.onCompleted();
+    }
+
+    @Override
+    public void sentSparseDimSizeAndInitParams(LongMessage req,StreamObserver<BooleanMessage> responseObject){
+        Context.sparseDimSize=req.getL();
+        // 开始利用sparseDimSize，采用取余的方式进行数据分配
+        try{
+            Context.kvStoreForLevelDB.initParams();
+
+            // 同步代码
+            workerStep.incrementAndGet();
+
+            while(workerStep.longValue()<Context.workerNum){
+                try {
+                    Thread.sleep(10);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+            workerStep.set(0);
+            BooleanMessage.Builder booleanMessage=BooleanMessage.newBuilder();
+            booleanMessage.setB(true);
+            responseObject.onNext(booleanMessage.build());
+            responseObject.onCompleted();
+
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+
+
+
+
     }
 
 

@@ -9,12 +9,17 @@ service PS {
     rpc AFMatrixDimPartition(KeyValueListMessage) returns (PartitionListMessage){}
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
     rpc GetSparseDimSize(RequestMetaMessage) returns (LongMessage){}
+    rpc SentSparseDimSizeAndInitParams(LongMessage) returns (BooleanMessage){}
 }
 
 
 
 message RequestMetaMessage {
     string host = 1;
+}
+
+message BooleanMessage{
+    bool b=1;
 }
 
 message LongMessage{

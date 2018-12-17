@@ -95,6 +95,12 @@ public class PSWorker {
 
     }
 
+    public void sentSparseDimSizeAndInitParams(long sparseDimSize){
+        LongMessage.Builder l=LongMessage.newBuilder();
+        l.setL(sparseDimSize);
+        blockingStub.sentSparseDimSizeAndInitParams(l.build());
+    }
+
 
 
 
