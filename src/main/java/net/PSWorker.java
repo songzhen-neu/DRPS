@@ -7,10 +7,13 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.jblas.FloatMatrix;
 
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static Util.DataProcessUtil.isCatEmpty;
+import static io.grpc.okhttp.internal.Platform.logger;
 
 /**
  * @program: simplePsForModelPartition
@@ -82,6 +85,14 @@ public class PSWorker {
             catDimMap.put(slkvListMessage.getList(i).getKey(),slkvListMessage.getList(i).getValue());
         }
         return catDimMap;
+    }
+
+    public long getSparseDimSize()throws UnknownHostException {
+        RequestMetaMessage.Builder requestMetaMessage=RequestMetaMessage.newBuilder();
+        requestMetaMessage.setHost(Inet4Address.getLocalHost().getHostAddress());
+        LongMessage longMessage=blockingStub.getSparseDimSize(requestMetaMessage.build());
+        return longMessage.getL();
+
     }
 
 

@@ -29,11 +29,11 @@ public class KVStore {
     public void sumAFMatrix(FloatMatrix val) {
         l.incrementAndGet();
         if (sum.size() == 0) {
-            sum.put("1", val);
+            sum.put("freq", val);
             logger.info("sum.size=0");
 
         } else {
-            sum.get("1").addi(val);
+            sum.get("freq").addi(val);
             logger.info("sum.size!=0");
         }
 

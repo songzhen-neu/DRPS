@@ -88,8 +88,7 @@ public class Context {
     public static long sparseDimSize;
     public static String myDataPath;
 
-    public static String masterIp;
-    public static String masterPort;
+
 
     public static boolean isDist;
 
@@ -108,11 +107,9 @@ public class Context {
         serverAddress.put("firstServerPort","8999");
         serverAddress.put("secondServerIp","172.20.10.3");
         serverAddress.put("secondServerPort","8999");
-//        serverAddress.put("thirdServerIp","172.20.10.13");
-//        serverAddress.put("thirdServerPort","8999");
+        serverAddress.put("thirdServerIp","172.17.89.50");
+        serverAddress.put("thirdServerPort","8999");
 
-        masterIp="localhost";
-        masterPort="8999";
         isPServer=true;
         isMaster=true;
         currentServerIp="firstServerIp";
@@ -121,8 +118,8 @@ public class Context {
         isDist=true;
 
 
-        workerNum=2;
-        serverNum=2;
+        workerNum=3;
+        serverNum=3;
 
         workerId=1;
 
@@ -147,7 +144,7 @@ public class Context {
         featureSize=10;
         catSize=12;
 
-        sampleBatchSize=200;
+        sampleBatchSize=5000;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;

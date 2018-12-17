@@ -99,7 +99,7 @@ public class PServer implements net.PSGrpc.PS {
 
 
 
-        responseObject.onNext(MessageDataTransUtil.FloatMatrix_2_MatrixMessage(store.getSum().get("1")));
+        responseObject.onNext(MessageDataTransUtil.FloatMatrix_2_MatrixMessage(store.getSum().get("freq")));
         responseObject.onCompleted();
 
     }
@@ -136,6 +136,7 @@ public class PServer implements net.PSGrpc.PS {
                 slkvMessage.setValue(map.get(i));
                 slkvListMessage.addList(slkvMessage);
             }
+            logger.info(Context.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
             responsedObject.onNext(slkvListMessage.build());
             responsedObject.onCompleted();
         }catch (IOException e){
@@ -144,6 +145,15 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public void getSparseDimSize(RequestMetaMessage req,StreamObserver<LongMessage> reponseObject){
+        LongMessage.Builder sparseDimSize=LongMessage.newBuilder();
+        sparseDimSize.setL(Context.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
+        logger.info("host:"+req.getHost());
+        reponseObject.onNext(sparseDimSize.build());
+        reponseObject.onCompleted();
     }
 
 

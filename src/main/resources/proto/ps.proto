@@ -8,12 +8,17 @@ service PS {
     rpc PushAFMatrix (MatrixMessage) returns (MatrixMessage){}
     rpc AFMatrixDimPartition(KeyValueListMessage) returns (PartitionListMessage){}
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
+    rpc GetSparseDimSize(RequestMetaMessage) returns (LongMessage){}
 }
 
 
 
 message RequestMetaMessage {
     string host = 1;
+}
+
+message LongMessage{
+    int64 l=1;
 }
 
 message PartitionMessage{

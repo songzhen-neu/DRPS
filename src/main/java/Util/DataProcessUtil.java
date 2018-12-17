@@ -24,7 +24,7 @@ import java.util.*;
 public class DataProcessUtil {
 
 
-    public static long metaToDB(String fileName, int featureSize, int catSize) throws IOException,ClassNotFoundException {
+    public static void metaToDB(String fileName, int featureSize, int catSize) throws IOException,ClassNotFoundException {
         /**
          *@Description: 读取数据
          *@Param: [fileName, featureSize, catSize]
@@ -49,7 +49,6 @@ public class DataProcessUtil {
            System.out.println("方法还没写");
         }
 
-        return sparseDimSize;
 
     }
 
@@ -261,7 +260,7 @@ public class DataProcessUtil {
 
 
 
-    public static long getBatchSampleListByBatchIndex(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
+    public static void getBatchSampleListByBatchIndex(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
         /**
          *@Description:
          *@Param: [fileName, featureSize, catSize]
@@ -277,7 +276,7 @@ public class DataProcessUtil {
         Set<String> catSet=new HashSet<String>();
 
 
-        long cat_index = 0;
+
         int countSampleListSize = 0;
         DB db=Context.kvStoreForLevelDB.getDb();
 
@@ -339,7 +338,6 @@ public class DataProcessUtil {
 
         CurrentTimeUtil.setEndTime();
         CurrentTimeUtil.showExecuteTime("MetaDataTobatchSample:");
-        return cat_index;
 
 
     }

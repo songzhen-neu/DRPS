@@ -21,7 +21,12 @@ public class PsForModelPartitionWorker {
         WorkerContext.init();
 
         // 将原始数据处理成one-hot编码的数据，然后存储在kv数据库中
-        Context.sparseDimSize=DataProcessUtil.metaToDB(Context.myDataPath,Context.featureSize,Context.catSize);
+        DataProcessUtil.metaToDB(Context.myDataPath,Context.featureSize,Context.catSize);
+
+        // 获取稀疏的维度个数，并发送给自己的本地服务器
+        Context.sparseDimSize=WorkerContext.psWorker.getSparseDimSize();
+        System.out.println(Context.sparseDimSize);
+
         WorkerContext.psWorker.shutdown();
         Context.kvStoreForLevelDB.getDb().close();
 
