@@ -1,7 +1,9 @@
 package Partitioning.data;
 
 
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
+import context.WorkerContext;
 import io.grpc.internal.ReadableBuffer;
 
 import java.io.*;
@@ -14,7 +16,7 @@ import java.io.*;
  */
 public class DataPartitioning{
     public static void dataPartitioning() throws IOException{
-        File file=new File(Context.dataPath);
+        File file=new File(WorkerContext.dataPath);
         BufferedReader br=new BufferedReader(new InputStreamReader(new FileInputStream(file)));
         String head=br.readLine();
         long readDataNum=0;

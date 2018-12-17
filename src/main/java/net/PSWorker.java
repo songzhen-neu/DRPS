@@ -2,7 +2,7 @@ package net;
 
 
 import Util.MessageDataTransUtil;
-import io.grpc.Context;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.jblas.FloatMatrix;
@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static Util.DataProcessUtil.isCatEmpty;
-import static io.grpc.okhttp.internal.Platform.logger;
+
 
 /**
  * @program: simplePsForModelPartition

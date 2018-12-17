@@ -22,15 +22,13 @@ public class PsForModelPartitionWorker {
         WorkerContext.init();
 
         // 将原始数据处理成one-hot编码的数据，然后存储在kv数据库中
-        DataProcessUtil.metaToDB(Context.myDataPath,Context.featureSize,Context.catSize);
+        DataProcessUtil.metaToDB(WorkerContext.myDataPath,WorkerContext.featureSize,WorkerContext.catSize);
 
         // 获取稀疏的维度个数，并发送给自己的本地服务器
         Context.sparseDimSize=WorkerContext.psWorker.getSparseDimSize();
 
-        WorkerContext.psWorker.setChannel("localhost",Integer.parseInt(Context.serverAddress.get(Context.currentServerPort)));
+        WorkerContext.psWorker.setChannel("localhost",Context.serverPort.get(WorkerContext.workerId));
         WorkerContext.psWorker.sentSparseDimSizeAndInitParams(Context.sparseDimSize);
-
-
 
 
         WorkerContext.psWorker.shutdown();

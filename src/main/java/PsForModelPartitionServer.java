@@ -1,5 +1,6 @@
 
 import context.Context;
+import context.ServerContext;
 import net.PSWorker;
 import net.PServer;
 
@@ -15,10 +16,10 @@ import java.io.IOException;
 public class PsForModelPartitionServer {
     public static void main(String args[]) throws IOException, InterruptedException,ClassNotFoundException {
         Context.init();
+        ServerContext.init();
 
         // 当前server的端口号
-        int port = Integer.parseInt(Context.serverAddress.get(Context.currentServerPort));
-        PServer pServer = new PServer(port);
+        PServer pServer = new PServer(Context.serverPort.get(ServerContext.serverId));
         pServer.start();
         pServer.blockUntilShutdown();
 

@@ -2,6 +2,7 @@ package Util;
 
 
 import context.Context;
+import context.WorkerContext;
 import dataStructure.partition.Partition;
 import dataStructure.partition.PartitionList;
 import dataStructure.sample.Sample;
@@ -59,8 +60,8 @@ public class PruneUtil {
 
     static void computeCountSparseDimFreq() throws IOException,ClassNotFoundException {
         DB db=Context.kvStoreForLevelDB.getDb();
-        for(int i=0;i<Context.sampleBatchListPrunedSize;i++){
-            byte[] bytes=db.get(("batchSample"+i*(Context.sampleBatchListSize/Context.sampleBatchListPrunedSize)+Context.workerId).getBytes());
+        for(int i=0;i<WorkerContext.sampleBatchListPrunedSize;i++){
+            byte[] bytes=db.get(("batchSample"+i*(WorkerContext.sampleBatchListSize/WorkerContext.sampleBatchListPrunedSize)+WorkerContext.workerId).getBytes());
             SampleList batch=(SampleList) TypeExchangeUtil.toObject(bytes);
             for(Sample sample:batch.sampleList){
                 for(long cat:sample.cat){
@@ -81,7 +82,7 @@ public class PruneUtil {
     public static List<Integer> removeOnceItemOfBPL(PartitionList bestPartitionList){
         List<Integer> prunedDimWithNoOnceItem=new ArrayList<Integer>();
         for(Partition partition:bestPartitionList.partitionList){
-            if(partition.partition.size()>(Context.minPartitionSize-1)){
+            if(partition.partition.size()>(WorkerContext.minPartitionSize-1)){
                 for(int cat:partition.partition){
                     prunedDimWithNoOnceItem.add(cat);
                 }

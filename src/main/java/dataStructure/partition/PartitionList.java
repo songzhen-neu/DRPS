@@ -1,5 +1,7 @@
 package dataStructure.partition;
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
+import context.WorkerContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ public class PartitionList{
         PartitionList bestPartitionListWithNoOnceItem=new PartitionList();
         for(int i=0;i<bestPartitionList.partitionList.size();i++){
             Partition partition=bestPartitionList.partitionList.get(i);
-            if(partition.partition.size()>(Context.minPartitionSize-1)){
+            if(partition.partition.size()>(WorkerContext.minPartitionSize-1)){
                 bestPartitionListWithNoOnceItem.partitionList.add(partition);
             }
         }

@@ -1,6 +1,7 @@
 package Util;
 
 
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
 import context.WorkerContext;
 import dataStructure.sample.Sample;
@@ -39,12 +40,12 @@ public class DataProcessUtil {
         SampleList sampleList;
 
         // 以下是离散特征在前连续特征在后的代码
-        if (Context.isCatForwardFeature) {
+        if (WorkerContext.isCatForwardFeature) {
 //            sparseDimSize=metaDataToSampleLevelDB(fileName, featureSize, catSize);
 //            sparseDimSize=metaDataToBatchSampleLevelDB(fileName,featureSize,catSize);
             getBatchSampleListByBatchIndex(fileName,featureSize,catSize);
 
-        } else if (!Context.isCatForwardFeature) {
+        } else if (!WorkerContext.isCatForwardFeature) {
             // 下面是连续特征在前，离散特征在后的代码
            System.out.println("方法还没写");
         }
@@ -127,7 +128,7 @@ public class DataProcessUtil {
 
         CurrentTimeUtil.setStartTime();
 
-        while ((readline = br.readLine()) != null && countSampleListSize < Context.sampleListSize) {
+        while ((readline = br.readLine()) != null && countSampleListSize < WorkerContext.sampleListSize) {
             String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
@@ -183,7 +184,7 @@ public class DataProcessUtil {
 
         CurrentTimeUtil.setStartTime();
 
-        while ((readline = br.readLine()) != null && countSampleListSize < Context.sampleListSize) {
+        while ((readline = br.readLine()) != null && countSampleListSize < WorkerContext.sampleListSize) {
             String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
@@ -207,11 +208,11 @@ public class DataProcessUtil {
 
 
             Sample sample = new Sample(feature, cat, click);
-            if(batchSample.sampleList.size()!=Context.sampleBatchSize){
+            if(batchSample.sampleList.size()!=WorkerContext.sampleBatchSize){
                 batchSample.sampleList.add(sample);
 
             }else {
-                Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/Context.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+                Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
                 batchSample.sampleList.clear();
                 batchSample.sampleList.add(sample);
 
@@ -221,7 +222,7 @@ public class DataProcessUtil {
         }
 
         if(batchSample.sampleList!=null){
-            Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/Context.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+            Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
         }
 
 
@@ -282,7 +283,7 @@ public class DataProcessUtil {
 
         CurrentTimeUtil.setStartTime();
 
-        while ((readline = br.readLine()) != null && countSampleListSize < Context.sampleListSize) {
+        while ((readline = br.readLine()) != null && countSampleListSize < WorkerContext.sampleListSize) {
             String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
@@ -307,7 +308,7 @@ public class DataProcessUtil {
 
 
             Sample sample = new Sample(feature, cat, click);
-            if(batchSample.sampleList.size()!=Context.sampleBatchSize){
+            if(batchSample.sampleList.size()!=WorkerContext.sampleBatchSize){
                 catList.add(getMetaCat(lineSplit,catSet));
                 batchSample.sampleList.add(sample);
 
@@ -320,7 +321,7 @@ public class DataProcessUtil {
                     }
                 }
 
-                Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/Context.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+                Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
                 catList.clear();
                 batchSample.sampleList.clear();
                 batchSample.sampleList.add(sample);
@@ -331,7 +332,7 @@ public class DataProcessUtil {
         }
 
         if(batchSample.sampleList!=null){
-            Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/Context.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+            Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
         }
 
 
@@ -343,7 +344,7 @@ public class DataProcessUtil {
     }
 
     public static String[] getMetaCat(String[] str,Set<String> catSet){
-        String[] cat=new String[Context.catSize];
+        String[] cat=new String[WorkerContext.catSize];
         for (int i=0;i<cat.length;i++){
             cat[i]=str[i+2];
             catSet.add(str[i+2]);
