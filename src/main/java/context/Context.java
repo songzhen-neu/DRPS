@@ -16,12 +16,9 @@ public class Context {
 
 
     /** 网络通信server的相关配置*/
-    public static Map<Integer,String> serverIp= new HashMap<>();
-    public static Map<Integer,Integer> serverPort= new HashMap<>();
+    public static Map<Integer,String> serverIp= new HashMap<Integer, String>();
+    public static Map<Integer,Integer> serverPort= new HashMap<Integer, Integer>();
 
-    /** 磁盘上的k-v数据库*/
-    public static KVStoreForLevelDB kvStoreForLevelDB=new KVStoreForLevelDB();
-    public static String levelDBPath;
 
     /** 稀疏维度大小*/
     public static long sparseDimSize;
@@ -57,19 +54,18 @@ public class Context {
         serverPort.put(1,8999);
         serverPort.put(2,8999);
 
-        levelDBPath="data/leveldb/";
+
 
 
         isDist=true;
 
-        workerNum=2;
-        serverNum=2;
+        workerNum=3;
+        serverNum=3;
         dataPartitionNum=workerNum;
         partitionedDataSize=100000;
         masterId=0;
 
 
-        kvStoreForLevelDB.init(levelDBPath);
 
         inited=true;
     }

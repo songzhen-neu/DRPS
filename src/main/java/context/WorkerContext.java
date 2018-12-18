@@ -2,7 +2,9 @@ package context;
 
 import net.PSRouterClient;
 import net.PSWorker;
+import store.KVStoreForLevelDB;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,11 +56,15 @@ public class WorkerContext {
     /** 模型划分相关信息*/
     public static int minPartitionSize;
 
+    /** 磁盘上的k-v数据库*/
+    public static KVStoreForLevelDB kvStoreForLevelDB=new KVStoreForLevelDB();
+    public static String levelDBPathForWorker;
 
 
 
 
-    public static void init(){
+
+    public static void init()throws IOException {
 
         workerId=0;
         mode=Mode.DISTRIBUTED;
@@ -86,6 +92,9 @@ public class WorkerContext {
 
         sampleBatchListSize=sampleListSize/sampleBatchSize;
         sampleBatchListPrunedSize=samplePrunedSize/sampleBatchSize;
+
+        levelDBPathForWorker="data/leveldbForWorker/";
+        kvStoreForLevelDB.init(levelDBPathForWorker);
 
 
 //        psWorker=new PSWorker(Context.serverIp.get(Context.masterId),Context.serverPort.get(Context.masterId));
