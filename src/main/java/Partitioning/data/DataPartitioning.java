@@ -23,7 +23,7 @@ public class DataPartitioning{
         String str;
 
         for(int i=0;i<Context.dataPartitionNum;i++){
-            File writeFile=new File("data/train"+(i+1)+".csv");
+            File writeFile=new File("data/train"+(i)+".csv");
             if(!writeFile.exists()){
                 writeFile.createNewFile();
             }

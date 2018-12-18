@@ -252,7 +252,7 @@ public class DataProcessUtil {
 
             }
         }else {
-            WorkerContext.psWorker.getCat_indexFromServer(catSize,lineSplit,cat);
+            WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getCat_indexFromServer(catSize,lineSplit,cat);
 
         }
 
@@ -314,7 +314,7 @@ public class DataProcessUtil {
 
             }else {
                 // 或者Map
-                Map<String,Long> dimMap=WorkerContext.psWorker.getCatDimMapBySet(catSet);
+                Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getCatDimMapBySet(catSet);
                 for(int i=0;i<catList.size();i++){
                     for(int j=0;j<catList.get(i).length;j++){
                         batchSample.sampleList.get(i).cat[j]=dimMap.get(catList.get(i)[j]);
