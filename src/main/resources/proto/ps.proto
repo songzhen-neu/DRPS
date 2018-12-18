@@ -10,6 +10,7 @@ service PS {
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
     rpc GetSparseDimSize(RequestMetaMessage) returns (LongMessage){}
     rpc SentSparseDimSizeAndInitParams(LongMessage) returns (BooleanMessage){}
+    rpc barrier(RequestMetaMessage) returns (BooleanMessage){}
 }
 
 
@@ -76,6 +77,8 @@ message SLKVListMessage{
     int32 size=1;
     repeated SLKVMessage list=2;
 }
+
+
 
 
 

@@ -104,6 +104,12 @@ public class PSWorker {
         blockingStub.sentSparseDimSizeAndInitParams(l.build());
     }
 
+    public void barrier() throws UnknownHostException{
+        RequestMetaMessage.Builder req=RequestMetaMessage.newBuilder();
+        req.setHost(Inet4Address.getLocalHost().getHostAddress());
+        blockingStub.barrier(req.build());
+    }
+
 
 
 
