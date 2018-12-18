@@ -48,6 +48,7 @@ public class PServer implements net.PSGrpc.PS {
     private AtomicLong workerStep=new AtomicLong(0);
     static Logger logger=LoggerFactory.getLogger((PServer.class));
     AtomicBoolean finished=new AtomicBoolean(false);
+    private AtomicBoolean workerStepInited=new AtomicBoolean(false);
 
 
 
@@ -195,9 +196,30 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
+    }
 
 
+    @Override
+    public void barrier(RequestMetaMessage req,StreamObserver<BooleanMessage> resp){
+        if(!workerStepInited.get()){
+            workerStep.set(0);
+            workerStepInited.getAndSet(true);
+        }
+        workerStep.incrementAndGet();
+        while(workerStep.get()<Context.workerNum){
+            try {
+                Thread.sleep(10);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
 
+        workerStepInited.set(false);
+        BooleanMessage.Builder boolMessage=BooleanMessage.newBuilder();
+        boolMessage.setB(true);
+        logger.info(""+workerStep.longValue());
+        resp.onNext(boolMessage.build());
+        resp.onCompleted();
 
     }
 

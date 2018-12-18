@@ -31,8 +31,12 @@ public class PsForModelPartitionWorker {
             Context.sparseDimSize=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId) .getSparseDimSize();
         }
 
-//        WorkerContext.psWorker.setChannel(Context.serverIp.get(WorkerContext.workerId),Context.serverPort.get(WorkerContext.workerId));
+        // 将稀疏维度的大小发给本地server，然后初始化参数
         WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
+
+        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+
+
 
 
         WorkerContext.psRouterClient.shutdownAll();
