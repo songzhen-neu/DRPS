@@ -25,13 +25,17 @@ public class PsForModelPartitionWorker {
         DataProcessUtil.metaToDB(WorkerContext.myDataPath,WorkerContext.featureSize,WorkerContext.catSize);
 
         // 获取稀疏的维度个数，并发送给自己的本地服务器
-        Context.sparseDimSize=WorkerContext.psWorker.getSparseDimSize();
+        if(Context.masterId==WorkerContext.workerId){
+            Context.sparseDimSize=WorkerContext.psRouterClient.getLocalhostPSWorker().getSparseDimSize();
+        }else {
+            Context.sparseDimSize=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId) .getSparseDimSize();
+        }
 
-        WorkerContext.psWorker.setChannel("localhost",Context.serverPort.get(WorkerContext.workerId));
-        WorkerContext.psWorker.sentSparseDimSizeAndInitParams(Context.sparseDimSize);
+//        WorkerContext.psWorker.setChannel(Context.serverIp.get(WorkerContext.workerId),Context.serverPort.get(WorkerContext.workerId));
+        WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
 
 
-        WorkerContext.psWorker.shutdown();
+        WorkerContext.psRouterClient.shutdownAll();
         Context.kvStoreForLevelDB.getDb().close();
 
 

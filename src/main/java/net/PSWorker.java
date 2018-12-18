@@ -5,6 +5,7 @@ import Util.MessageDataTransUtil;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import lombok.Data;
 import org.jblas.FloatMatrix;
 
 import java.net.Inet4Address;
@@ -21,11 +22,13 @@ import static Util.DataProcessUtil.isCatEmpty;
  * @author: SongZhen
  * @create: 2018-12-02 19:21
  */
+
+@Data
 public class PSWorker {
     private ManagedChannel channel=null;
     private net.PSGrpc.PSBlockingStub blockingStub=null;
 
-    public void setChannel(String host,int port){
+    public PSWorker(String host,int port){
         channel=ManagedChannelBuilder.forAddress(host,port).usePlaintext(true).build();
         blockingStub=net.PSGrpc.newBlockingStub(channel);
     }

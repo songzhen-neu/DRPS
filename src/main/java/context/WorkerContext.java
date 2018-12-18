@@ -1,5 +1,6 @@
 package context;
 
+import net.PSRouterClient;
 import net.PSWorker;
 
 import java.util.HashMap;
@@ -12,7 +13,8 @@ import java.util.Map;
  * @create: 2018-12-10 18:46
  */
 public class WorkerContext {
-    public static PSWorker psWorker;
+//    public static PSWorker psWorker;
+    public static PSRouterClient psRouterClient;
 
     public static int workerId;
     /** 判断是分布式执行还是单机执行*/
@@ -58,7 +60,7 @@ public class WorkerContext {
 
     public static void init(){
 
-        workerId=1;
+        workerId=0;
         mode=Mode.DISTRIBUTED;
         dataPath="data/train.csv/";
         isCatForwardFeature=true;
@@ -86,7 +88,7 @@ public class WorkerContext {
         sampleBatchListPrunedSize=samplePrunedSize/sampleBatchSize;
 
 
-        psWorker=new PSWorker();
-        psWorker.setChannel(Context.serverIp.get(Context.masterId),Context.serverPort.get(Context.masterId));
+//        psWorker=new PSWorker(Context.serverIp.get(Context.masterId),Context.serverPort.get(Context.masterId));
+        psRouterClient=new PSRouterClient();
     }
 }

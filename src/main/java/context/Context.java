@@ -50,23 +50,23 @@ public class Context {
             return;
         }
 
-        serverIp.put(1,"202.199.6.30");
-        serverIp.put(2,"172.20.10.3");
-        serverIp.put(3,"172.17.89.50");
+        serverIp.put(0,"202.199.6.30");
+        serverIp.put(1,"172.20.10.3");
+        serverIp.put(2,"172.17.89.50");
+        serverPort.put(0,8999);
         serverPort.put(1,8999);
         serverPort.put(2,8999);
-        serverPort.put(3,8999);
 
         levelDBPath="data/leveldb/";
 
 
         isDist=true;
 
-        workerNum=3;
-        serverNum=3;
+        workerNum=2;
+        serverNum=2;
         dataPartitionNum=workerNum;
         partitionedDataSize=100000;
-        masterId=1;
+        masterId=0;
 
 
         kvStoreForLevelDB.init(levelDBPath);

@@ -160,7 +160,7 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        workerStep.set(0);
+
         sparseDimSize.setL(Context.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
         reponseObject.onNext(sparseDimSize.build());
         reponseObject.onCompleted();
