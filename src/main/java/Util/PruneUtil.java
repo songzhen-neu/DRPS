@@ -25,7 +25,7 @@ public class PruneUtil {
         */
         // 先遍历数据将数据每个维度出现的次数做成一个数组
         // sparseDimSize是所有数据集可能出现的维度
-        DB db=Context.kvStoreForLevelDB.getDb();
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
         long sparseDimSize=Context.sparseDimSize;
         Double freqThreshold;
         List<Integer> prunedSparseDim=new ArrayList<Integer>();
@@ -59,7 +59,7 @@ public class PruneUtil {
     }
 
     static void computeCountSparseDimFreq() throws IOException,ClassNotFoundException {
-        DB db=Context.kvStoreForLevelDB.getDb();
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
         for(int i=0;i<WorkerContext.sampleBatchListPrunedSize;i++){
             byte[] bytes=db.get(("batchSample"+i*(WorkerContext.sampleBatchListSize/WorkerContext.sampleBatchListPrunedSize)+WorkerContext.workerId).getBytes());
             SampleList batch=(SampleList) TypeExchangeUtil.toObject(bytes);

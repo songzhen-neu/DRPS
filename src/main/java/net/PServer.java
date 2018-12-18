@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.yahoo.sketches.quantiles.DoublesSketch;
 import com.yahoo.sketches.quantiles.UpdateDoublesSketch;
 import context.Context;
+import context.ServerContext;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -125,7 +126,7 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void getIndexOfSparseDim(SListMessage req,StreamObserver<SLKVListMessage> responsedObject){
         try{
-            Map<String,Long> map=Context.kvStoreForLevelDB.getIndex(req);
+            Map<String,Long> map=ServerContext.kvStoreForLevelDB.getIndex(req);
             SLKVListMessage.Builder slkvListMessage=SLKVListMessage.newBuilder();
             slkvListMessage.setSize(map.size());
             for(String i:map.keySet()){
@@ -134,7 +135,7 @@ public class PServer implements net.PSGrpc.PS {
                 slkvMessage.setValue(map.get(i));
                 slkvListMessage.addList(slkvMessage);
             }
-            logger.info(Context.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
+            logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
             responsedObject.onNext(slkvListMessage.build());
             responsedObject.onCompleted();
         }catch (IOException e){
@@ -161,7 +162,7 @@ public class PServer implements net.PSGrpc.PS {
         }
 
 
-        sparseDimSize.setL(Context.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
+        sparseDimSize.setL(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
         reponseObject.onNext(sparseDimSize.build());
         reponseObject.onCompleted();
     }
@@ -171,19 +172,19 @@ public class PServer implements net.PSGrpc.PS {
         Context.sparseDimSize=req.getL();
         // 开始利用sparseDimSize，采用取余的方式进行数据分配
         try{
-            Context.kvStoreForLevelDB.initParams();
+            ServerContext.kvStoreForLevelDB.initParams();
 
-            // 同步代码
-            workerStep.incrementAndGet();
-
-            while(workerStep.longValue()<Context.workerNum){
-                try {
-                    Thread.sleep(10);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
-                }
-            }
-            workerStep.set(0);
+//            // 同步代码
+//            workerStep.incrementAndGet();
+//
+//            while(workerStep.longValue()<Context.workerNum){
+//                try {
+//                    Thread.sleep(10);
+//                }catch (InterruptedException e){
+//                    e.printStackTrace();
+//                }
+//            }
+//            workerStep.set(0);
             BooleanMessage.Builder booleanMessage=BooleanMessage.newBuilder();
             booleanMessage.setB(true);
             responseObject.onNext(booleanMessage.build());

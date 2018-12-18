@@ -39,7 +39,6 @@ public class KVStoreForLevelDB {
 
     @Synchronized
     public Map<String,Long> getIndex(SListMessage sListMessage)throws IOException,ClassNotFoundException{
-        DB db=Context.kvStoreForLevelDB.getDb();
         Map<String,Long> map=new HashMap<String, Long>();
         for(int i=0;i<sListMessage.getSize();i++){
             String key=sListMessage.getList(i);

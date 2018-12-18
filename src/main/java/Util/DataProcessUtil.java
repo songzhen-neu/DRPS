@@ -124,7 +124,7 @@ public class DataProcessUtil {
 
         long cat_index = 0;
         int countSampleListSize = 0;
-        DB db=Context.kvStoreForLevelDB.getDb();
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
 
         CurrentTimeUtil.setStartTime();
 
@@ -152,7 +152,7 @@ public class DataProcessUtil {
             }
 
             Sample sample = new Sample(feature, cat, click);
-            Context.kvStoreForLevelDB.getDb().put(("sample"+countSampleListSize).getBytes(),TypeExchangeUtil.toByteArray(sample));
+            WorkerContext.kvStoreForLevelDB.getDb().put(("sample"+countSampleListSize).getBytes(),TypeExchangeUtil.toByteArray(sample));
             countSampleListSize++;
         }
 
@@ -180,7 +180,7 @@ public class DataProcessUtil {
 
         long cat_index = 0;
         int countSampleListSize = 0;
-        DB db=Context.kvStoreForLevelDB.getDb();
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
 
         CurrentTimeUtil.setStartTime();
 
@@ -212,7 +212,7 @@ public class DataProcessUtil {
                 batchSample.sampleList.add(sample);
 
             }else {
-                Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+                WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
                 batchSample.sampleList.clear();
                 batchSample.sampleList.add(sample);
 
@@ -222,7 +222,7 @@ public class DataProcessUtil {
         }
 
         if(batchSample.sampleList!=null){
-            Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+            WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
         }
 
 
@@ -279,7 +279,7 @@ public class DataProcessUtil {
 
 
         int countSampleListSize = 0;
-        DB db=Context.kvStoreForLevelDB.getDb();
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
 
         CurrentTimeUtil.setStartTime();
 
@@ -321,7 +321,7 @@ public class DataProcessUtil {
                     }
                 }
 
-                Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+                WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
                 catList.clear();
                 batchSample.sampleList.clear();
                 batchSample.sampleList.add(sample);
@@ -332,7 +332,7 @@ public class DataProcessUtil {
         }
 
         if(batchSample.sampleList!=null){
-            Context.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+            WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
         }
 
 

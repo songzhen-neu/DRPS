@@ -36,7 +36,7 @@ public class PsForModelPartitionWorker {
 
 
         WorkerContext.psRouterClient.shutdownAll();
-        Context.kvStoreForLevelDB.getDb().close();
+        WorkerContext.kvStoreForLevelDB.getDb().close();
 
 
 //        worker.pushKeyValueMap();

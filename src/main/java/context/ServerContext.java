@@ -1,5 +1,7 @@
 package context;
 
+import store.KVStoreForLevelDB;
+
 import java.io.IOException;
 
 
@@ -20,14 +22,21 @@ public class ServerContext {
     /** 判断是否异步*/
     public static boolean isAsy;
 
+    /** 磁盘上的k-v数据库*/
+    public static KVStoreForLevelDB kvStoreForLevelDB=new KVStoreForLevelDB();
+    public static String levelDBPathForServer;
 
-    public static void init()  {
+
+    public static void init()  throws IOException{
         if (inited){
             return;
         }
 
         serverId=1;
         isAsy=false;
+
+        levelDBPathForServer="data/leveldbForServer/";
+        kvStoreForLevelDB.init(levelDBPathForServer);
 
 
 
