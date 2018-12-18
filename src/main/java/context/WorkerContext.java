@@ -60,7 +60,7 @@ public class WorkerContext {
 
     public static void init(){
 
-        workerId=0;
+        workerId=1;
         mode=Mode.DISTRIBUTED;
         dataPath="data/train.csv/";
         isCatForwardFeature=true;

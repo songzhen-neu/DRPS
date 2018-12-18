@@ -26,7 +26,7 @@ public class ServerContext {
             return;
         }
 
-        serverId=0;
+        serverId=1;
         isAsy=false;
 
 

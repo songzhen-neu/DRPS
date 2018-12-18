@@ -16,8 +16,8 @@ public class Context {
 
 
     /** 网络通信server的相关配置*/
-    public static Map<Integer,String> serverIp= new HashMap<>();
-    public static Map<Integer,Integer> serverPort= new HashMap<>();
+    public static Map<Integer,String> serverIp= new HashMap<Integer, String>();
+    public static Map<Integer,Integer> serverPort= new HashMap<Integer, Integer>();
 
     /** 磁盘上的k-v数据库*/
     public static KVStoreForLevelDB kvStoreForLevelDB=new KVStoreForLevelDB();
@@ -62,8 +62,8 @@ public class Context {
 
         isDist=true;
 
-        workerNum=2;
-        serverNum=2;
+        workerNum=3;
+        serverNum=3;
         dataPartitionNum=workerNum;
         partitionedDataSize=100000;
         masterId=0;
