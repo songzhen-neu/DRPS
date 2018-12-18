@@ -4,6 +4,7 @@ import Util.FileUtil;
 import Util.RandomUtil;
 import Util.TypeExchangeUtil;
 import context.Context;
+import context.ServerContext;
 import context.WorkerContext;
 import lombok.Data;
 import lombok.Synchronized;
@@ -58,7 +59,7 @@ public class KVStoreForLevelDB {
 
     public void initParams() throws IOException{
         for(int i=0;i<Context.sparseDimSize;i++){
-            if(i%WorkerContext.workerId==0){
+            if(i%Context.serverNum==ServerContext.serverId){
                 db.put(("catParam"+i).getBytes(),TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f,0.1f)));
                 System.out.println("params:"+i);
             }
