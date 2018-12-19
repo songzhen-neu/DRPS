@@ -3,6 +3,8 @@ package net;
 
 import Util.MessageDataTransUtil;
 
+
+import context.Context;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.Data;
@@ -108,6 +110,32 @@ public class PSWorker {
         RequestMetaMessage.Builder req=RequestMetaMessage.newBuilder();
         req.setHost(Inet4Address.getLocalHost().getHostAddress());
         blockingStub.barrier(req.build());
+    }
+
+    public void getGlobalMaxMinOfFeature(float[] max,float[] min){
+        /**
+        *@Description: 直接对max和min进行修改，max和min传入的是本地最大最小值，返回的是全局最大最小值
+        *@Param: [max, min]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 下午4:24 18-12-19
+        */
+        MaxAndMinArrayMessage.Builder req=MaxAndMinArrayMessage.newBuilder();
+
+        // 不太确定repeated是不是有序的
+        for(int i=0;i<max.length;i++){
+            req.addMax(max[i]);
+            req.addMin(min[i]);
+        }
+
+        MaxAndMinArrayMessage resp=blockingStub.getMaxAndMinValueOfEachFeature(req.build());
+        for(int i=0;i<Context.featureSize;i++){
+            max[i]=req.getMax(i);
+            min[i]=req.getMin(i);
+        }
+
+
+
     }
 
 
