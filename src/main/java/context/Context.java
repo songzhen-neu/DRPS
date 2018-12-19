@@ -22,6 +22,7 @@ public class Context {
 
     /** 稀疏维度大小*/
     public static long sparseDimSize;
+    public static int featureSize;
 
     /** 是否是分布式执行*/
     public static boolean isDist;
@@ -53,6 +54,8 @@ public class Context {
         serverPort.put(0,8999);
         serverPort.put(1,8999);
         serverPort.put(2,8999);
+
+        featureSize=10;
 
 
 

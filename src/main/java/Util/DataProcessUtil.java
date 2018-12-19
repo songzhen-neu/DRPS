@@ -54,50 +54,58 @@ public class DataProcessUtil {
     }
 
 
-    public static SampleList linerNormalization(SampleList sampleList){  // 这里标准化是为了提升训练精度。那么也就是(a-amin)/(amax-amin)，一定落在(0,1)区间内
-        /*首先应该获取每一个属性栏最大和最小的参数，这里应该只对feature属性来做，因为cat属性只表示这意味出不出现，不表示具体值
-         * 规范化这里究竟是否要真的使用max是有争议的，因为，可能噪声导致了部分数据值异常大，而影响了整体精度
-         *
-         *
-         * */
-        int featureSize=sampleList.featureSize;
-        float[] max=new float[featureSize];
-        float[] min=new float[featureSize];
-        float[] dis=new float[featureSize];
+    public static void linerNormalization() throws IOException,ClassNotFoundException{  // 这里标准化是为了提升训练精度。那么也就是(a-amin)/(amax-amin)，一定落在(0,1)区间内
+       // 本地统计每个属性最大和最小的feature，然后发给server，server统计全局最大和最小的，返回给worker
+        float[] max=new float[WorkerContext.featureSize];
+        float[] min=new float[WorkerContext.featureSize];
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
 
-
-        for(int i=0;i<featureSize;i++){
-            max[i]= Float.MIN_VALUE;
+        // 初始化max和min数组，max为float的最小值，min为float的最大值
+        for(int i=0;i<WorkerContext.featureSize;i++){
+            max[i]=Float.MIN_VALUE;
             min[i]=Float.MAX_VALUE;
         }
 
-
-        for(int i=0;i<sampleList.sampleList.size();i++){
-            for(int j=0;j<featureSize;j++){
-                float[] feature=sampleList.sampleList.get(i).feature;
-                if(feature[j]>max[j]){
-                    max[j]=feature[j];
-
-                }
-                if(feature[j]<min[j]){
-                    min[j]=feature[j];
+        // 遍历所有数据，找到每个feature的最大和最小值
+        for(int i=0;i<WorkerContext.sampleBatchListSize;i++){
+            SampleList batch=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+i).getBytes()));
+            for(int j=0;j<batch.sampleList.size();j++){
+                float[] feature=batch.sampleList.get(j).feature;
+                for(int k=0;k<feature.length;k++){
+                    if(feature[k]>max[k]){
+                        max[k]=feature[k];
+                    }
+                    if(feature[k]<min[k]){
+                        min[k]=feature[k];
+                    }
                 }
             }
-//            System.out.println(sampleList.sampleList.get(i).feature[1]);
+
         }
 
-        for(int i=0;i<featureSize;i++){
-            dis[i]=max[i]-min[i];
-        }
+        // 将最大和最小值发送给worker
+        PSWorker psWorker=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
+        psWorker.getGlobalMaxMinOfFeature(max,min);
 
-        for(int i=0;i<sampleList.sampleList.size();i++){
-            for(int j=0;j<featureSize;j++){
-                float[] feature=sampleList.sampleList.get(i).feature;
-                feature[j]=(feature[j]-min[j])/dis[j];
+
+        // 遍历所有数据，对每一条数据的每个sample进行规范化
+        for(int i=0;i<WorkerContext.sampleBatchListSize;i++){
+            SampleList batch=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+i).getBytes()));
+            for(int j=0;j<batch.sampleList.size();j++){
+                float[] feature=batch.sampleList.get(j).feature;
+                for(int k=0;k<feature.length;k++){
+                    feature[k]=(feature[k]-min[k])/(max[k]-min[k]);
+                }
             }
+
+            // 把sampleBatch写入数据库
+            db.delete(("sampleBatch"+i).getBytes());
+            db.put(("sampleBatch"+i).getBytes(),TypeExchangeUtil.toByteArray(batch));
+
         }
 
-        return sampleList;
+
+
     }
 
     public static boolean isCatEmpty(String cat){

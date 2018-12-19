@@ -4,6 +4,7 @@ package net;
 import Util.MessageDataTransUtil;
 import com.google.common.collect.Maps;
 
+import com.google.common.util.concurrent.AtomicDoubleArray;
 import com.yahoo.sketches.quantiles.DoublesSketch;
 import com.yahoo.sketches.quantiles.UpdateDoublesSketch;
 import context.Context;
@@ -49,6 +50,8 @@ public class PServer implements net.PSGrpc.PS {
     static Logger logger=LoggerFactory.getLogger((PServer.class));
     AtomicBoolean finished=new AtomicBoolean(false);
     private AtomicBoolean workerStepInited=new AtomicBoolean(false);
+    private float[] maxFeature=new float[Context.featureSize];
+    private float[] minFeature=new float[Context.featureSize];
 
 
 
@@ -59,6 +62,7 @@ public class PServer implements net.PSGrpc.PS {
     public void start() throws  IOException{
         this.server.start();
         logger.info("PServer Start");
+        init();
 
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
@@ -66,6 +70,16 @@ public class PServer implements net.PSGrpc.PS {
                 PServer.this.stop();
             }
         });
+    }
+
+
+    public void init(){
+        // 初始化feature的min和max数组
+        for(int i=0;i<maxFeature.length;i++){
+            maxFeature[i]=Float.MIN_VALUE;
+            minFeature[i]=Float.MAX_VALUE;
+
+        }
     }
 
     public void stop(){
@@ -201,6 +215,52 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void barrier(RequestMetaMessage req,StreamObserver<BooleanMessage> resp){
+        waitBarrier();
+
+        BooleanMessage.Builder boolMessage=BooleanMessage.newBuilder();
+        boolMessage.setB(true);
+        logger.info(""+workerStep.longValue());
+        resp.onNext(boolMessage.build());
+        resp.onCompleted();
+
+    }
+
+    @Override
+    public void getMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage req,StreamObserver<MaxAndMinArrayMessage> resp){
+        Float[] reqMax=(Float[]) req.getMaxList().toArray();
+        Float[] reqMin=(Float[]) req.getMinList().toArray();
+
+
+        synchronized (this){
+            for(int i=0;i<Context.featureSize;i++){
+                if(reqMax[i]>maxFeature[i]){
+                    maxFeature[i]=reqMax[i];
+                }
+                if(reqMin[i]<minFeature[i]){
+                    minFeature[i]=reqMin[i];
+                }
+            }
+        }
+
+        waitBarrier();
+
+        MaxAndMinArrayMessage.Builder respMaxAndMin=MaxAndMinArrayMessage.newBuilder();
+        for(int i=0;i<Context.featureSize;i++){
+            respMaxAndMin.addMax(maxFeature[i]);
+            respMaxAndMin.addMin(minFeature[i]);
+        }
+
+        resp.onNext(respMaxAndMin.build());
+        resp.onCompleted();
+
+
+
+    }
+
+
+
+
+    public void waitBarrier(){
         if(!workerStepInited.get()){
             workerStep.set(0);
             workerStepInited.getAndSet(true);
@@ -215,12 +275,6 @@ public class PServer implements net.PSGrpc.PS {
         }
 
         workerStepInited.set(false);
-        BooleanMessage.Builder boolMessage=BooleanMessage.newBuilder();
-        boolMessage.setB(true);
-        logger.info(""+workerStep.longValue());
-        resp.onNext(boolMessage.build());
-        resp.onCompleted();
-
     }
 
 

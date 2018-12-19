@@ -10,7 +10,8 @@ service PS {
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
     rpc GetSparseDimSize(RequestMetaMessage) returns (LongMessage){}
     rpc SentSparseDimSizeAndInitParams(LongMessage) returns (BooleanMessage){}
-    rpc barrier(RequestMetaMessage) returns (BooleanMessage){}
+    rpc Barrier(RequestMetaMessage) returns (BooleanMessage){}
+    rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
 }
 
 
@@ -76,6 +77,11 @@ message SListMessage{
 message SLKVListMessage{
     int32 size=1;
     repeated SLKVMessage list=2;
+}
+
+message MaxAndMinArrayMessage{
+    repeated float max=1;
+    repeated float min=2;
 }
 
 

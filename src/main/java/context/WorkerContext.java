@@ -82,7 +82,7 @@ public class WorkerContext {
         myDataPath="data/train"+workerId+".csv";
 
 
-        featureSize=10;
+
         catSize=12;
 
         sampleBatchSize=3000;
