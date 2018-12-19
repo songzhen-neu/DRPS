@@ -43,7 +43,7 @@ public class DataProcessUtil {
         if (WorkerContext.isCatForwardFeature) {
 //            sparseDimSize=metaDataToSampleLevelDB(fileName, featureSize, catSize);
 //            sparseDimSize=metaDataToBatchSampleLevelDB(fileName,featureSize,catSize);
-            getBatchSampleListByBatchIndex(fileName,featureSize,catSize);
+            getSampleBatchListByBatchIndex(fileName,featureSize,catSize);
 
         } else if (!WorkerContext.isCatForwardFeature) {
             // 下面是连续特征在前，离散特征在后的代码
@@ -56,12 +56,12 @@ public class DataProcessUtil {
 
     public static void linerNormalization() throws IOException,ClassNotFoundException{  // 这里标准化是为了提升训练精度。那么也就是(a-amin)/(amax-amin)，一定落在(0,1)区间内
        // 本地统计每个属性最大和最小的feature，然后发给server，server统计全局最大和最小的，返回给worker
-        float[] max=new float[WorkerContext.featureSize];
-        float[] min=new float[WorkerContext.featureSize];
+        float[] max=new float[Context.featureSize];
+        float[] min=new float[Context.featureSize];
         DB db=WorkerContext.kvStoreForLevelDB.getDb();
 
         // 初始化max和min数组，max为float的最小值，min为float的最大值
-        for(int i=0;i<WorkerContext.featureSize;i++){
+        for(int i=0;i<Context.featureSize;i++){
             max[i]=Float.MIN_VALUE;
             min[i]=Float.MAX_VALUE;
         }
@@ -172,7 +172,7 @@ public class DataProcessUtil {
     }
 
 
-    public static long metaDataToBatchSampleLevelDB(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
+    public static long metaDataToSampleBatchLevelDB(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
         /**
          *@Description:
          *@Param: [fileName, featureSize, catSize]
@@ -183,7 +183,7 @@ public class DataProcessUtil {
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
         String readline = null;
         br.readLine();
-        SampleList batchSample=new SampleList();
+        SampleList sampleBatch=new SampleList();
 
 
         long cat_index = 0;
@@ -216,27 +216,27 @@ public class DataProcessUtil {
 
 
             Sample sample = new Sample(feature, cat, click);
-            if(batchSample.sampleList.size()!=WorkerContext.sampleBatchSize){
-                batchSample.sampleList.add(sample);
+            if(sampleBatch.sampleList.size()!=WorkerContext.sampleBatchSize){
+                sampleBatch.sampleList.add(sample);
 
             }else {
-                WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
-                batchSample.sampleList.clear();
-                batchSample.sampleList.add(sample);
+                WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
+                sampleBatch.sampleList.clear();
+                sampleBatch.sampleList.add(sample);
 
             }
             countSampleListSize++;
 
         }
 
-        if(batchSample.sampleList!=null){
-            WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+        if(sampleBatch.sampleList!=null){
+            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
         }
 
 
 
         CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("MetaDataTobatchSample:");
+        CurrentTimeUtil.showExecuteTime("MetaDataToSampleBatch:");
         return cat_index;
 
 
@@ -269,7 +269,7 @@ public class DataProcessUtil {
 
 
 
-    public static void getBatchSampleListByBatchIndex(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
+    public static void getSampleBatchListByBatchIndex(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
         /**
          *@Description:
          *@Param: [fileName, featureSize, catSize]
@@ -280,7 +280,7 @@ public class DataProcessUtil {
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
         String readline = null;
         br.readLine();
-        SampleList batchSample=new SampleList();
+        SampleList sampleBatch=new SampleList();
         List<String[]> catList=new ArrayList<String[]>();
         Set<String> catSet=new HashSet<String>();
 
@@ -316,37 +316,37 @@ public class DataProcessUtil {
 
 
             Sample sample = new Sample(feature, cat, click);
-            if(batchSample.sampleList.size()!=WorkerContext.sampleBatchSize){
+            if(sampleBatch.sampleList.size()!=WorkerContext.sampleBatchSize){
                 catList.add(getMetaCat(lineSplit,catSet));
-                batchSample.sampleList.add(sample);
+                sampleBatch.sampleList.add(sample);
 
             }else {
                 // 或者Map
                 Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getCatDimMapBySet(catSet);
                 for(int i=0;i<catList.size();i++){
                     for(int j=0;j<catList.get(i).length;j++){
-                        batchSample.sampleList.get(i).cat[j]=dimMap.get(catList.get(i)[j]);
+                        sampleBatch.sampleList.get(i).cat[j]=dimMap.get(catList.get(i)[j]);
                     }
                 }
 
-                WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+                WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
                 catList.clear();
-                batchSample.sampleList.clear();
-                batchSample.sampleList.add(sample);
+                sampleBatch.sampleList.clear();
+                sampleBatch.sampleList.add(sample);
 
             }
             countSampleListSize++;
 
         }
 
-        if(batchSample.sampleList!=null){
-            WorkerContext.kvStoreForLevelDB.getDb().put(("batchSample"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(batchSample));
+        if(sampleBatch.sampleList!=null){
+            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
         }
 
 
 
         CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("MetaDataTobatchSample:");
+        CurrentTimeUtil.showExecuteTime("MetaDataToSampleBatch:");
 
 
     }
