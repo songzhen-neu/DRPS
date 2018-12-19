@@ -50,7 +50,6 @@ public class WorkerContext {
     public static int sampleBatchListPrunedSize; // 用于剪枝和模型划分的训练batch个数
 
     /** 原始数据集相关信息*/
-    public static int featureSize;
     public static int catSize;
 
     /** 模型划分相关信息*/

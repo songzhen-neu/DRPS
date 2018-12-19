@@ -22,7 +22,7 @@ public class PsForModelPartitionWorker {
         WorkerContext.init();
 
         // 将原始数据处理成one-hot编码的数据，然后存储在kv数据库中
-        DataProcessUtil.metaToDB(WorkerContext.myDataPath,WorkerContext.featureSize,WorkerContext.catSize);
+        DataProcessUtil.metaToDB(WorkerContext.myDataPath,Context.featureSize,WorkerContext.catSize);
 
         // 获取稀疏的维度个数，并发送给自己的本地服务器
         if(Context.masterId==WorkerContext.workerId){
@@ -32,7 +32,7 @@ public class PsForModelPartitionWorker {
         }
 
         // 规范化连续feature属性
-
+        DataProcessUtil.linerNormalization();
 
         // 将稀疏维度的大小发给本地server，然后初始化参数
         WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
