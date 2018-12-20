@@ -291,7 +291,8 @@ public class DataProcessUtil {
 
         CurrentTimeUtil.setStartTime();
 
-        while ((readline = br.readLine()) != null && countSampleListSize < WorkerContext.sampleListSize) {
+        // countSampleListSize就是当前已经读取的数据个数
+        while ((readline = br.readLine()) != null && countSampleListSize <= WorkerContext.sampleListSize) {
             String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
@@ -329,7 +330,7 @@ public class DataProcessUtil {
                     }
                 }
 
-                WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
+                WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+(countSampleListSize/WorkerContext.sampleBatchSize-1)).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
                 catList.clear();
                 sampleBatch.sampleList.clear();
                 sampleBatch.sampleList.add(sample);
@@ -340,7 +341,7 @@ public class DataProcessUtil {
         }
 
         if(sampleBatch.sampleList!=null){
-            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+countSampleListSize/WorkerContext.sampleBatchSize).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
+            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+(countSampleListSize/WorkerContext.sampleBatchSize)).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
         }
 
 

@@ -1,12 +1,10 @@
 package Util;
 
-import net.KeyValueListMessage;
-import net.KeyValueMessage;
-import net.MatrixMessage;
-import net.SLKVListMessage;
+import net.*;
 import org.jblas.FloatMatrix;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,9 +62,80 @@ public class MessageDataTransUtil {
     }
 
     public static Map<String,Long> SLKVListMessage_2_map(SLKVListMessage slkvListMessage){
+        /**
+        *@Description: <string,long>类型的messageList转化为map
+        *@Param: [slkvListMessage]
+        *@return: java.util.Map<java.lang.String,java.lang.Long>
+        *@Author: SongZhen
+        *@date: 下午9:45 18-12-19
+        */
         Map<String,Long> map=new HashMap<String, Long>();
         for(int i=0;i<slkvListMessage.getSize();i++){
             map.put(slkvListMessage.getList(i).getKey(),slkvListMessage.getList(i).getValue());
+        }
+        return map;
+    }
+
+    public static SLKVListMessage Map_2_SLKVListMessage(Map<String,Long> map){
+        /**
+         *@Description: <string,long>类型的messageList转化为map
+         *@Param: [slkvListMessage]
+         *@return: java.util.Map<java.lang.String,java.lang.Long>
+         *@Author: SongZhen
+         *@date: 下午9:45 18-12-19
+         */
+        SLKVListMessage.Builder listMessage=SLKVListMessage.newBuilder();
+        listMessage.setSize(map.size());
+        for(String i:map.keySet()){
+            SLKVMessage.Builder message=SLKVMessage.newBuilder();
+            message.setKey(i);
+            message.setValue(map.get(i));
+            listMessage.addList(message);
+        }
+
+        return listMessage.build();
+    }
+
+
+    public static SFKVListMessage Map_2_SFKVListMessage(Map<String,Float> map){
+        /**
+         *@Description: <string,long>类型的messageList转化为map
+         *@Param: [slkvListMessage]
+         *@return: java.util.Map<java.lang.String,java.lang.Long>
+         *@Author: SongZhen
+         *@date: 下午9:45 18-12-19
+         */
+        SFKVListMessage.Builder listMessage=SFKVListMessage.newBuilder();
+        for(String i:map.keySet()){
+            SFKVMessage.Builder message=SFKVMessage.newBuilder();
+            message.setKey(i);
+            message.setValue(map.get(i));
+            listMessage.addList(message);
+        }
+
+        return listMessage.build();
+    }
+
+    public static Set<String> SListMessage_2_Set(SListMessage req){
+        Set<String> set=new HashSet<String>();
+        for(int i=0;i<req.getListCount();i++){
+            set.add(req.getList(i));
+        }
+        return set;
+    }
+
+    public static SListMessage Set_2_SListMessage(Set<String> set){
+        SListMessage.Builder sListMessage=SListMessage.newBuilder();
+        for(String key:set){
+            sListMessage.addList(key);
+        }
+        return sListMessage.build();
+    }
+
+    public static Map<String,Float> SFKVListMessage_2_Map(SFKVListMessage sfkvListMessage){
+        Map<String,Float> map=new HashMap<String, Float>();
+        for(int i=0;i<sfkvListMessage.getListCount();i++){
+            map.put(sfkvListMessage.getList(i).getKey(),sfkvListMessage.getList(i).getValue());
         }
         return map;
     }

@@ -1,3 +1,4 @@
+import Algotithm.LogisticRegression;
 import Util.DataProcessUtil;
 import Util.PruneUtil;
 import context.Context;
@@ -38,6 +39,10 @@ public class PsForModelPartitionWorker {
         WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
 
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+
+        // 开始训练
+        LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,10);
+        logisticRegression.train();
 
 
 
