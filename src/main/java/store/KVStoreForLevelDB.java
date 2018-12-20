@@ -1,6 +1,7 @@
 package store;
 
 import Util.FileUtil;
+import Util.MessageDataTransUtil;
 import Util.RandomUtil;
 import Util.TypeExchangeUtil;
 import context.Context;
@@ -8,9 +9,7 @@ import context.ServerContext;
 import context.WorkerContext;
 import lombok.Data;
 import lombok.Synchronized;
-import net.IntListMessage;
-import net.KeyValueListMessage;
-import net.SListMessage;
+import net.*;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
@@ -19,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class KVStoreForLevelDB {
     DB db;
     AtomicLong curIndexOfSparseDim=new AtomicLong(0);
+    private float[] featureParams=new float[Context.featureSize];
     public void init(String path) throws IOException {
         FileUtil.deleteFile(new File(path+"db/"));
         db= Iq80DBFactory.factory.open(new File(path,"db"),new Options().createIfMissing(true));
@@ -63,6 +64,23 @@ public class KVStoreForLevelDB {
                 System.out.println("params:"+i);
             }
         }
+        if(Context.masterId==WorkerContext.workerId){
+            for(int i=0;i<featureParams.length;i++){
+                featureParams[i]=RandomUtil.getRandomValue(-0.1f,0.1f);
+            }
+        }
+
+    }
+
+    public SFKVListMessage getNeededParams(Set<String> set) throws ClassNotFoundException,IOException{
+        DB db=ServerContext.kvStoreForLevelDB.getDb();
+        SFKVListMessage.Builder sfkvlistMessage=SFKVListMessage.newBuilder();
+        Map<String,Float> map=new HashMap<String, Float>();
+        for(String key:set){
+            Float f=(Float) TypeExchangeUtil.toObject(db.get(key.getBytes()));
+            map.put(key,f);
+        }
+        return MessageDataTransUtil.Map_2_SFKVListMessage(map);
     }
 
 

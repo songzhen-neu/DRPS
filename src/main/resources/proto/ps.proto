@@ -12,6 +12,7 @@ service PS {
     rpc SentSparseDimSizeAndInitParams(LongMessage) returns (BooleanMessage){}
     rpc Barrier(RequestMetaMessage) returns (BooleanMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
+    rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
 }
 
 
@@ -84,7 +85,14 @@ message MaxAndMinArrayMessage{
     repeated float min=2;
 }
 
+message SFKVListMessage{
+    repeated SFKVMessage list=2;
+}
 
+message SFKVMessage{
+    string key=1;
+    float value=2;
+}
 
 
 

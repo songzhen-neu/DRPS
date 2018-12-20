@@ -133,12 +133,14 @@ public class PSWorker {
             max[i]=req.getMax(i);
             min[i]=req.getMin(i);
         }
-
-
-
     }
 
+    public Map<String,Float> getNeededParams(Set<String> set){
+        SListMessage sListMessage=MessageDataTransUtil.Set_2_SListMessage(set);
+        SFKVListMessage sfkvListMessage=blockingStub.getNeededParams(sListMessage);
+        return MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessage);
 
+    }
 
 
 

@@ -23,6 +23,7 @@ import store.KVStore;
 import java.io.IOException;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -142,16 +143,9 @@ public class PServer implements net.PSGrpc.PS {
     public void getIndexOfSparseDim(SListMessage req,StreamObserver<SLKVListMessage> responsedObject){
         try{
             Map<String,Long> map=ServerContext.kvStoreForLevelDB.getIndex(req);
-            SLKVListMessage.Builder slkvListMessage=SLKVListMessage.newBuilder();
-            slkvListMessage.setSize(map.size());
-            for(String i:map.keySet()){
-                SLKVMessage.Builder slkvMessage=SLKVMessage.newBuilder();
-                slkvMessage.setKey(i);
-                slkvMessage.setValue(map.get(i));
-                slkvListMessage.addList(slkvMessage);
-            }
+            SLKVListMessage slkvListMessage=MessageDataTransUtil.Map_2_SLKVListMessage(map);
             logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
-            responsedObject.onNext(slkvListMessage.build());
+            responsedObject.onNext(slkvListMessage);
             responsedObject.onCompleted();
         }catch (IOException e){
             e.printStackTrace();
@@ -189,17 +183,6 @@ public class PServer implements net.PSGrpc.PS {
         try{
             ServerContext.kvStoreForLevelDB.initParams();
 
-//            // 同步代码
-//            workerStep.incrementAndGet();
-//
-//            while(workerStep.longValue()<Context.workerNum){
-//                try {
-//                    Thread.sleep(10);
-//                }catch (InterruptedException e){
-//                    e.printStackTrace();
-//                }
-//            }
-//            workerStep.set(0);
             BooleanMessage.Builder booleanMessage=BooleanMessage.newBuilder();
             booleanMessage.setB(true);
             responseObject.onNext(booleanMessage.build());
@@ -227,8 +210,13 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void getMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage req,StreamObserver<MaxAndMinArrayMessage> resp){
-        Float[] reqMax=(Float[]) req.getMaxList().toArray();
-        Float[] reqMin=(Float[]) req.getMinList().toArray();
+        float[] reqMax=new float[req.getMaxCount()];
+        float[] reqMin=new float[req.getMinCount()];
+
+        for(int i=0;i<reqMax.length;i++){
+            reqMax[i]=req.getMax(i);
+            reqMin[i]=req.getMin(i);
+        }
 
 
         synchronized (this){
@@ -277,5 +265,18 @@ public class PServer implements net.PSGrpc.PS {
         workerStepInited.set(false);
     }
 
+    @Override
+    public void getNeededParams(SListMessage req,StreamObserver<SFKVListMessage> resp){
+        // 获取需要访问的参数的key
+        Set<String> neededParamIndices=MessageDataTransUtil.SListMessage_2_Set(req);
+        try {
+            SFKVListMessage sfkvListMessage=ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
+            resp.onNext(sfkvListMessage);
+            resp.onCompleted();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
 
 }
