@@ -8,6 +8,7 @@ import context.Context;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.Data;
+import lombok.Synchronized;
 import org.jblas.FloatMatrix;
 
 import java.net.Inet4Address;
@@ -134,6 +135,7 @@ public class PSWorker {
             min[i]=req.getMin(i);
         }
     }
+
 
     public Map<String,Float> getNeededParams(Set<String> set){
         SListMessage sListMessage=MessageDataTransUtil.Set_2_SListMessage(set);

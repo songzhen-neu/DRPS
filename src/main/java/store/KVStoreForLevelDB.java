@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -72,6 +73,7 @@ public class KVStoreForLevelDB {
 
     }
 
+    @Synchronized
     public SFKVListMessage getNeededParams(Set<String> set) throws ClassNotFoundException,IOException{
         DB db=ServerContext.kvStoreForLevelDB.getDb();
         SFKVListMessage.Builder sfkvlistMessage=SFKVListMessage.newBuilder();
@@ -80,7 +82,33 @@ public class KVStoreForLevelDB {
             Float f=(Float) TypeExchangeUtil.toObject(db.get(key.getBytes()));
             map.put(key,f);
         }
+        if(ServerContext.serverId==Context.masterId){
+            for(int i=0;i<featureParams.length;i++){
+                map.put("featParam"+i,featureParams[i]);
+            }
+        }
         return MessageDataTransUtil.Map_2_SFKVListMessage(map);
+    }
+
+    @Synchronized
+    public void updateParams(Map<String,Float> map) {
+        try{
+            for(String index:map.keySet()){
+                float param=(Float) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+                param-=map.get(index);
+                updateKVStore(index,param);
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }catch (ClassNotFoundException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    public void updateKVStore(Object key,Object value) throws IOException{
+        db.delete(TypeExchangeUtil.toByteArray(key));
+        db.put(TypeExchangeUtil.toByteArray(key),TypeExchangeUtil.toByteArray(value));
     }
 
 

@@ -13,6 +13,7 @@ service PS {
     rpc Barrier(RequestMetaMessage) returns (BooleanMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
     rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
+    rpc SendSFMap(SFKVListMessage) returns (SMessage){};
 }
 
 
@@ -73,6 +74,10 @@ message IntListMessage{
 message SListMessage{
     int32 size=1;
     repeated string list=2;
+}
+
+message SMessage{
+    string str=1;
 }
 
 message SLKVListMessage{

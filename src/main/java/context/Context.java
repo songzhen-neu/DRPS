@@ -49,11 +49,11 @@ public class Context {
         }
 
         serverIp.put(0,"202.199.6.30");
-        serverIp.put(1,"172.20.10.3");
-        serverIp.put(2,"172.17.89.50");
-        serverPort.put(0,8999);
-        serverPort.put(1,8999);
-        serverPort.put(2,8999);
+        serverIp.put(1,"202.199.6.30");
+        serverIp.put(2,"202.199.6.30");
+        serverPort.put(0,9010);
+        serverPort.put(1,9011);
+        serverPort.put(2,9012);
 
         featureSize=10;
 
@@ -62,8 +62,9 @@ public class Context {
 
         isDist=true;
 
-        workerNum=3;
-        serverNum=3;
+        // 当worker和server数量都是1，则为单机运行，masterId设置为0
+        workerNum=1;
+        serverNum=1;
         dataPartitionNum=workerNum;
         partitionedDataSize=100000;
         masterId=0;

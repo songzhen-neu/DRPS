@@ -279,4 +279,15 @@ public class PServer implements net.PSGrpc.PS {
 
     }
 
+    @Override
+    public void sendSFMap(SFKVListMessage req,StreamObserver<SMessage> resp){
+        Map<String,Float> map=MessageDataTransUtil.SFKVListMessage_2_Map(req);
+        SMessage.Builder smessage=SMessage.newBuilder();
+
+        ServerContext.kvStoreForLevelDB.updateParams(map);
+        smessage.setStr("success");
+        resp.onNext(smessage.build());
+        resp.onCompleted();
+    }
+
 }

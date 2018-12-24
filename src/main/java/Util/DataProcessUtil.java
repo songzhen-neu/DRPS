@@ -140,7 +140,7 @@ public class DataProcessUtil {
             String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
-            boolean click = Boolean.parseBoolean(lineSplit[1]);
+            float click = Float.parseFloat(lineSplit[1]);
 
             // 给cat初始值全为-1，来表示上来所有cat属性都为missing value
             for (int i = 0; i < catSize; i++) {
@@ -196,7 +196,7 @@ public class DataProcessUtil {
             String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
-            boolean click = Boolean.parseBoolean(lineSplit[1]);
+            float click = Float.parseFloat(lineSplit[1]);
 
 
             // 给cat初始值全为-1，来表示上来所有cat属性都为missing value
@@ -296,7 +296,7 @@ public class DataProcessUtil {
             String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
-            boolean click = Boolean.parseBoolean(lineSplit[1]);
+            float click = Float.parseFloat(lineSplit[1]);
 
 
             // 给cat初始值全为-1，来表示上来所有cat属性都为missing value

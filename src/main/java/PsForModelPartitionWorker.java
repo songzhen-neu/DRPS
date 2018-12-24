@@ -1,6 +1,7 @@
 import Algotithm.LogisticRegression;
 import Util.DataProcessUtil;
 import Util.PruneUtil;
+import Util.TestNetWork;
 import context.Context;
 import context.WorkerContext;
 import javafx.concurrent.Worker;
@@ -8,6 +9,9 @@ import net.PSWorker;
 import store.KVStoreForLevelDB;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static Partitioning.data.DataPartitioning.dataPartitioning;
 
@@ -21,6 +25,8 @@ public class PsForModelPartitionWorker {
     public static void main(String[] args) throws IOException,ClassNotFoundException,InterruptedException {
         Context.init();
         WorkerContext.init();
+
+//        TestNetWork.test();
 
         // 将原始数据处理成one-hot编码的数据，然后存储在kv数据库中
         DataProcessUtil.metaToDB(WorkerContext.myDataPath,Context.featureSize,WorkerContext.catSize);
