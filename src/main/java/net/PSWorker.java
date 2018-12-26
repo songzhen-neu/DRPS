@@ -144,6 +144,12 @@ public class PSWorker {
 
     }
 
+    public void sendGradientMap(Map<String,Float> map){
+        SFKVListMessage sentMessage=MessageDataTransUtil.Map_2_SFKVListMessage(map);
+        SMessage sMessage=blockingStub.sendSFMap(sentMessage);
+
+    }
+
 
 
 }

@@ -286,6 +286,8 @@ public class PServer implements net.PSGrpc.PS {
 
         ServerContext.kvStoreForLevelDB.updateParams(map);
         smessage.setStr("success");
+        waitBarrier();
+
         resp.onNext(smessage.build());
         resp.onCompleted();
     }

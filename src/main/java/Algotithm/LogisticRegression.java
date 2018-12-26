@@ -46,6 +46,7 @@ public class LogisticRegression {
         float[] outputValueOfBatch;
         float[] errorOfBatch;
         Map<String,Float> gradientMap;
+        float loss=0;
 
 
         // 该层是循环echo遍数据集
@@ -71,10 +72,13 @@ public class LogisticRegression {
 
                 outputValueOfBatch = getActivateValue(batch, paramsMap);
                 errorOfBatch =getError(outputValueOfBatch,batch);
-                gradientMap=getGradientMap(errorOfBatch,batch);
-                System.out.println("gradientMap");
+                gradientMap=getGradientMap(errorOfBatch,batch,paramsMap);
                 // 将gradient发送给server，然后得到新的params
-                WorkerContext.psRouterClient.sentGradientMap(gradientMap);
+                WorkerContext.psRouterClient.sendGradientMap(gradientMap);
+
+                loss=calculateLoss(outputValueOfBatch,batch)/WorkerContext.sampleBatchSize;
+
+                System.out.println("error echo:"+i+",batch:"+j+",loss:"+loss);
 
 
 
@@ -82,8 +86,16 @@ public class LogisticRegression {
         }
     }
 
+    public float calculateLoss(float[] outputValueOfBatch,SampleList batch){
+        float loss=0;
+        for(int i=0;i<batch.sampleList.size();i++){
+            loss+=(batch.sampleList.get(i).click*Math.log(outputValueOfBatch[i])+(1-batch.sampleList.get(i).click)*Math.log(1-outputValueOfBatch[i]));
+        }
+        return loss;
+    }
 
-    public Map<String,Float> getGradientMap(float[] error,SampleList batch){
+
+    public Map<String,Float> getGradientMap(float[] error,SampleList batch,Map<String,Float> paramsMap){
         Map<String,Float> map=new HashMap<String, Float>();
         for(int i=0;i<batch.sampleList.size();i++){
             Sample sample=batch.sampleList.get(i);
@@ -91,9 +103,10 @@ public class LogisticRegression {
                 if(sample.feature[j]!=-1){
                     if(map.get("featParam"+j)!=null){
                         float curGradient=map.get("featParam"+j);
-                        curGradient+=error[i]*sample.feature[j];
+                        curGradient+=learningRate*error[i]*sample.feature[j]-l2Lambda*paramsMap.get("featParam"+j);
+                        map.put("featParam"+j,curGradient);
                     }else {
-                        map.put("featParam"+j,error[i]*sample.feature[j]);
+                        map.put("featParam"+j,learningRate*error[i]*sample.feature[j]-l2Lambda*paramsMap.get("featParam"+j));
                     }
                 }
 
@@ -103,15 +116,19 @@ public class LogisticRegression {
                 if(sample.cat[j]!=-1){
                     if(map.get("catParam"+sample.cat[j])!=null){
                         float curGradient=map.get("catParam"+sample.cat[j]);
-                        curGradient+=error[i];
+                        curGradient+=learningRate*error[i]-l2Lambda*paramsMap.get("catParam"+sample.cat[j]);
+                        map.put("catParam"+j,curGradient);
                     }else {
-                        map.put("catParam"+sample.cat[j],error[i]);
+                        map.put("catParam"+sample.cat[j],learningRate*error[i]-l2Lambda*paramsMap.get("catParam"+sample.cat[j]));
                     }
                 }
 
             }
         }
 
+        for(String key:map.keySet()){
+            map.put(key,map.get(key)/WorkerContext.sampleBatchSize);
+        }
         return map;
     }
 
@@ -137,7 +154,7 @@ public class LogisticRegression {
             }
             for(int i=0;i<sample.cat.length;i++){
                 if(sample.cat[i]!=-1){
-                    value[l]+=sample.cat[i]*paramsMap.get("catParam"+sample.cat[i]);
+                    value[l]+=paramsMap.get("catParam"+sample.cat[i]);
                 }
             }
 
@@ -147,7 +164,7 @@ public class LogisticRegression {
             }else if(value[l]<=-10){
                 value[l]=0;
             }else {
-                value[l]=(float) (1/(1+Math.exp(-value[l])));
+                value[l]=(float) (1.0f/(1+Math.exp(-value[l])));
             }
         }
         return value;

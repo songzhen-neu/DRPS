@@ -94,9 +94,17 @@ public class KVStoreForLevelDB {
     public void updateParams(Map<String,Float> map) {
         try{
             for(String index:map.keySet()){
-                float param=(Float) TypeExchangeUtil.toObject(db.get(index.getBytes()));
-                param-=map.get(index);
-                updateKVStore(index,param);
+//                System.out.println(index);
+                if(index.contains("featParam")){
+                    String[] split=index.split("m");
+                    featureParams[Integer.parseInt(split[1])]+=map.get(index);
+
+                }else {
+                    float param=(Float) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+                    param+=map.get(index);
+                    updateKVStore(index,param);
+                }
+
             }
         }catch (IOException e){
             e.printStackTrace();

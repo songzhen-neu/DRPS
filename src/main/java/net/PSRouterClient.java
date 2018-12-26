@@ -39,8 +39,11 @@ public class PSRouterClient{
     }
 
 
-    public void sentGradientMap(Map<String,Float> map){
+    public void sendGradientMap(Map<String,Float> map){
         Map[] maps=divideMapByRouter(map);
+        for(int i=0;i<maps.length;i++){
+            psWorkers.get(i).sendGradientMap(maps[i]);
+        }
         System.out.println("maps");
     }
 

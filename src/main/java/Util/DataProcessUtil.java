@@ -293,7 +293,16 @@ public class DataProcessUtil {
 
         // countSampleListSize就是当前已经读取的数据个数
         while ((readline = br.readLine()) != null && countSampleListSize <= WorkerContext.sampleListSize) {
-            String[] lineSplit = readline.split(",");  //在调试的时候，由于这个在下文没有调用，所有就没有给空间存储，其实就相当于废代码不编译
+            String[] lineSplit = new String[Context.featureSize+WorkerContext.catSize+2];
+            String[] split=readline.split(",");
+            for(int i=0;i<lineSplit.length;i++) {
+                if(i<split.length){
+                    lineSplit[i]=split[i];
+                }else {
+                    lineSplit[i]="-1";
+                }
+            }
+
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
             float click = Float.parseFloat(lineSplit[1]);
@@ -308,6 +317,9 @@ public class DataProcessUtil {
 
 
             for (int i = 2 + catSize; i < 2 + catSize + featureSize; i++) {
+//                System.out.println(lineSplit.length);
+//                System.out.println(i);
+//                System.out.println(readline);
                 if (lineSplit[i].equals("")) {
                     feature[i - 2 - catSize] = 0f;
                 } else {

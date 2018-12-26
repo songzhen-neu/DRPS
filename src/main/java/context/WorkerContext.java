@@ -69,11 +69,11 @@ public class WorkerContext {
         mode=Mode.DISTRIBUTED;
         dataPath="data/train.csv/";
         isCatForwardFeature=true;
-        sampleListSize=30000;
+        sampleListSize=50000;
 
         usePruneRate=true;
 
-        samplePrunedSize=50000;
+        samplePrunedSize=80000;
 
         pruneRate=0.001f;
         freqThreshold=100;
@@ -84,7 +84,7 @@ public class WorkerContext {
 
         catSize=12;
 
-        sampleBatchSize=3000;
+        sampleBatchSize=10000;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;
