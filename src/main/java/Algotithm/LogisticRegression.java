@@ -80,6 +80,7 @@ public class LogisticRegression {
 
                 System.out.println("error echo:"+i+",batch:"+j+",loss:"+loss);
 
+                paramsMap.clear();
 
 
             }

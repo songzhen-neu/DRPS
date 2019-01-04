@@ -7,6 +7,7 @@ import Util.MessageDataTransUtil;
 import context.Context;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.NettyChannelBuilder;
 import lombok.Data;
 import lombok.Synchronized;
 import org.jblas.FloatMatrix;
@@ -32,7 +33,7 @@ public class PSWorker {
     private net.PSGrpc.PSBlockingStub blockingStub=null;
 
     public PSWorker(String host,int port){
-        channel=ManagedChannelBuilder.forAddress(host,port).usePlaintext(true).build();
+            channel=NettyChannelBuilder.forAddress(host,port).maxMessageSize(Context.maxMessageSize).usePlaintext(true).build();
         blockingStub=net.PSGrpc.newBlockingStub(channel);
     }
 

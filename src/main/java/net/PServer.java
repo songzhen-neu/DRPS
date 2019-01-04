@@ -11,6 +11,7 @@ import context.Context;
 import context.ServerContext;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Data;
 import org.iq80.leveldb.DB;
@@ -57,7 +58,7 @@ public class PServer implements net.PSGrpc.PS {
 
 
     public PServer(int port){
-        this.server = ServerBuilder.forPort(port).addService(net.PSGrpc.bindService(this)).build();
+        this.server = NettyServerBuilder.forPort(port).maxMessageSize(Context.maxMessageSize).addService(net.PSGrpc.bindService(this)).build();
     }
 
     public void start() throws  IOException{

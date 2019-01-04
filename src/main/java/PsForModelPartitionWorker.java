@@ -1,5 +1,6 @@
 import Algotithm.LogisticRegression;
 import Util.DataProcessUtil;
+import Util.MemoryUtil;
 import Util.PruneUtil;
 import Util.TestNetWork;
 import context.Context;
@@ -49,6 +50,7 @@ public class PsForModelPartitionWorker {
         // 开始训练
         LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,1000);
         logisticRegression.train();
+
 
 
 

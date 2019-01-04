@@ -16,7 +16,8 @@ import java.io.*;
  */
 public class DataPartitioning{
     public static void dataPartitioning() throws IOException{
-        File file=new File(WorkerContext.dataPath);
+        Context.init();
+        File file=new File(Context.dataPath);
         BufferedReader br=new BufferedReader(new InputStreamReader(new FileInputStream(file)));
         String head=br.readLine();
         long readDataNum=0;

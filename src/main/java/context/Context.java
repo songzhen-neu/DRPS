@@ -40,6 +40,9 @@ public class Context {
 
     /** 判断是不是server的master机器，管参数分配的*/
     public static int masterId;
+    public static String dataPath;
+
+    public static int maxMessageSize;
 
 
 
@@ -60,16 +63,22 @@ public class Context {
 
 
 
+
+
+
         isDist=true;
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=1;
-        serverNum=1;
+        workerNum=3;
+        serverNum=3;
         dataPartitionNum=workerNum;
-        partitionedDataSize=100000;
+        partitionedDataSize=1000000;
         masterId=0;
 
+        dataPath="data/train.csv/";
 
+
+        maxMessageSize=Integer.MAX_VALUE;
 
         inited=true;
     }

@@ -35,7 +35,6 @@ public class DataProcessUtil {
          */
 
 
-        long freemem = MemoryUtil.getFreeMemory();
         long sparseDimSize=0l;
         SampleList sampleList;
 
