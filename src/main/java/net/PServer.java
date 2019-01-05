@@ -145,8 +145,10 @@ public class PServer implements net.PSGrpc.PS {
         try{
             Map<String,Long> map=ServerContext.kvStoreForLevelDB.getIndex(req);
             map.put("CurIndexNum",ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
+
             SLKVListMessage slkvListMessage=MessageDataTransUtil.Map_2_SLKVListMessage(map);
             logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
+            System.out.println(map.get("CurIndexNum"));
 
             responsedObject.onNext(slkvListMessage);
             responsedObject.onCompleted();

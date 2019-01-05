@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.Future;
 
 /**
  * @program: CtrForBigModel
@@ -340,11 +341,16 @@ public class DataProcessUtil {
                 // 或者Map
                 Map<String,Long> dimMaps=new HashMap<String, Long>();
                 for(int i=0;i<catSetList.size();i++){
+
                     Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(i).getCatDimMapBySet(catSetList.get(i));
                     // 获取并向其他机器发送当前的index个数
                     for(int j=0;j<Context.serverNum;j++){
                         if(j!=i){
+                            System.out.println("cur:"+dimMap.get("CurIndexNum"));
+                            // 这些是并行的，那么就容易出问题
                             WorkerContext.psRouterClient.getPsWorkers().get(j).setCurIndexNum(dimMap.get("CurIndexNum"));
+
+
                         }
                     }
 

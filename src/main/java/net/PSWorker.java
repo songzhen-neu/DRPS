@@ -31,10 +31,12 @@ import static Util.DataProcessUtil.isCatEmpty;
 public class PSWorker {
     private ManagedChannel channel=null;
     private net.PSGrpc.PSBlockingStub blockingStub=null;
+    private net.PSGrpc.PSFutureStub futureStub=null;
 
     public PSWorker(String host,int port){
-            channel=NettyChannelBuilder.forAddress(host,port).maxMessageSize(Context.maxMessageSize).usePlaintext(true).build();
+        channel=NettyChannelBuilder.forAddress(host,port).maxMessageSize(Context.maxMessageSize).usePlaintext(true).build();
         blockingStub=net.PSGrpc.newBlockingStub(channel);
+        futureStub=net.PSGrpc.newFutureStub(channel);
     }
 
 
@@ -79,7 +81,7 @@ public class PSWorker {
     }
 
 
-    public Map<String,Long> getCatDimMapBySet(Set<String> catSet){
+    public synchronized Map<String,Long> getCatDimMapBySet(Set<String> catSet){
         Map<String,Long> catDimMap=new HashMap<String, Long>();
         SListMessage.Builder slistMessage=SListMessage.newBuilder();
         for(String cat:catSet){
@@ -152,10 +154,11 @@ public class PSWorker {
     }
 
 
-    public void setCurIndexNum(long curIndexNum){
+    public synchronized void setCurIndexNum(long curIndexNum){
         LongMessage.Builder l=LongMessage.newBuilder();
         l.setL(curIndexNum);
         blockingStub.sentCurIndexNum(l.build());
+
     }
 
 
