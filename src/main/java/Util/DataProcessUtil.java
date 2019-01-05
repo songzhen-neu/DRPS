@@ -35,7 +35,6 @@ public class DataProcessUtil {
          */
 
 
-        long sparseDimSize=0l;
         SampleList sampleList;
 
         // 以下是离散特征在前连续特征在后的代码
@@ -281,6 +280,7 @@ public class DataProcessUtil {
         br.readLine();
         SampleList sampleBatch=new SampleList();
         List<String[]> catList=new ArrayList<String[]>();
+        List<Set> catSetList=new ArrayList<Set>();
         Set<String> catSet=new HashSet<String>();
 
 
@@ -289,6 +289,11 @@ public class DataProcessUtil {
         DB db=WorkerContext.kvStoreForLevelDB.getDb();
 
         CurrentTimeUtil.setStartTime();
+
+        // 初始化catSetList，大小是server的大小
+        for(int i=0;i<Context.serverNum;i++){
+            catSetList.add(new HashSet<String>());
+        }
 
         // countSampleListSize就是当前已经读取的数据个数
         while ((readline = br.readLine()) != null && countSampleListSize <= WorkerContext.sampleListSize) {
@@ -313,8 +318,6 @@ public class DataProcessUtil {
             }
 
 
-
-
             for (int i = 2 + catSize; i < 2 + catSize + featureSize; i++) {
 //                System.out.println(lineSplit.length);
 //                System.out.println(i);
@@ -329,15 +332,25 @@ public class DataProcessUtil {
 
             Sample sample = new Sample(feature, cat, click);
             if(sampleBatch.sampleList.size()!=WorkerContext.sampleBatchSize){
-                catList.add(getMetaCat(lineSplit,catSet));
+//                getMetaCat(catSetList,lineSplit,catSet);
+                catList.add(getMetaCat(lineSplit,catSetList));
                 sampleBatch.sampleList.add(sample);
 
             }else {
                 // 或者Map
-                Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getCatDimMapBySet(catSet);
+                Map<String,Long> dimMaps=new HashMap<String, Long>();
+                for(int i=0;i<catSetList.size();i++){
+                    Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(i).getCatDimMapBySet(catSetList.get(i));
+                    for(String key:dimMap.keySet()){
+                        dimMaps.put(key,dimMap.get(key));
+                    }
+                }
+
                 for(int i=0;i<catList.size();i++){
                     for(int j=0;j<catList.get(i).length;j++){
-                        sampleBatch.sampleList.get(i).cat[j]=dimMap.get(catList.get(i)[j]);
+
+                        sampleBatch.sampleList.get(i).cat[j]=dimMaps.get(catList.get(i)[j]);
+
                     }
                 }
 
@@ -363,11 +376,15 @@ public class DataProcessUtil {
 
     }
 
-    public static String[] getMetaCat(String[] str,Set<String> catSet){
+    public static String[] getMetaCat(String[] str,List<Set> catSetList){
         String[] cat=new String[WorkerContext.catSize];
         for (int i=0;i<cat.length;i++){
             cat[i]=str[i+2];
-            catSet.add(str[i+2]);
+//            if(cat[i].equals("07d7df22")||cat[i].equals("a99f214a")||cat[i].equals("ecad2386")){
+//                System.out.println("cat:"+cat[i]+",hashcode:"+(cat[i].hashCode())+",serverId:"+Math.abs(cat[i].hashCode())%3);
+//            }
+            int serverId=Math.abs(str[i+2].hashCode()%Context.serverNum);
+            catSetList.get(serverId).add(str[i+2]);
         }
         return cat;
     }
