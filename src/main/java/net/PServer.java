@@ -144,8 +144,10 @@ public class PServer implements net.PSGrpc.PS {
     public void getIndexOfSparseDim(SListMessage req,StreamObserver<SLKVListMessage> responsedObject){
         try{
             Map<String,Long> map=ServerContext.kvStoreForLevelDB.getIndex(req);
+            map.put("CurIndexNum",ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
             SLKVListMessage slkvListMessage=MessageDataTransUtil.Map_2_SLKVListMessage(map);
             logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
+
             responsedObject.onNext(slkvListMessage);
             responsedObject.onCompleted();
         }catch (IOException e){
@@ -290,6 +292,15 @@ public class PServer implements net.PSGrpc.PS {
         waitBarrier();
 
         resp.onNext(smessage.build());
+        resp.onCompleted();
+    }
+
+    @Override
+    public void sentCurIndexNum(LongMessage req,StreamObserver<SMessage> resp){
+        ServerContext.kvStoreForLevelDB.setCurIndexOfSparseDim(new AtomicLong(req.getL()));
+        SMessage.Builder sMessage=SMessage.newBuilder();
+        sMessage.setStr("success");
+        resp.onNext(sMessage.build());
         resp.onCompleted();
     }
 

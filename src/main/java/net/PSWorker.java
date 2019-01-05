@@ -152,5 +152,12 @@ public class PSWorker {
     }
 
 
+    public void setCurIndexNum(long curIndexNum){
+        LongMessage.Builder l=LongMessage.newBuilder();
+        l.setL(curIndexNum);
+        blockingStub.sentCurIndexNum(l.build());
+    }
+
+
 
 }

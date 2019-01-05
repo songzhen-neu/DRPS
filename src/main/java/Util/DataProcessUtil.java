@@ -341,6 +341,13 @@ public class DataProcessUtil {
                 Map<String,Long> dimMaps=new HashMap<String, Long>();
                 for(int i=0;i<catSetList.size();i++){
                     Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(i).getCatDimMapBySet(catSetList.get(i));
+                    // 获取并向其他机器发送当前的index个数
+                    for(int j=0;j<Context.serverNum;j++){
+                        if(j!=i){
+                            WorkerContext.psRouterClient.getPsWorkers().get(j).setCurIndexNum(dimMap.get("CurIndexNum"));
+                        }
+                    }
+
                     for(String key:dimMap.keySet()){
                         dimMaps.put(key,dimMap.get(key));
                     }
@@ -363,6 +370,7 @@ public class DataProcessUtil {
             countSampleListSize++;
 
         }
+        System.out.println(countSampleListSize);
 
         if(sampleBatch.sampleList!=null){
             WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+(countSampleListSize/WorkerContext.sampleBatchSize)).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
