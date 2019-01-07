@@ -6,6 +6,7 @@ import context.Context;
 import context.WorkerContext;
 import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
+import lombok.Synchronized;
 import net.IntListMessage;
 import net.PSWorker;
 import org.iq80.leveldb.DB;
@@ -341,8 +342,10 @@ public class DataProcessUtil {
                 // 或者Map
                 Map<String,Long> dimMaps=new HashMap<String, Long>();
                 for(int i=0;i<catSetList.size();i++){
-
+                    CurrentTimeUtil.setStartTime();
                     Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(i).getCatDimMapBySet(catSetList.get(i));
+
+
                     // 获取并向其他机器发送当前的index个数
                     for(int j=0;j<Context.serverNum;j++){
                         if(j!=i){

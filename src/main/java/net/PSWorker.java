@@ -80,8 +80,8 @@ public class PSWorker {
 
     }
 
-
-    public synchronized Map<String,Long> getCatDimMapBySet(Set<String> catSet){
+    @Synchronized
+    public Map<String,Long> getCatDimMapBySet(Set<String> catSet){
         Map<String,Long> catDimMap=new HashMap<String, Long>();
         SListMessage.Builder slistMessage=SListMessage.newBuilder();
         for(String cat:catSet){
@@ -153,7 +153,7 @@ public class PSWorker {
 
     }
 
-
+    @Synchronized
     public synchronized void setCurIndexNum(long curIndexNum){
         LongMessage.Builder l=LongMessage.newBuilder();
         l.setL(curIndexNum);

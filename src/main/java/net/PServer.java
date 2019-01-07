@@ -14,6 +14,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Data;
+import lombok.Synchronized;
 import org.iq80.leveldb.DB;
 import org.jblas.FloatMatrix;
 
@@ -141,6 +142,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
+    @Synchronized
     public void getIndexOfSparseDim(SListMessage req,StreamObserver<SLKVListMessage> responsedObject){
         try{
             Map<String,Long> map=ServerContext.kvStoreForLevelDB.getIndex(req);
@@ -298,6 +300,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
+    @Synchronized
     public void sentCurIndexNum(LongMessage req,StreamObserver<SMessage> resp){
         ServerContext.kvStoreForLevelDB.setCurIndexOfSparseDim(new AtomicLong(req.getL()));
         SMessage.Builder sMessage=SMessage.newBuilder();
