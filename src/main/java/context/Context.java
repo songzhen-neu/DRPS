@@ -43,6 +43,9 @@ public class Context {
     public static String dataPath;
 
     public static int maxMessageSize;
+    public static float diskSeekTime;
+    public static float diskAccessTime;
+    public static float netTrafficTime;
 
 
 
@@ -69,10 +72,10 @@ public class Context {
         isDist=true;
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=3;
-        serverNum=3;
+        workerNum=1;
+        serverNum=1;
         dataPartitionNum=workerNum;
-        partitionedDataSize=1000000;
+        partitionedDataSize=10000000;
         masterId=0;
 
         dataPath="data/train.csv/";
@@ -81,5 +84,9 @@ public class Context {
         maxMessageSize=Integer.MAX_VALUE;
 
         inited=true;
+
+        diskSeekTime=0.29f;
+        diskAccessTime=0.0001f;
+        netTrafficTime=0.001f;
     }
 }

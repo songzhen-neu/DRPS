@@ -15,8 +15,15 @@ service PS {
     rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
     rpc SendSFMap(SFKVListMessage) returns (SMessage){};
     rpc SentCurIndexNum(LongMessage) returns (SMessage){};
+    rpc sentInitedT(IntFloatMessage) returns(IntMessage){};
 }
 
+
+
+message IntFloatMessage{
+    int32 i=1;
+    float f=2;
+}
 
 
 message RequestMetaMessage {
@@ -29,6 +36,15 @@ message BooleanMessage{
 
 message LongMessage{
     int64 l=1;
+}
+
+message LongIntMessage{
+    int64 l=1;
+    int32 i=2;
+}
+
+message IntMessage{
+    int32 i=1;
 }
 
 message PartitionMessage{

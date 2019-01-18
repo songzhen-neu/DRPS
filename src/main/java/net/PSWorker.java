@@ -5,12 +5,15 @@ import Util.MessageDataTransUtil;
 
 
 import context.Context;
+import context.WorkerContext;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.netty.NettyChannelBuilder;
 import lombok.Data;
 import lombok.Synchronized;
 import org.jblas.FloatMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
@@ -32,6 +35,7 @@ public class PSWorker {
     private ManagedChannel channel=null;
     private net.PSGrpc.PSBlockingStub blockingStub=null;
     private net.PSGrpc.PSFutureStub futureStub=null;
+    private Logger logger=LoggerFactory.getLogger(this.getClass());
 
     public PSWorker(String host,int port){
         channel=NettyChannelBuilder.forAddress(host,port).maxMessageSize(Context.maxMessageSize).usePlaintext(true).build();
@@ -52,6 +56,8 @@ public class PSWorker {
         System.out.println("sss");
 
     }
+
+
 
     public void shutdown() throws InterruptedException{
         channel.shutdown();
@@ -158,6 +164,17 @@ public class PSWorker {
         LongMessage.Builder l=LongMessage.newBuilder();
         l.setL(curIndexNum);
         blockingStub.sentCurIndexNum(l.build());
+
+    }
+
+    public void sentInitedT(float Time){
+        int minCostI;
+        IntFloatMessage.Builder sentMessage=IntFloatMessage.newBuilder();
+        sentMessage.setF(Time);
+        sentMessage.setI(WorkerContext.workerId);
+        IntMessage respM=blockingStub.sentInitedT(sentMessage.build());
+        minCostI=respM.getI();
+        logger.info("get Min time along machines:"+minCostI);
 
     }
 

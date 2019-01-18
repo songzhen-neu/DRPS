@@ -10,11 +10,13 @@ import lombok.Synchronized;
 import net.IntListMessage;
 import net.PSWorker;
 import org.iq80.leveldb.DB;
+import org.iq80.leveldb.util.SizeOf;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.instrument.Instrumentation;
 import java.util.*;
 import java.util.concurrent.Future;
 
@@ -277,20 +279,19 @@ public class DataProcessUtil {
          *@Author: SongZhen
          *@date: 下午10:26 18-11-13
          */
+
+
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
         String readline = null;
         br.readLine();
         SampleList sampleBatch=new SampleList();
         List<String[]> catList=new ArrayList<String[]>();
         List<Set> catSetList=new ArrayList<Set>();
-        Set<String> catSet=new HashSet<String>();
-
 
 
         int countSampleListSize = 0;
         DB db=WorkerContext.kvStoreForLevelDB.getDb();
 
-        CurrentTimeUtil.setStartTime();
 
         // 初始化catSetList，大小是server的大小
         for(int i=0;i<Context.serverNum;i++){
@@ -299,6 +300,7 @@ public class DataProcessUtil {
 
         // countSampleListSize就是当前已经读取的数据个数
         while ((readline = br.readLine()) != null && countSampleListSize <= WorkerContext.sampleListSize) {
+            // 这里+2，是因为前面有id和isClick属性
             String[] lineSplit = new String[Context.featureSize+WorkerContext.catSize+2];
             String[] split=readline.split(",");
             for(int i=0;i<lineSplit.length;i++) {
@@ -308,6 +310,8 @@ public class DataProcessUtil {
                     lineSplit[i]="-1";
                 }
             }
+
+
 
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
@@ -332,6 +336,7 @@ public class DataProcessUtil {
             }
 
 
+
             Sample sample = new Sample(feature, cat, click);
             if(sampleBatch.sampleList.size()!=WorkerContext.sampleBatchSize){
 //                getMetaCat(catSetList,lineSplit,catSet);
@@ -339,7 +344,7 @@ public class DataProcessUtil {
                 sampleBatch.sampleList.add(sample);
 
             }else {
-                // 或者Map
+
                 Map<String,Long> dimMaps=new HashMap<String, Long>();
                 for(int i=0;i<catSetList.size();i++){
                     CurrentTimeUtil.setStartTime();
@@ -349,7 +354,6 @@ public class DataProcessUtil {
                     // 获取并向其他机器发送当前的index个数
                     for(int j=0;j<Context.serverNum;j++){
                         if(j!=i){
-                            System.out.println("cur:"+dimMap.get("CurIndexNum"));
                             // 这些是并行的，那么就容易出问题
                             WorkerContext.psRouterClient.getPsWorkers().get(j).setCurIndexNum(dimMap.get("CurIndexNum"));
 
@@ -370,16 +374,19 @@ public class DataProcessUtil {
                     }
                 }
 
+
+
                 WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+(countSampleListSize/WorkerContext.sampleBatchSize-1)).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
                 catList.clear();
-                sampleBatch.sampleList.clear();
+                sampleBatch=new SampleList();
+                MemoryUtil.releaseMemory();
                 sampleBatch.sampleList.add(sample);
+
 
             }
             countSampleListSize++;
 
         }
-        System.out.println(countSampleListSize);
 
         if(sampleBatch.sampleList!=null){
             WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+(countSampleListSize/WorkerContext.sampleBatchSize)).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
@@ -387,8 +394,14 @@ public class DataProcessUtil {
 
 
 
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("MetaDataToSampleBatch:");
+        MemoryUtil.showFreeMemory("before call gc");
+        // 显示调用gc并不会强制释放内存，虚拟机会尽最大努力从所有丢弃的对象中回收空间
+        MemoryUtil.releaseMemory();
+
+
+
+        br.close();
+
 
 
     }

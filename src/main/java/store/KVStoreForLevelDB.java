@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -34,6 +35,10 @@ public class KVStoreForLevelDB {
     DB db;
     AtomicLong curIndexOfSparseDim=new AtomicLong(0);
     private float[] featureParams=new float[Context.featureSize];
+    Map<Integer,Float> timeCostMap=new ConcurrentHashMap<Integer, Float>();
+
+
+
     public void init(String path) throws IOException {
         FileUtil.deleteFile(new File(path+"db/"));
         db= Iq80DBFactory.factory.open(new File(path,"db"),new Options().createIfMissing(true));
@@ -59,6 +64,7 @@ public class KVStoreForLevelDB {
     }
 
     public void initParams() throws IOException{
+        System.out.println("sparseDimSize:"+Context.sparseDimSize);
         for(int i=0;i<Context.sparseDimSize;i++){
             if(i%Context.serverNum==ServerContext.serverId){
                 db.put(("catParam"+i).getBytes(),TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f,0.1f)));

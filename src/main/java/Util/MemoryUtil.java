@@ -30,7 +30,16 @@ public class MemoryUtil {
         endMemory=getFreeMemory();
     }
 
-    public static void showMemory(String flag){
-        System.out.println(flag+":"+(endMemory-startMemory));
+    public static void showUsedMemory(String flag){
+        System.out.println(flag+":"+(startMemory-endMemory)+"MB");
     }
+
+    public static void showFreeMemory(String flag){
+        System.out.println(flag+":"+getFreeMemory()+"MB");
+    }
+
+    public static void releaseMemory(){
+        System.gc();
+    }
+
 }

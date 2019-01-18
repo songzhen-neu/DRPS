@@ -1,6 +1,7 @@
 package net;
 
 
+import Util.MemoryUtil;
 import Util.MessageDataTransUtil;
 import com.google.common.collect.Maps;
 
@@ -30,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -55,6 +57,8 @@ public class PServer implements net.PSGrpc.PS {
     private AtomicBoolean workerStepInited=new AtomicBoolean(false);
     private float[] maxFeature=new float[Context.featureSize];
     private float[] minFeature=new float[Context.featureSize];
+
+    private AtomicBoolean isExecuteFlag=new AtomicBoolean(false);
 
 
 
@@ -150,7 +154,6 @@ public class PServer implements net.PSGrpc.PS {
 
             SLKVListMessage slkvListMessage=MessageDataTransUtil.Map_2_SLKVListMessage(map);
             logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
-            System.out.println(map.get("CurIndexNum"));
 
             responsedObject.onNext(slkvListMessage);
             responsedObject.onCompleted();
@@ -256,9 +259,13 @@ public class PServer implements net.PSGrpc.PS {
 
 
     public void waitBarrier(){
-        if(!workerStepInited.get()){
-            workerStep.set(0);
-            workerStepInited.getAndSet(true);
+        // 这里加一个原语，保证同一时间只能有一个初始化workerStep
+        // synchronized 只能防止同时执行一个对象的代码段，所以在这里够用了
+        synchronized (this){
+            if(!workerStepInited.get()){
+                workerStep.set(0);
+                workerStepInited.getAndSet(true);
+            }
         }
         workerStep.incrementAndGet();
         while(workerStep.get()<Context.workerNum){
@@ -307,6 +314,38 @@ public class PServer implements net.PSGrpc.PS {
         sMessage.setStr("success");
         resp.onNext(sMessage.build());
         resp.onCompleted();
+    }
+
+    @Override
+    public void sentInitedT(IntFloatMessage req,StreamObserver<IntMessage> resp){
+        IntMessage.Builder intMessage=IntMessage.newBuilder();
+        ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(),req.getF());
+        waitBarrier();
+        if(!isExecuteFlag.getAndSet(true)){
+            intMessage.setI(getKeyOfMinValue());
+        }
+        resp.onNext(intMessage.build());
+        resp.onCompleted();
+
+    }
+
+    public int getKeyOfMinValue(){
+        int keyOfMaxValue=-1;
+        Map<Integer,Float> map=ServerContext.kvStoreForLevelDB.getTimeCostMap();
+        float minValue=Float.MAX_VALUE;
+        for(int i:map.keySet()){
+            if(keyOfMaxValue==-1){
+                keyOfMaxValue=i;
+                minValue=map.get(i);
+            }
+            else {
+                if(map.get(i)<minValue){
+                    keyOfMaxValue=i;
+                    minValue=map.get(i);
+                }
+            }
+        }
+        return keyOfMaxValue;
     }
 
 }
