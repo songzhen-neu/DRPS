@@ -256,27 +256,28 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-
-
-    public void waitBarrier(){
+    public void waitBarrier() {
         // 这里加一个原语，保证同一时间只能有一个初始化workerStep
         // synchronized 只能防止同时执行一个对象的代码段，所以在这里够用了
-        synchronized (this){
-            if(!workerStepInited.get()){
-                workerStep.set(0);
-                workerStepInited.getAndSet(true);
-            }
-        }
+        resetWorkerStep();
+
         workerStep.incrementAndGet();
-        while(workerStep.get()<Context.workerNum){
+        while (workerStep.get() < Context.workerNum) {
             try {
                 Thread.sleep(10);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
         workerStepInited.set(false);
+    }
+
+    @Synchronized
+    public void resetWorkerStep(){
+        if (!workerStepInited.getAndSet(true)) {
+            workerStep.set(0);
+        }
     }
 
     @Override
@@ -320,14 +321,18 @@ public class PServer implements net.PSGrpc.PS {
     public void sentInitedT(IntFloatMessage req,StreamObserver<IntMessage> resp){
         IntMessage.Builder intMessage=IntMessage.newBuilder();
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(),req.getF());
-        waitBarrier();
+
         if(!isExecuteFlag.getAndSet(true)){
-            intMessage.setI(getKeyOfMinValue());
+            ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
+
         }
+        waitBarrier();
+        intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
         resp.onNext(intMessage.build());
         resp.onCompleted();
 
     }
+
 
     public int getKeyOfMinValue(){
         int keyOfMaxValue=-1;
