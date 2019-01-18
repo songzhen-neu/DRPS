@@ -260,7 +260,8 @@ public class PServer implements net.PSGrpc.PS {
         // 这里加一个原语，保证同一时间只能有一个初始化workerStep
         // synchronized 只能防止同时执行一个对象的代码段，所以在这里够用了
         resetWorkerStep();
-
+        logger.info("workerStepInited:"+workerStepInited);
+        logger.info("workerStep1:"+workerStep);
         workerStep.incrementAndGet();
         while (workerStep.get() < Context.workerNum) {
             try {
@@ -275,7 +276,8 @@ public class PServer implements net.PSGrpc.PS {
 
     @Synchronized
     public void resetWorkerStep(){
-        if (!workerStepInited.getAndSet(true)) {
+        if (!workerStepInited.get()) {
+            workerStepInited.set(true);
             workerStep.set(0);
         }
     }
