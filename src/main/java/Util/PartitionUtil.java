@@ -24,7 +24,8 @@ public class PartitionUtil {
     static Logger logger=LoggerFactory.getLogger(PartitionUtil.class.getName());
     public static void partitionV(){
         // 也就是初始化Ticom和Ti_disk
-        float Ti_com=getAccessedVNum();
+        float Ti_com=getAccessedVNum()*Context.netTrafficTime;
+        System.out.println(Ti_com);
         float Ti_disk=0;
 
         // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器

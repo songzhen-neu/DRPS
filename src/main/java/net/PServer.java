@@ -50,8 +50,8 @@ public class PServer implements net.PSGrpc.PS {
     private KVStore store=new KVStore();
     private Map<String,FloatMatrix> floatMatrixMap=new ConcurrentHashMap<String, FloatMatrix>();
 
-    private AtomicLong globalStep=new AtomicLong(0);
-    private AtomicLong workerStep=new AtomicLong(0);
+    private AtomicInteger globalStep=new AtomicInteger(0);
+    private AtomicInteger workerStep=new AtomicInteger(0);
     static Logger logger=LoggerFactory.getLogger((PServer.class));
     AtomicBoolean finished=new AtomicBoolean(false);
     private AtomicBoolean workerStepInited=new AtomicBoolean(false);
@@ -59,6 +59,7 @@ public class PServer implements net.PSGrpc.PS {
     private float[] minFeature=new float[Context.featureSize];
 
     private AtomicBoolean isExecuteFlag=new AtomicBoolean(false);
+    private AtomicInteger workerStepForBarrier =new AtomicInteger(0);
 
 
 
@@ -259,28 +260,53 @@ public class PServer implements net.PSGrpc.PS {
     public void waitBarrier() {
         // 这里加一个原语，保证同一时间只能有一个初始化workerStep
         // synchronized 只能防止同时执行一个对象的代码段，所以在这里够用了
-        resetWorkerStep();
-        logger.info("workerStepInited:"+workerStepInited);
-        logger.info("workerStep1:"+workerStep);
-        workerStep.incrementAndGet();
-        while (workerStep.get() < Context.workerNum) {
-            try {
-                Thread.sleep(10);
-            } catch (Exception e) {
-                e.printStackTrace();
+
+
+//        Thread.currentThread().wait();
+
+        // synchronized在进入同步代码块的时候，会对这个变量或者对象获得锁，退出这个代码块的时候才会释放锁。
+
+//        int gStep=globalStep.get();
+//        int wStep=workerStep.incrementAndGet();
+
+        try {
+
+            workerStepForBarrier.incrementAndGet();
+            if (workerStepForBarrier.get() == Context.workerNum) {
+                synchronized (workerStepForBarrier) {
+                    workerStepForBarrier.notifyAll();
+                }
+
+            }else {
+                synchronized (workerStepForBarrier){
+                    workerStepForBarrier.wait();
+                }
+
             }
+
+        }catch (InterruptedException e){
+            e.printStackTrace();
         }
 
-        workerStepInited.set(false);
+
+//        synchronized (workerStepInited){
+//            if(!workerStepInited.get()){
+//                workerStepInited.set(true);
+//                workerStepForBarrier.set(0);
+//            }
+//        }
+//
+//        workerStepForBarrier.incrementAndGet();
+
+        workerStepForBarrier.set(0);
+
+//        workerStepInited.set(false);
+
+
+
     }
 
-    @Synchronized
-    public void resetWorkerStep(){
-        if (!workerStepInited.get()) {
-            workerStepInited.set(true);
-            workerStep.set(0);
-        }
-    }
+
 
     @Override
     public void getNeededParams(SListMessage req,StreamObserver<SFKVListMessage> resp){
@@ -322,13 +348,41 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void sentInitedT(IntFloatMessage req,StreamObserver<IntMessage> resp){
         IntMessage.Builder intMessage=IntMessage.newBuilder();
+
+
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(),req.getF());
+
+        try{
+            if(ServerContext.kvStoreForLevelDB.getTimeCostMap().size()==Context.workerNum){
+                synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()){
+                    ServerContext.kvStoreForLevelDB.getTimeCostMap().notifyAll();
+                }
+
+            }else {
+                synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()){
+                    ServerContext.kvStoreForLevelDB.getTimeCostMap().wait();
+                }
+
+            }
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+
+
+
+
+//        waitBarrier();
+        System.out.println("size:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
 
         if(!isExecuteFlag.getAndSet(true)){
             ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
 
         }
-        waitBarrier();
+
+        logger.info("I:"+req.getI()+",F:"+req.getF()+",minI:"+ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
+
+
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
         resp.onNext(intMessage.build());
         resp.onCompleted();
