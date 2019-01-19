@@ -167,7 +167,7 @@ public class PSWorker {
 
     }
 
-    public void sentInitedT(float Time){
+    public int sentInitedT(float Time){
         int minCostI;
         IntFloatMessage.Builder sentMessage=IntFloatMessage.newBuilder();
         sentMessage.setF(Time);
@@ -175,7 +175,7 @@ public class PSWorker {
         IntMessage respM=blockingStub.sentInitedT(sentMessage.build());
         minCostI=respM.getI();
         logger.info("get Min time along machines:"+minCostI);
-
+        return minCostI;
     }
 
 
