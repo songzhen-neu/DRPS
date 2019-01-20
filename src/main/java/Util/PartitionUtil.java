@@ -59,11 +59,12 @@ public class PartitionUtil {
                 // 统计本机访问Vi的次数
                 float T_localAccessVj=getVjAccessNum(j);
                 // 统计其他机器访问Vi的次数
-                if(insertI!=WorkerContext.workerId){
-                    WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
-                }else {
+                if(insertI==WorkerContext.workerId){
                     float accessNum_otherWorkers=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
                     Ti_com=Ti_com-T_localAccessVj+accessNum_otherWorkers;
+
+                }else {
+                    WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
                 }
             }
         }
@@ -132,7 +133,7 @@ public class PartitionUtil {
                     Integer viAccessNum=(Integer)TypeExchangeUtil.toObject(db.get(("vAccessNum"+i).getBytes()));
                     viAccessNum++;
                     db.put(("vAccessNum"+i).getBytes(),TypeExchangeUtil.toByteArray(viAccessNum));
-                    System.out.println("i:"+i+"viAccessNum:"+viAccessNum);
+//                    System.out.println("i:"+i+"viAccessNum:"+viAccessNum);
                 }else {
                     db.put(("vAccessNum"+i).getBytes(),TypeExchangeUtil.toByteArray(1));
                 }

@@ -397,21 +397,24 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void pushLocalViAccessNum(FloatMessage req,StreamObserver<BooleanMessage> resp){
-        numSet_otherWorkerAccessVi.add(req.getF());
-        waitBarrier(Context.workerNum-1);
+
 
         // 开始计算numSet_otherWorkerAccessVi的总和
-        synchronized (isExecuteFlag){
-            if (isExecuteFlag.getAndSet(true)){
-                for(float f:numSet_otherWorkerAccessVi){
-                    floatSum+=f;
+        synchronized (isExecuteFlag) {
+
+            numSet_otherWorkerAccessVi.add(req.getF());
+            waitBarrier(Context.workerNum - 1);
+            if (isExecuteFlag.getAndSet(true)) {
+                for (float f : numSet_otherWorkerAccessVi) {
+                    floatSum += f;
                 }
+                synchronized (floatSum) {
+                    floatSum.notifyAll();
+                }
+
             }
         }
 
-        synchronized (floatSum){
-            floatSum.notify();
-        }
 
         BooleanMessage.Builder executeStatus=BooleanMessage.newBuilder();
         executeStatus.setB(true);
