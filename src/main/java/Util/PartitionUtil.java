@@ -39,29 +39,48 @@ public class PartitionUtil {
 
 
         // 下面取出j=1，放在第insertI台机器上
-        for(int j=0;j<Context.sparseDimSize;j++){
+        for(long j=0;j<Context.sparseDimSize;j++){
 
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
-
                 Ti_com = getInitTiCom();
 
-//                System.out.println(Ti_com);
+
                 Ti_disk = 0;
 
                 // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
                 PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
                 insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
                 vSet[insertI].add(j);
-                // 加入j后，需要再次统计Tcom和Tdisk
+
 
                 isInited = true;
             }else {
-
+                // 统计本机访问Vi的次数
+                float T_localAccessVj=getVjAccessNum(j);
+                // 统计其他机器访问Vi的次数
+                if(insertI!=WorkerContext.workerId){
+                    WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
+                }else {
+                    float accessNum_otherWorkers=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
+                    Ti_com=Ti_com-T_localAccessVj+accessNum_otherWorkers;
+                }
             }
         }
 
     }
+
+    private static float getVjAccessNum(long j) throws IOException,ClassNotFoundException{
+        int num=0;
+        if(db.get(("vAccessNum"+j).getBytes())!=null){
+            num=(Integer) TypeExchangeUtil.toObject(db.get(("vAccessNum"+j).getBytes()));
+        }else {
+            num=0;
+        }
+        return num;
+    }
+
+
     private static float getInitTiCom()throws IOException,ClassNotFoundException{
         float sum=0;
         for(int i=0;i<Context.sparseDimSize;i++){

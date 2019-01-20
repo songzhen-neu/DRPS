@@ -178,6 +178,34 @@ public class PSWorker {
         return minCostI;
     }
 
+    public void pushLocalViAccessNum(float T_localAccessVj){
+        /**
+        *@Description: 如果不是要插入Vj的机器i，那么就把自己本地对Vj的访问次数push给server
+         * 然后server统计完一个和之后返回给是插入Vj的机器i。
+        *@Param: [T_localAccessVj]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 下午10:29 19-1-19
+        */
+        FloatMessage.Builder sentMessage=FloatMessage.newBuilder();
+        sentMessage.setF(T_localAccessVj);
+        blockingStub.pushLocalViAccessNum(sentMessage.build());
+
+    }
+
+    public float pullOtherWorkerAccessForVi()throws UnknownHostException{
+        /**
+        *@Description: 插入vj的机器i，向worker发送pull，请求其他机器访问Vj的次数
+        *@Param: []
+        *@return: void
+        *@Author: SongZhen
+        *@date: 下午10:31 19-1-19
+        */
+        RequestMetaMessage.Builder req=RequestMetaMessage.newBuilder();
+        req.setHost(Inet4Address.getLocalHost().getHostName());
+        FloatMessage accessedNum_otherWorkers=blockingStub.pullOtherWorkerAccessForVi(req.build());
+        return accessedNum_otherWorkers.getF();
+    }
 
 
 }

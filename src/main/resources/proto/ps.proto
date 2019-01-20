@@ -15,11 +15,15 @@ service PS {
     rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
     rpc SendSFMap(SFKVListMessage) returns (SMessage){};
     rpc SentCurIndexNum(LongMessage) returns (SMessage){};
-    rpc sentInitedT(IntFloatMessage) returns(IntMessage){};
+    rpc SentInitedT(IntFloatMessage) returns(IntMessage){};
+    rpc PushLocalViAccessNum(FloatMessage) returns(BooleanMessage){};
+    rpc PullOtherWorkerAccessForVi(RequestMetaMessage) returns(FloatMessage){};
 }
 
 
-
+message FloatMessage{
+    float f=1;
+}
 message IntFloatMessage{
     int32 i=1;
     float f=2;

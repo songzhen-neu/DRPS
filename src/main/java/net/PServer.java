@@ -6,6 +6,7 @@ import Util.MessageDataTransUtil;
 import com.google.common.collect.Maps;
 
 import com.google.common.util.concurrent.AtomicDoubleArray;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.yahoo.sketches.quantiles.DoublesSketch;
 import com.yahoo.sketches.quantiles.UpdateDoublesSketch;
 import context.Context;
@@ -14,6 +15,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
+import io.netty.util.internal.ConcurrentSet;
 import lombok.Data;
 import lombok.Synchronized;
 import org.iq80.leveldb.DB;
@@ -60,6 +62,9 @@ public class PServer implements net.PSGrpc.PS {
 
     private AtomicBoolean isExecuteFlag=new AtomicBoolean(false);
     private AtomicInteger workerStepForBarrier =new AtomicInteger(0);
+
+    private ConcurrentSet<Float> numSet_otherWorkerAccessVi=new ConcurrentSet<Float>();
+    private Float floatSum=0f;
 
 
 
@@ -209,7 +214,7 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void barrier(RequestMetaMessage req,StreamObserver<BooleanMessage> resp){
-        waitBarrier();
+        waitBarrier(Context.workerNum);
 
         BooleanMessage.Builder boolMessage=BooleanMessage.newBuilder();
         boolMessage.setB(true);
@@ -241,7 +246,7 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        waitBarrier();
+        waitBarrier(Context.workerNum);
 
         MaxAndMinArrayMessage.Builder respMaxAndMin=MaxAndMinArrayMessage.newBuilder();
         for(int i=0;i<Context.featureSize;i++){
@@ -257,22 +262,11 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-    public void waitBarrier() {
-        // 这里加一个原语，保证同一时间只能有一个初始化workerStep
-        // synchronized 只能防止同时执行一个对象的代码段，所以在这里够用了
-
-
-//        Thread.currentThread().wait();
-
-        // synchronized在进入同步代码块的时候，会对这个变量或者对象获得锁，退出这个代码块的时候才会释放锁。
-
-//        int gStep=globalStep.get();
-//        int wStep=workerStep.incrementAndGet();
-
+    public void waitBarrier(int num_waitOthers) {
         try {
 
             workerStepForBarrier.incrementAndGet();
-            if (workerStepForBarrier.get() == Context.workerNum) {
+            if (workerStepForBarrier.get() == num_waitOthers) {
                 synchronized (workerStepForBarrier) {
                     workerStepForBarrier.notifyAll();
                 }
@@ -288,20 +282,7 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
-
-//        synchronized (workerStepInited){
-//            if(!workerStepInited.get()){
-//                workerStepInited.set(true);
-//                workerStepForBarrier.set(0);
-//            }
-//        }
-//
-//        workerStepForBarrier.incrementAndGet();
-
         workerStepForBarrier.set(0);
-
-//        workerStepInited.set(false);
-
 
 
     }
@@ -329,7 +310,7 @@ public class PServer implements net.PSGrpc.PS {
 
         ServerContext.kvStoreForLevelDB.updateParams(map);
         smessage.setStr("success");
-        waitBarrier();
+        waitBarrier(Context.workerNum);
 
         resp.onNext(smessage.build());
         resp.onCompleted();
@@ -372,18 +353,23 @@ public class PServer implements net.PSGrpc.PS {
 
 
 
-//        waitBarrier();
+
         System.out.println("size:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
 
-        if(!isExecuteFlag.getAndSet(true)){
-            ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
+        synchronized (isExecuteFlag) {
+            if (!isExecuteFlag.getAndSet(true)) {
+                ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
 
+            }
         }
+
 
         logger.info("I:"+req.getI()+",F:"+req.getF()+",minI:"+ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
 
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
+
+        isExecuteFlag.set(false);
         resp.onNext(intMessage.build());
         resp.onCompleted();
 
@@ -407,6 +393,52 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
         return keyOfMaxValue;
+    }
+
+    @Override
+    public void pushLocalViAccessNum(FloatMessage req,StreamObserver<BooleanMessage> resp){
+        numSet_otherWorkerAccessVi.add(req.getF());
+        waitBarrier(Context.workerNum-1);
+
+        // 开始计算numSet_otherWorkerAccessVi的总和
+        synchronized (isExecuteFlag){
+            if (isExecuteFlag.getAndSet(true)){
+                for(float f:numSet_otherWorkerAccessVi){
+                    floatSum+=f;
+                }
+            }
+        }
+
+        synchronized (floatSum){
+            floatSum.notify();
+        }
+
+        BooleanMessage.Builder executeStatus=BooleanMessage.newBuilder();
+        executeStatus.setB(true);
+        isExecuteFlag.set(false);
+        resp.onNext(executeStatus.build());
+        resp.onCompleted();
+
+
+
+    }
+
+    @Override
+    public void pullOtherWorkerAccessForVi(RequestMetaMessage req,StreamObserver<FloatMessage> resp){
+        synchronized (floatSum){
+            try{
+                floatSum.wait();
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
+            logger.info("pullOtherWorkerAccessForVi from:"+req.getHost());
+            FloatMessage.Builder floatMessage=FloatMessage.newBuilder();
+            floatMessage.setF(floatSum);
+            floatSum=0f;
+            resp.onNext(floatMessage.build());
+            resp.onCompleted();
+
+        }
     }
 
 }
