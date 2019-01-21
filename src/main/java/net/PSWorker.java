@@ -175,7 +175,7 @@ public class PSWorker {
         sentMessage.setI(WorkerContext.workerId);
         IMessage respM=blockingStub.sentInitedT(sentMessage.build());
         minCostI=respM.getI();
-        logger.info("get Min time along machines:"+minCostI);
+//        logger.info("get Min time along machines:"+minCostI);
         return minCostI;
     }
 

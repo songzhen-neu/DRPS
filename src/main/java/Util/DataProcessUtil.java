@@ -270,6 +270,7 @@ public class DataProcessUtil {
 
 
 
+    // 这个算法是基于多个server的，进行one-hot构建的，有点问题
     public static void getSampleBatchListByBatchIndex(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
         /**
          *@Description:
@@ -409,6 +410,122 @@ public class DataProcessUtil {
 
     }
 
+    public static void getSampleBatchListByBatchIndexByMaster(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
+        /**
+         *@Description:这是只在master上
+         *@Param: [fileName, featureSize, catSize]
+         *@return: ParaStructure.Sample.SampleList
+         *@Author: SongZhen
+         *@date: 下午10:26 18-11-13
+         */
+
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+        String readline = null;
+        br.readLine();
+        SampleList sampleBatch=new SampleList();
+        // 每个元素都是一个cat长度的String数组，表示这个batch的所有cat
+        List<String[]> catList=new ArrayList<String[]>();
+
+        Set<String> catSet=new HashSet<String>();
+
+
+        int countSampleListSize = 0;
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
+
+
+        // countSampleListSize就是当前已经读取的数据个数
+        while ((readline = br.readLine()) != null && countSampleListSize <= WorkerContext.sampleListSize) {
+            // 这里+2，是因为前面有id和isClick属性
+            String[] lineSplit = new String[Context.featureSize + WorkerContext.catSize + 2];
+            String[] split = readline.split(",");
+            for (int i = 0; i < lineSplit.length; i++) {
+                if (i < split.length) {
+                    lineSplit[i] = split[i];
+                } else {
+                    lineSplit[i] = "-1";
+                }
+            }
+
+
+            float[] feature = new float[featureSize];
+            long[] cat = new long[catSize];
+            float click = Float.parseFloat(lineSplit[1]);
+
+
+            // 给cat初始值全为-1，来表示上来所有cat属性都为missing value
+            for (int i = 0; i < catSize; i++) {
+                cat[i] = -1;
+            }
+
+
+            for (int i = 2 + catSize; i < 2 + catSize + featureSize; i++) {
+//                System.out.println(lineSplit.length);
+//                System.out.println(i);
+//                System.out.println(readline);
+                if (lineSplit[i].equals("")) {
+                    feature[i - 2 - catSize] = 0f;
+                } else {
+                    feature[i - 2 - catSize] = Float.parseFloat(lineSplit[i]);
+                }
+            }
+
+
+            Sample sample = new Sample(feature, cat, click);
+            if (sampleBatch.sampleList.size() != WorkerContext.sampleBatchSize) {
+//                getMetaCat(catSetList,lineSplit,catSet);
+                catList.add(getMetaCat_ForMasterBuild(lineSplit, catSet));
+                sampleBatch.sampleList.add(sample);
+
+            } else {
+
+                Map<String, Long> dimMaps = new HashMap<String, Long>();
+
+
+                Map<String, Long> dimMap = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getCatDimMapBySet(catSet);
+
+
+                for (String key : dimMap.keySet()) {
+                    dimMaps.put(key, dimMap.get(key));
+                }
+
+
+                for (int i = 0; i < catList.size(); i++) {
+                    for (int j = 0; j < catList.get(i).length; j++) {
+
+                        sampleBatch.sampleList.get(i).cat[j] = dimMaps.get(catList.get(i)[j]);
+
+                    }
+                }
+
+
+                WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + (countSampleListSize / WorkerContext.sampleBatchSize - 1)).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
+                catList.clear();
+                sampleBatch = new SampleList();
+                MemoryUtil.releaseMemory();
+                sampleBatch.sampleList.add(sample);
+
+
+            }
+            countSampleListSize++;
+
+        }
+
+        if (sampleBatch.sampleList != null) {
+            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + (countSampleListSize / WorkerContext.sampleBatchSize)).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
+        }
+
+
+        MemoryUtil.showFreeMemory("before call gc");
+        // 显示调用gc并不会强制释放内存，虚拟机会尽最大努力从所有丢弃的对象中回收空间
+        MemoryUtil.releaseMemory();
+
+
+        br.close();
+
+
+    }
+
     public static String[] getMetaCat(String[] str,List<Set> catSetList){
         /**
         *@Description: 根据lineSplit来获取一个cat属性的String数组，
@@ -430,5 +547,26 @@ public class DataProcessUtil {
         return cat;
     }
 
+
+    public static String[] getMetaCat_ForMasterBuild(String[] str,Set catSet){
+        /**
+         *@Description: 根据lineSplit来获取一个cat属性的String数组，
+         * 并且按照hashcode分给不同的server，也就是划分在catSetList里。
+         *@Param: [str, catSetList]
+         *@return: java.lang.String[]
+         *@Author: SongZhen
+         *@date: 下午3:29 19-1-21
+         */
+        String[] cat=new String[WorkerContext.catSize];
+        for (int i=0;i<cat.length;i++){
+            cat[i]=str[i+2];
+//            if(cat[i].equals("07d7df22")||cat[i].equals("a99f214a")||cat[i].equals("ecad2386")){
+//                System.out.println("cat:"+cat[i]+",hashcode:"+(cat[i].hashCode())+",serverId:"+Math.abs(cat[i].hashCode())%3);
+//            }
+
+            catSet.add(str[i+2]);
+        }
+        return cat;
+    }
 
 }

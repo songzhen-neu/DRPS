@@ -227,7 +227,7 @@ public class PServer implements net.PSGrpc.PS {
 
         BMessage.Builder boolMessage=BMessage.newBuilder();
         boolMessage.setB(true);
-        logger.info(""+workerStep.longValue());
+//        logger.info(""+workerStep.longValue());
         resp.onNext(boolMessage.build());
         resp.onCompleted();
 
