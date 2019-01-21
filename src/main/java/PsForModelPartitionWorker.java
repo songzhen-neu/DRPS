@@ -36,7 +36,7 @@ public class PsForModelPartitionWorker {
         // 将原始数据处理成one-hot编码的数据，然后存储在kv数据库中
 
         DataProcessUtil.metaToDB(WorkerContext.myDataPath,Context.featureSize,WorkerContext.catSize);
-
+        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
 
         // 获取稀疏的维度个数，并发送给自己的本地服务器
@@ -52,7 +52,7 @@ public class PsForModelPartitionWorker {
         // 规范化连续feature属性
         DataProcessUtil.linerNormalization();
 
-        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分

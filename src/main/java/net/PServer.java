@@ -160,24 +160,24 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    @Synchronized
     public void getIndexOfSparseDim(SListMessage req,StreamObserver<SLKVListMessage> responsedObject){
-        try{
-            Map<String,Long> map=ServerContext.kvStoreForLevelDB.getIndex(req);
-            map.put("CurIndexNum",ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
+        synchronized (ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim()){
+            try{
+                Map<String,Long> map=ServerContext.kvStoreForLevelDB.getIndex(req);
+                map.put("CurIndexNum",ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
 //            logger.info("curIndex:"+ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
 
-            SLKVListMessage slkvListMessage=MessageDataTransUtil.Map_2_SLKVListMessage(map);
-            logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
+                SLKVListMessage slkvListMessage=MessageDataTransUtil.Map_2_SLKVListMessage(map);
+                logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
 
-            responsedObject.onNext(slkvListMessage);
-            responsedObject.onCompleted();
-        }catch (IOException e){
-            e.printStackTrace();
-        }catch (ClassNotFoundException e){
-            e.printStackTrace();
+                responsedObject.onNext(slkvListMessage);
+                responsedObject.onCompleted();
+            }catch (IOException e){
+                e.printStackTrace();
+            }catch (ClassNotFoundException e){
+                e.printStackTrace();
+            }
         }
-
     }
 
     @Override

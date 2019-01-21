@@ -38,14 +38,13 @@ public class DataProcessUtil {
          */
 
 
-        SampleList sampleList;
 
         // 以下是离散特征在前连续特征在后的代码
         if (WorkerContext.isCatForwardFeature) {
 //            sparseDimSize=metaDataToSampleLevelDB(fileName, featureSize, catSize);
 //            sparseDimSize=metaDataToBatchSampleLevelDB(fileName,featureSize,catSize);
+//            getSampleBatchListByBatchIndexByMaster(fileName,featureSize,catSize);
             getSampleBatchListByBatchIndex(fileName,featureSize,catSize);
-
         } else if (!WorkerContext.isCatForwardFeature) {
             // 下面是连续特征在前，离散特征在后的代码
            System.out.println("方法还没写");
@@ -382,10 +381,15 @@ public class DataProcessUtil {
 
                 WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch"+(countSampleListSize/WorkerContext.sampleBatchSize-1)).getBytes(),TypeExchangeUtil.toByteArray(sampleBatch));
                 catList.clear();
+                for(int i=0;i<Context.serverNum;i++){
+                    catSetList.get(i).clear();
+                }
+
+
                 sampleBatch=new SampleList();
                 MemoryUtil.releaseMemory();
                 sampleBatch.sampleList.add(sample);
-
+                catList.add(getMetaCat(lineSplit,catSetList));
 
             }
             countSampleListSize++;
@@ -410,7 +414,7 @@ public class DataProcessUtil {
 
     }
 
-    public static void getSampleBatchListByBatchIndexByMaster(String fileName, int featureSize, int catSize) throws IOException ,ClassNotFoundException{
+    public static void getSampleBatchListByBatchIndexByMaster(String fileName, int featureSize, int catSize) throws IOException, ClassNotFoundException {
         /**
          *@Description:这是只在master上
          *@Param: [fileName, featureSize, catSize]
@@ -423,16 +427,13 @@ public class DataProcessUtil {
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
         String readline = null;
         br.readLine();
-        SampleList sampleBatch=new SampleList();
+        SampleList sampleBatch = new SampleList();
         // 每个元素都是一个cat长度的String数组，表示这个batch的所有cat
-        List<String[]> catList=new ArrayList<String[]>();
+        List<String[]> catList = new ArrayList<String[]>();
 
-        Set<String> catSet=new HashSet<String>();
-
-
+        Set<String> catSet = new HashSet<String>();
         int countSampleListSize = 0;
-        DB db=WorkerContext.kvStoreForLevelDB.getDb();
-
+        DB db = WorkerContext.kvStoreForLevelDB.getDb();
 
         // countSampleListSize就是当前已经读取的数据个数
         while ((readline = br.readLine()) != null && countSampleListSize <= WorkerContext.sampleListSize) {
@@ -451,7 +452,6 @@ public class DataProcessUtil {
             float[] feature = new float[featureSize];
             long[] cat = new long[catSize];
             float click = Float.parseFloat(lineSplit[1]);
-
 
             // 给cat初始值全为-1，来表示上来所有cat属性都为missing value
             for (int i = 0; i < catSize; i++) {
@@ -479,36 +479,25 @@ public class DataProcessUtil {
 
             } else {
 
-                Map<String, Long> dimMaps = new HashMap<String, Long>();
-
 
                 Map<String, Long> dimMap = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getCatDimMapBySet(catSet);
 
 
-                for (String key : dimMap.keySet()) {
-                    dimMaps.put(key, dimMap.get(key));
-                }
-
-
                 for (int i = 0; i < catList.size(); i++) {
                     for (int j = 0; j < catList.get(i).length; j++) {
-
-                        sampleBatch.sampleList.get(i).cat[j] = dimMaps.get(catList.get(i)[j]);
-
+                        sampleBatch.sampleList.get(i).cat[j] = dimMap.get(catList.get(i)[j]);
                     }
                 }
 
-
                 WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + (countSampleListSize / WorkerContext.sampleBatchSize - 1)).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
                 catList.clear();
+                catSet.clear();
                 sampleBatch = new SampleList();
                 MemoryUtil.releaseMemory();
                 sampleBatch.sampleList.add(sample);
-
-
+                catList.add(getMetaCat_ForMasterBuild(lineSplit, catSet));
             }
             countSampleListSize++;
-
         }
 
         if (sampleBatch.sampleList != null) {
@@ -519,8 +508,6 @@ public class DataProcessUtil {
         MemoryUtil.showFreeMemory("before call gc");
         // 显示调用gc并不会强制释放内存，虚拟机会尽最大努力从所有丢弃的对象中回收空间
         MemoryUtil.releaseMemory();
-
-
         br.close();
 
 
