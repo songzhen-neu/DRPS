@@ -285,6 +285,7 @@ public class DataProcessUtil {
         br.readLine();
         SampleList sampleBatch=new SampleList();
         List<String[]> catList=new ArrayList<String[]>();
+        // 长度为server的大小，用来判定哪个参数传递给哪个server进行编码
         List<Set> catSetList=new ArrayList<Set>();
 
 
@@ -347,6 +348,8 @@ public class DataProcessUtil {
                 Map<String,Long> dimMaps=new HashMap<String, Long>();
                 for(int i=0;i<catSetList.size();i++){
                     CurrentTimeUtil.setStartTime();
+
+                    // 这块多个worker的数据集同时访问多个服务器，那么这里的CurIndexNum极大可能是乱的，导致了总的维度的减少
                     Map<String,Long> dimMap=WorkerContext.psRouterClient.getPsWorkers().get(i).getCatDimMapBySet(catSetList.get(i));
 
 
@@ -355,14 +358,15 @@ public class DataProcessUtil {
                         if(j!=i){
                             // 这些是并行的，那么就容易出问题
                             WorkerContext.psRouterClient.getPsWorkers().get(j).setCurIndexNum(dimMap.get("CurIndexNum"));
-
-
                         }
                     }
+
 
                     for(String key:dimMap.keySet()){
                         dimMaps.put(key,dimMap.get(key));
                     }
+                    WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+
                 }
 
                 for(int i=0;i<catList.size();i++){
@@ -406,6 +410,14 @@ public class DataProcessUtil {
     }
 
     public static String[] getMetaCat(String[] str,List<Set> catSetList){
+        /**
+        *@Description: 根据lineSplit来获取一个cat属性的String数组，
+         * 并且按照hashcode分给不同的server，也就是划分在catSetList里。
+        *@Param: [str, catSetList]
+        *@return: java.lang.String[]
+        *@Author: SongZhen
+        *@date: 下午3:29 19-1-21
+        */
         String[] cat=new String[WorkerContext.catSize];
         for (int i=0;i<cat.length;i++){
             cat[i]=str[i+2];
