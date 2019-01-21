@@ -7,7 +7,6 @@ import context.WorkerContext;
 import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
 import lombok.Synchronized;
-import net.IntListMessage;
 import net.PSWorker;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.util.SizeOf;

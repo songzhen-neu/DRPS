@@ -24,17 +24,20 @@ import org.jblas.FloatMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import store.KVStore;
+import sun.plugin2.message.Message;
 
 import java.io.IOException;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 
 /**
@@ -60,12 +63,17 @@ public class PServer implements net.PSGrpc.PS {
     private float[] maxFeature=new float[Context.featureSize];
     private float[] minFeature=new float[Context.featureSize];
 
-    private AtomicBoolean isExecuteFlag=new AtomicBoolean(false);
-    private AtomicInteger workerStepForBarrier =new AtomicInteger(0);
+    private static AtomicBoolean isExecuteFlag=new AtomicBoolean(false);
+    private static AtomicInteger workerStepForBarrier =new AtomicInteger(0);
 
     private ConcurrentSet<Float> numSet_otherWorkerAccessVi=new ConcurrentSet<Float>();
-    private Float floatSum=0f;
+    private static volatile Float floatSum=0f;
+    private static AtomicBoolean isFinished=new AtomicBoolean(false);
+    private static AtomicBoolean isStart=new AtomicBoolean(false);
+    private static AtomicBoolean isWait=new AtomicBoolean(false);
 
+    private static ConcurrentMap<Long,Integer> vAccessNumMap=new ConcurrentHashMap<Long, Integer>();
+    private static ConcurrentSet<Long> prunedVSet=new ConcurrentSet<Long>();
 
 
     public PServer(int port){
@@ -172,8 +180,8 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void getSparseDimSize(RequestMetaMessage req,StreamObserver<LongMessage> reponseObject){
-        LongMessage.Builder sparseDimSize=LongMessage.newBuilder();
+    public void getSparseDimSize(RequestMetaMessage req,StreamObserver<LMessage> reponseObject){
+        LMessage.Builder sparseDimSize=LMessage.newBuilder();
 
         logger.info("host:"+req.getHost());
         workerStep.incrementAndGet();
@@ -193,13 +201,13 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void sentSparseDimSizeAndInitParams(LongMessage req,StreamObserver<BooleanMessage> responseObject){
+    public void sentSparseDimSizeAndInitParams(LMessage req,StreamObserver<BMessage> responseObject){
         Context.sparseDimSize=req.getL();
         // 开始利用sparseDimSize，采用取余的方式进行数据分配
         try{
             ServerContext.kvStoreForLevelDB.initParams();
 
-            BooleanMessage.Builder booleanMessage=BooleanMessage.newBuilder();
+            BMessage.Builder booleanMessage=BMessage.newBuilder();
             booleanMessage.setB(true);
             responseObject.onNext(booleanMessage.build());
             responseObject.onCompleted();
@@ -213,10 +221,10 @@ public class PServer implements net.PSGrpc.PS {
 
 
     @Override
-    public void barrier(RequestMetaMessage req,StreamObserver<BooleanMessage> resp){
+    public void barrier(RequestMetaMessage req,StreamObserver<BMessage> resp){
         waitBarrier(Context.workerNum);
 
-        BooleanMessage.Builder boolMessage=BooleanMessage.newBuilder();
+        BMessage.Builder boolMessage=BMessage.newBuilder();
         boolMessage.setB(true);
         logger.info(""+workerStep.longValue());
         resp.onNext(boolMessage.build());
@@ -264,7 +272,6 @@ public class PServer implements net.PSGrpc.PS {
 
     public void waitBarrier(int num_waitOthers) {
         try {
-
             workerStepForBarrier.incrementAndGet();
             if (workerStepForBarrier.get() == num_waitOthers) {
                 synchronized (workerStepForBarrier) {
@@ -282,7 +289,10 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
+//        System.out.println("num2:"+num_waitOthers);
+//        System.out.println(workerStepForBarrier.intValue());
         workerStepForBarrier.set(0);
+
 
 
     }
@@ -318,7 +328,7 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     @Synchronized
-    public void sentCurIndexNum(LongMessage req,StreamObserver<SMessage> resp){
+    public void sentCurIndexNum(LMessage req,StreamObserver<SMessage> resp){
         ServerContext.kvStoreForLevelDB.setCurIndexOfSparseDim(new AtomicLong(req.getL()));
         SMessage.Builder sMessage=SMessage.newBuilder();
         sMessage.setStr("success");
@@ -327,8 +337,8 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void sentInitedT(IntFloatMessage req,StreamObserver<IntMessage> resp){
-        IntMessage.Builder intMessage=IntMessage.newBuilder();
+    public void sentInitedT(IFMessage req,StreamObserver<IMessage> resp){
+        IMessage.Builder intMessage=IMessage.newBuilder();
 
 
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(),req.getF());
@@ -396,27 +406,40 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void pushLocalViAccessNum(FloatMessage req,StreamObserver<BooleanMessage> resp){
+    public void pushLocalViAccessNum(FMessage req,StreamObserver<BMessage> resp){
 
-
+        numSet_otherWorkerAccessVi.add(req.getF());
+        System.out.println("haha");
+        waitBarrier(Context.workerNum - 1);
+        System.out.println("haha1");
         // 开始计算numSet_otherWorkerAccessVi的总和
-        synchronized (isExecuteFlag) {
-
-            numSet_otherWorkerAccessVi.add(req.getF());
-            waitBarrier(Context.workerNum - 1);
-            if (isExecuteFlag.getAndSet(true)) {
+        synchronized (floatSum) {
+            if (!isExecuteFlag.getAndSet(true)) {
                 for (float f : numSet_otherWorkerAccessVi) {
+                    System.out.println("hahaadd");
                     floatSum += f;
+                    isFinished.set(true);
                 }
-                synchronized (floatSum) {
-                    floatSum.notifyAll();
+
+                while(!isWait.get()){
+                    try {
+                        Thread.sleep(10);
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                }
+
+                synchronized (isFinished) {
+                    isFinished.notify();
+
                 }
 
             }
         }
 
 
-        BooleanMessage.Builder executeStatus=BooleanMessage.newBuilder();
+        System.out.println("haha2");
+        BMessage.Builder executeStatus=BMessage.newBuilder();
         executeStatus.setB(true);
         isExecuteFlag.set(false);
         resp.onNext(executeStatus.build());
@@ -427,21 +450,87 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void pullOtherWorkerAccessForVi(RequestMetaMessage req,StreamObserver<FloatMessage> resp){
-        synchronized (floatSum){
+    public void pullOtherWorkerAccessForVi(RequestMetaMessage req,StreamObserver<FMessage> resp){
+        System.out.println("haha3");
+
+        synchronized (isFinished){
             try{
-                floatSum.wait();
+                isWait.set(true);
+                isFinished.wait();
+
             }catch (InterruptedException e){
                 e.printStackTrace();
             }
-            logger.info("pullOtherWorkerAccessForVi from:"+req.getHost());
-            FloatMessage.Builder floatMessage=FloatMessage.newBuilder();
-            floatMessage.setF(floatSum);
-            floatSum=0f;
-            resp.onNext(floatMessage.build());
-            resp.onCompleted();
-
         }
+
+        isStart.set(true);
+
+        isFinished.set(false);
+        System.out.println("haha4");
+        logger.info("pullOtherWorkerAccessForVi from:"+req.getHost());
+        FMessage.Builder floatMessage=FMessage.newBuilder();
+        floatMessage.setF(floatSum);
+        floatSum=0f;
+        resp.onNext(floatMessage.build());
+        resp.onCompleted();
+
     }
+
+    @Override
+    public void pushVANumAndGetCatPrunedRecord(LIListMessage req,StreamObserver<LListMessage> resp){
+        Map<Long,Integer> map=MessageDataTransUtil.LIListMessage_2_Map(req);
+
+
+        // 下面开始计算，且只计算一次各个map的和
+        synchronized (vAccessNumMap){
+            for(long l:map.keySet()){
+                if(vAccessNumMap.containsKey(l)){
+                    int num=vAccessNumMap.get(l);
+                    num++;
+                    vAccessNumMap.put(l,num);
+                }else {
+                    vAccessNumMap.put(l,map.get(l));
+                }
+            }
+        }
+        waitBarrier(Context.workerNum);
+
+        // 取频率高于freqThreshold,统计到
+        if(!isExecuteFlag.getAndSet(true)){
+            for(Long l:vAccessNumMap.keySet()){
+                if(vAccessNumMap.get(l)>Context.freqThreshold){
+                    prunedVSet.add(l);
+                }
+            }
+            System.out.println("isFinish02:"+isFinished.get());
+            isFinished.set(true);
+            System.out.println("isFinish03:"+isFinished.get());
+        }
+
+        System.out.println("isFinish04:"+isFinished.get());
+        while(!isFinished.get()){
+            try {
+                Thread.sleep(10);
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
+        }
+
+        isFinished.set(false);
+        isExecuteFlag.set(false);
+
+        LListMessage.Builder respMessage=LListMessage.newBuilder();
+        for(long l:prunedVSet){
+            LMessage.Builder lMessage=LMessage.newBuilder();
+            lMessage.setL(l);
+            respMessage.addList(lMessage);
+        }
+
+        resp.onNext(respMessage.build());
+        resp.onCompleted();
+
+
+    }
+
 
 }

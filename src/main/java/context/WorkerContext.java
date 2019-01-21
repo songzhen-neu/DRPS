@@ -42,9 +42,8 @@ public class WorkerContext {
 
 
     /** 剪枝*/
-    public static boolean usePruneRate;
+
     public static float pruneRate;
-    public static float freqThreshold;
     public static int samplePrunedSize;   // 用于剪枝和模型划分的训练样本个数
     public static int sampleBatchListPrunedSize; // 用于剪枝和模型划分的训练batch个数
 
@@ -69,12 +68,12 @@ public class WorkerContext {
         isCatForwardFeature=true;
         sampleListSize=10000;
 
-        usePruneRate=true;
 
-        samplePrunedSize=10000;
+
+        samplePrunedSize=1000;
 
         pruneRate=0.001f;
-        freqThreshold=100;
+
 
         myDataPath="data/train"+workerId+".csv";
 
@@ -82,7 +81,7 @@ public class WorkerContext {
 
         catSize=12;
 
-        sampleBatchSize=1000;
+        sampleBatchSize=100;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;

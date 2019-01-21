@@ -15,6 +15,7 @@ import org.jblas.FloatMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -105,13 +106,13 @@ public class PSWorker {
     public long getSparseDimSize()throws UnknownHostException {
         RequestMetaMessage.Builder requestMetaMessage=RequestMetaMessage.newBuilder();
         requestMetaMessage.setHost(Inet4Address.getLocalHost().getHostAddress());
-        LongMessage longMessage=blockingStub.getSparseDimSize(requestMetaMessage.build());
+        LMessage longMessage=blockingStub.getSparseDimSize(requestMetaMessage.build());
         return longMessage.getL();
 
     }
 
     public void sentSparseDimSizeAndInitParams(long sparseDimSize){
-        LongMessage.Builder l=LongMessage.newBuilder();
+        LMessage.Builder l=LMessage.newBuilder();
         l.setL(sparseDimSize);
         blockingStub.sentSparseDimSizeAndInitParams(l.build());
     }
@@ -161,7 +162,7 @@ public class PSWorker {
 
     @Synchronized
     public synchronized void setCurIndexNum(long curIndexNum){
-        LongMessage.Builder l=LongMessage.newBuilder();
+        LMessage.Builder l=LMessage.newBuilder();
         l.setL(curIndexNum);
         blockingStub.sentCurIndexNum(l.build());
 
@@ -169,10 +170,10 @@ public class PSWorker {
 
     public int sentInitedT(float Time){
         int minCostI;
-        IntFloatMessage.Builder sentMessage=IntFloatMessage.newBuilder();
+        IFMessage.Builder sentMessage=IFMessage.newBuilder();
         sentMessage.setF(Time);
         sentMessage.setI(WorkerContext.workerId);
-        IntMessage respM=blockingStub.sentInitedT(sentMessage.build());
+        IMessage respM=blockingStub.sentInitedT(sentMessage.build());
         minCostI=respM.getI();
         logger.info("get Min time along machines:"+minCostI);
         return minCostI;
@@ -187,7 +188,7 @@ public class PSWorker {
         *@Author: SongZhen
         *@date: 下午10:29 19-1-19
         */
-        FloatMessage.Builder sentMessage=FloatMessage.newBuilder();
+        FMessage.Builder sentMessage=FMessage.newBuilder();
         sentMessage.setF(T_localAccessVj);
         blockingStub.pushLocalViAccessNum(sentMessage.build());
 
@@ -203,8 +204,16 @@ public class PSWorker {
         */
         RequestMetaMessage.Builder req=RequestMetaMessage.newBuilder();
         req.setHost(Inet4Address.getLocalHost().getHostName());
-        FloatMessage accessedNum_otherWorkers=blockingStub.pullOtherWorkerAccessForVi(req.build());
+        FMessage accessedNum_otherWorkers=blockingStub.pullOtherWorkerAccessForVi(req.build());
         return accessedNum_otherWorkers.getF();
+    }
+
+    public Set<Long> pushVANumAndGetCatPrunedRecord(Map<Long,Integer> vAccessNum){
+        Set<Long> set=new HashSet<Long>();
+        LIListMessage message=MessageDataTransUtil.Map_2_LIListMessage(vAccessNum);
+        blockingStub.pushVANumAndGetCatPrunedRecord(message);
+
+        return set;
     }
 
 

@@ -47,6 +47,9 @@ public class Context {
     public static float diskAccessTime;
     public static float netTrafficTime;
 
+    public static float freqThreshold;
+    public static boolean usePruneRate;
+
 
 
     public static void init() throws IOException {
@@ -88,5 +91,8 @@ public class Context {
         diskSeekTime=0.29f;
         diskAccessTime=0.0001f;
         netTrafficTime=0.001f;
+
+        freqThreshold=8;
+        usePruneRate=true;
     }
 }

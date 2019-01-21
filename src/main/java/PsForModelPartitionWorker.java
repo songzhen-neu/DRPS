@@ -55,6 +55,8 @@ public class PsForModelPartitionWorker {
 
         // 将稀疏维度的大小发给本地server，然后初始化参数
         WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
+
+
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
         PartitionUtil.partitionV();
 
@@ -63,7 +65,7 @@ public class PsForModelPartitionWorker {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,1000);
+        LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,50);
         MemoryUtil.releaseMemory();
         logisticRegression.train();
 

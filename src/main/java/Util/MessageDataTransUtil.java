@@ -3,10 +3,7 @@ package Util;
 import net.*;
 import org.jblas.FloatMatrix;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @program: simplePsForModelPartition
@@ -140,4 +137,25 @@ public class MessageDataTransUtil {
         return map;
     }
 
+
+    public static LIListMessage Map_2_LIListMessage(Map<Long,Integer> vAccessNum){
+        LIListMessage.Builder message=LIListMessage.newBuilder();
+        for(long i:vAccessNum.keySet()){
+            LIMessage.Builder liMessage=LIMessage.newBuilder();
+            liMessage.setL(i);
+            liMessage.setI(vAccessNum.get(i));
+            message.addList(liMessage.build());
+        }
+        message.setSize(vAccessNum.size());
+        return message.build();
+    }
+
+    public static Map<Long,Integer> LIListMessage_2_Map(LIListMessage message){
+        Map<Long,Integer> map=new HashMap<Long, Integer>();
+        for(int i=0;i<message.getSize();i++){
+            LIMessage liMessage=message.getList(i);
+            map.put(liMessage.getL(),liMessage.getI());
+        }
+        return map;
+    }
 }

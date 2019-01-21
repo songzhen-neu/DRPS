@@ -8,23 +8,25 @@ service PS {
     rpc PushAFMatrix (MatrixMessage) returns (MatrixMessage){}
     rpc AFMatrixDimPartition(KeyValueListMessage) returns (PartitionListMessage){}
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
-    rpc GetSparseDimSize(RequestMetaMessage) returns (LongMessage){}
-    rpc SentSparseDimSizeAndInitParams(LongMessage) returns (BooleanMessage){}
-    rpc Barrier(RequestMetaMessage) returns (BooleanMessage){}
+    rpc GetSparseDimSize(RequestMetaMessage) returns (LMessage){}
+    rpc SentSparseDimSizeAndInitParams(LMessage) returns (BMessage){}
+    rpc Barrier(RequestMetaMessage) returns (BMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
     rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
     rpc SendSFMap(SFKVListMessage) returns (SMessage){};
-    rpc SentCurIndexNum(LongMessage) returns (SMessage){};
-    rpc SentInitedT(IntFloatMessage) returns(IntMessage){};
-    rpc PushLocalViAccessNum(FloatMessage) returns(BooleanMessage){};
-    rpc PullOtherWorkerAccessForVi(RequestMetaMessage) returns(FloatMessage){};
+    rpc SentCurIndexNum(LMessage) returns (SMessage){};
+    rpc SentInitedT(IFMessage) returns(IMessage){};
+    rpc PushLocalViAccessNum(FMessage) returns(BMessage){};
+    rpc PullOtherWorkerAccessForVi(RequestMetaMessage) returns(FMessage){};
+    rpc PushVANumAndGetCatPrunedRecord(LIListMessage) returns(LListMessage){};
+
 }
 
 
-message FloatMessage{
+message FMessage{
     float f=1;
 }
-message IntFloatMessage{
+message IFMessage{
     int32 i=1;
     float f=2;
 }
@@ -34,20 +36,20 @@ message RequestMetaMessage {
     string host = 1;
 }
 
-message BooleanMessage{
+message BMessage{
     bool b=1;
 }
 
-message LongMessage{
+message LMessage{
     int64 l=1;
 }
 
-message LongIntMessage{
+message LIMessage{
     int64 l=1;
     int32 i=2;
 }
 
-message IntMessage{
+message IMessage{
     int32 i=1;
 }
 
@@ -87,7 +89,7 @@ message AFMatrixMessage{
     MatrixMessage AFMatrix=2;
 }
 
-message IntListMessage{
+message IListMessage{
     int32 size=1;
     repeated int32 list=2;
 }
@@ -120,6 +122,16 @@ message SFKVMessage{
     float value=2;
 }
 
+
+message LIListMessage{
+    int32 size=1;
+    repeated LIMessage list=2;
+}
+
+message LListMessage{
+    int32 size=1;
+    repeated LMessage List=2;
+}
 
 
 

@@ -11,9 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @program: simplePsForModelPartition
@@ -24,6 +22,12 @@ import java.util.Set;
 public class PartitionUtil {
     static Logger logger=LoggerFactory.getLogger(PartitionUtil.class.getName());
     static DB db=WorkerContext.kvStoreForLevelDB.getDb();
+    static Set<Integer> batchSampledRecord=new HashSet<Integer>();
+    static Set<Long> catPrunedRecord=new HashSet<Long>();
+    // 这个是放在内存里的vAccessNum
+    static Map<Long,Integer> vAccessNum=new HashMap<Long, Integer>();
+
+
     public static void partitionV() throws IOException,ClassNotFoundException{
         boolean isInited=false;
         float Ti_com=0;
@@ -32,14 +36,21 @@ public class PartitionUtil {
         // 本地存储哪台机器（server）存了哪些参数
         Set[] vSet = SetUtil.initSetArray(Context.serverNum);
 
-        // 统计每个参数被本地的batch访问的次数，并放到worker的数据库里，以vAccessNum开头
+        // 统计每个参数被本地的batch访问的次数，并放到worker的数据库里，以vAccessNum开头,
         buildVAccessNum();
+
+
+        // 上述是已经采样完的数据的关于V的访问的统计，其中batchRecord是采样的batch的index
+        // 下面开始进行维度的剪枝，返回的是server计算完成之后，被剪枝后的维度
+        // 所以每台机器都要向master发送采样后，每个V被访问的次数
+        catPrunedRecord=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord(vAccessNum);
+
 
 
 
 
         // 下面取出j=1，放在第insertI台机器上
-        for(long j=0;j<Context.sparseDimSize;j++){
+        for (long j = 0; j < Context.sparseDimSize; j++) {
 
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
@@ -48,25 +59,27 @@ public class PartitionUtil {
 
                 Ti_disk = 0;
 
-                // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
-                PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
-                insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
-                vSet[insertI].add(j);
-
 
                 isInited = true;
-            }else {
+            } else {
                 // 统计本机访问Vi的次数
-                float T_localAccessVj=getVjAccessNum(j);
+                float T_localAccessVj = getVjAccessNum(j);
                 // 统计其他机器访问Vi的次数
-                if(insertI==WorkerContext.workerId){
-                    float accessNum_otherWorkers=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
-                    Ti_com=Ti_com-T_localAccessVj+accessNum_otherWorkers;
+                if (insertI == WorkerContext.workerId) {
+                    float accessNum_otherWorkers = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
+                    Ti_com = Ti_com - T_localAccessVj + accessNum_otherWorkers;
+                    // 下面开始计算disk的时间,这里是初始化的时间
 
-                }else {
+
+                } else {
                     WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
                 }
             }
+
+            // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
+            PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
+            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
+            vSet[insertI].add(j);
         }
 
     }
@@ -96,14 +109,25 @@ public class PartitionUtil {
     private static void buildVAccessNum(){
         DB db=WorkerContext.kvStoreForLevelDB.getDb();
         Set<Long> set=new HashSet<Long>();
+        int num_ContainsBatchPruned=WorkerContext.sampleBatchListSize/WorkerContext.sampleBatchListPrunedSize;
+
 
         // 遍历数据并统计Ui访问的参数v的个数
-        for(int i=0;i<WorkerContext.sampleBatchListSize;i++){
+        for(int i=0;i<WorkerContext.sampleBatchListPrunedSize;i++){
             try{
-                SampleList sampleBatch=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+i).getBytes()));
+                int m=RandomUtil.getIntRandomFromZeroToN(num_ContainsBatchPruned);
+                int index=i*(num_ContainsBatchPruned)+m;
+                SampleList sampleBatch=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+index).getBytes()));
+                batchSampledRecord.add(i*(num_ContainsBatchPruned)+m);
+
+                // 这里的set是采样后的每个sampleBatch
                 buildVSetOfBatch(set, sampleBatch);
                 // 遍历set，然后更新db里的对V的访问次数，db里没有出现的维度，说明本地数据集对这个维度没有访问
-                buildVSetAccessNumOfBatch(set);
+                // 这个是基于磁盘的
+//                buildVSetAccessNumOfBatch(set);
+                // 由于经过了采样和剪枝，那么其实可以基于内存做
+                buildVSetAccessNumOfBatchInMemory(set);
+                set.clear();
             }catch (IOException e){
                 e.printStackTrace();
             }catch (ClassNotFoundException e){
@@ -114,6 +138,13 @@ public class PartitionUtil {
     }
 
     private static void buildVSetOfBatch(Set<Long> set, SampleList sampleBatch) {
+        /**
+        *@Description: 这个batch访问的所有稀疏维度cat的集合
+        *@Param: [set, sampleBatch]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 上午9:29 19-1-21
+        */
         for(int j=0;j<sampleBatch.sampleList.size();j++){
             for(Sample sample:sampleBatch.sampleList){
                 long[] catList=sample.cat;
@@ -146,6 +177,21 @@ public class PartitionUtil {
             e.printStackTrace();
         }
 
+    }
+
+
+    private static void buildVSetAccessNumOfBatchInMemory(Set<Long> set){
+        for(long i:set){
+            if(vAccessNum.get(i)!=null){
+                int num=vAccessNum.get(i);
+                num++;
+                vAccessNum.put(i,num);
+            }else {
+                vAccessNum.put(i,1);
+            }
+
+
+        }
     }
 
 
