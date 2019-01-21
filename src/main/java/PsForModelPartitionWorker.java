@@ -52,13 +52,19 @@ public class PsForModelPartitionWorker {
         // 规范化连续feature属性
         DataProcessUtil.linerNormalization();
 
-
-        // 将稀疏维度的大小发给本地server，然后初始化参数
-        WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
+        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
         PartitionUtil.partitionV();
+
+
+        System.out.println("end");
+        // 将稀疏维度的大小发给本地server，然后初始化参数
+        WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
+
+
+
 
 
 

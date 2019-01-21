@@ -158,4 +158,12 @@ public class MessageDataTransUtil {
         }
         return map;
     }
+
+    public static Set<Long> LListMessage_2_Set(LListMessage message){
+        Set<Long> set=new HashSet<Long>();
+        for(int i=0;i<message.getSize();i++){
+            set.add(message.getList(i).getL());
+        }
+        return set;
+    }
 }

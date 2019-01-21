@@ -46,15 +46,15 @@ public class PartitionUtil {
         catPrunedRecord=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord(vAccessNum);
 
 
-
-
-
         // 下面取出j=1，放在第insertI台机器上
-        for (long j = 0; j < Context.sparseDimSize; j++) {
+        for (long j : catPrunedRecord) {
 
+            PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
+            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
+            System.out.println("insertI:"+insertI);
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
-                Ti_com = getInitTiCom();
+                Ti_com = getInitTiComInMemory(catPrunedRecord);
 
 
                 Ti_disk = 0;
@@ -63,7 +63,7 @@ public class PartitionUtil {
                 isInited = true;
             } else {
                 // 统计本机访问Vi的次数
-                float T_localAccessVj = getVjAccessNum(j);
+                float T_localAccessVj = getVjAccessNumInMemory(j);
                 // 统计其他机器访问Vi的次数
                 if (insertI == WorkerContext.workerId) {
                     float accessNum_otherWorkers = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
@@ -77,8 +77,7 @@ public class PartitionUtil {
             }
 
             // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
-            PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
-            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
+
             vSet[insertI].add(j);
         }
 
@@ -94,6 +93,26 @@ public class PartitionUtil {
         return num;
     }
 
+    private static float getVjAccessNumInMemory(long j) throws IOException,ClassNotFoundException{
+        int num=0;
+        if(vAccessNum.get(j)!=null){
+            num=vAccessNum.get(j);
+        }else {
+            num=0;
+        }
+        return num;
+    }
+
+
+    private static float getInitTiComInMemory(Set<Long> catPrunedRecord){
+        float sum=0;
+        for(long l:catPrunedRecord){
+            if(vAccessNum.get(l)!=null){
+                sum+=vAccessNum.get(l);
+            }
+        }
+        return sum;
+    }
 
     private static float getInitTiCom()throws IOException,ClassNotFoundException{
         float sum=0;

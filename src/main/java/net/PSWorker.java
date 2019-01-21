@@ -209,11 +209,10 @@ public class PSWorker {
     }
 
     public Set<Long> pushVANumAndGetCatPrunedRecord(Map<Long,Integer> vAccessNum){
-        Set<Long> set=new HashSet<Long>();
         LIListMessage message=MessageDataTransUtil.Map_2_LIListMessage(vAccessNum);
-        blockingStub.pushVANumAndGetCatPrunedRecord(message);
+        LListMessage lListMessage= blockingStub.pushVANumAndGetCatPrunedRecord(message);
 
-        return set;
+        return MessageDataTransUtil.LListMessage_2_Set(lListMessage);
     }
 
 

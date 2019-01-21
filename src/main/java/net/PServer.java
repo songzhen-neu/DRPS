@@ -167,7 +167,7 @@ public class PServer implements net.PSGrpc.PS {
             map.put("CurIndexNum",ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
 
             SLKVListMessage slkvListMessage=MessageDataTransUtil.Map_2_SLKVListMessage(map);
-            logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
+//            logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
 
             responsedObject.onNext(slkvListMessage);
             responsedObject.onCompleted();
@@ -456,7 +456,11 @@ public class PServer implements net.PSGrpc.PS {
         synchronized (isFinished){
             try{
                 isWait.set(true);
-                isFinished.wait();
+                // 这里是只有是多台机器的时候才wait，单机跑不wait
+                if(Context.workerNum>1){
+                    isFinished.wait();
+                }
+
 
             }catch (InterruptedException e){
                 e.printStackTrace();
@@ -485,8 +489,8 @@ public class PServer implements net.PSGrpc.PS {
         synchronized (vAccessNumMap){
             for(long l:map.keySet()){
                 if(vAccessNumMap.containsKey(l)){
-                    int num=vAccessNumMap.get(l);
-                    num++;
+                    int num=vAccessNumMap.get(l)+map.get(l);
+
                     vAccessNumMap.put(l,num);
                 }else {
                     vAccessNumMap.put(l,map.get(l));
@@ -525,7 +529,8 @@ public class PServer implements net.PSGrpc.PS {
             lMessage.setL(l);
             respMessage.addList(lMessage);
         }
-
+        respMessage.setSize(prunedVSet.size());
+        logger.info("prunedVSet"+prunedVSet.size());
         resp.onNext(respMessage.build());
         resp.onCompleted();
 
