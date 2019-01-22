@@ -24,7 +24,6 @@ import org.jblas.FloatMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import store.KVStore;
-import sun.plugin2.message.Message;
 
 import java.io.IOException;
 
@@ -341,9 +340,9 @@ public class PServer implements net.PSGrpc.PS {
     public void sentInitedT(IFMessage req,StreamObserver<IMessage> resp){
         IMessage.Builder intMessage=IMessage.newBuilder();
 
-
+        logger.info("req:"+req.getI());
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(),req.getF());
-
+        logger.info("TimeCostMapSize:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
         try{
             if(ServerContext.kvStoreForLevelDB.getTimeCostMap().size()==Context.workerNum){
                 synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()){
@@ -362,17 +361,16 @@ public class PServer implements net.PSGrpc.PS {
 
 
 
-
-
-
         System.out.println("size:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
 
-        synchronized (isExecuteFlag) {
-            if (!isExecuteFlag.getAndSet(true)) {
-                ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
 
-            }
+        if (!isFinished.getAndSet(true)) {
+            ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
+
         }
+
+        waitFinished();
+
 
 
         logger.info("I:"+req.getI()+",F:"+req.getF()+",minI:"+ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
@@ -386,12 +384,31 @@ public class PServer implements net.PSGrpc.PS {
 
     }
 
+    private void waitFinished() {
+        try {
+            if(isFinished.get()){
+                synchronized (isFinished){
+                    isFinished.notifyAll();
+                }
+            }else {
+                synchronized (isFinished){
+                    isFinished.wait();
+                }
+            }
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+        isFinished.set(false);
+    }
+
 
     public int getKeyOfMinValue(){
         int keyOfMaxValue=-1;
         Map<Integer,Float> map=ServerContext.kvStoreForLevelDB.getTimeCostMap();
         float minValue=Float.MAX_VALUE;
         for(int i:map.keySet()){
+            System.out.println("i:"+i);
             if(keyOfMaxValue==-1){
                 keyOfMaxValue=i;
                 minValue=map.get(i);
@@ -486,6 +503,7 @@ public class PServer implements net.PSGrpc.PS {
         Map<Long,Integer> map=MessageDataTransUtil.LIListMessage_2_Map(req);
 
 
+
         // 下面开始计算，且只计算一次各个map的和
         synchronized (vAccessNumMap){
             for(long l:map.keySet()){
@@ -498,6 +516,7 @@ public class PServer implements net.PSGrpc.PS {
                 }
             }
         }
+
         waitBarrier(Context.workerNum);
 
         // 取频率高于freqThreshold,统计到
@@ -513,17 +532,14 @@ public class PServer implements net.PSGrpc.PS {
         }
 
         System.out.println("isFinish04:"+isFinished.get());
-        while(!isFinished.get()){
-            try {
-                Thread.sleep(10);
-            }catch (InterruptedException e){
-                e.printStackTrace();
-            }
-        }
+
+        waitFinished();
 
         isFinished.set(false);
-        isExecuteFlag.set(false);
 
+
+
+        System.out.println("isFinish05:");
         LListMessage.Builder respMessage=LListMessage.newBuilder();
         for(long l:prunedVSet){
             LMessage.Builder lMessage=LMessage.newBuilder();
@@ -531,6 +547,7 @@ public class PServer implements net.PSGrpc.PS {
             respMessage.addList(lMessage);
         }
         respMessage.setSize(prunedVSet.size());
+        System.out.println("isFinish06:");
 //        logger.info("prunedVSet"+prunedVSet.size());
         resp.onNext(respMessage.build());
         resp.onCompleted();

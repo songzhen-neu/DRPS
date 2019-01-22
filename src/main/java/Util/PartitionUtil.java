@@ -44,15 +44,11 @@ public class PartitionUtil {
         // 下面开始进行维度的剪枝，返回的是server计算完成之后，被剪枝后的维度
         // 所以每台机器都要向master发送采样后，每个V被访问的次数
         catPrunedRecord=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord(vAccessNum);
-        logger.info("prunedVSet"+catPrunedRecord.size());
+        logger.info("prunedVSet:"+catPrunedRecord.size());
 
 
         // 下面取出j=1，放在第insertI台机器上
         for (long j : catPrunedRecord) {
-
-            PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
-            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
-            logger.info("insert "+j+" into "+insertI);
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
                 Ti_com = getInitTiComInMemory(catPrunedRecord);
@@ -77,6 +73,10 @@ public class PartitionUtil {
                 }
             }
 
+            PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
+            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
+            WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+            logger.info("insert "+j+" into "+insertI);
             // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
 
             vSet[insertI].add(j);
