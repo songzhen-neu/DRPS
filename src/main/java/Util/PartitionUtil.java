@@ -44,6 +44,7 @@ public class PartitionUtil {
         // 下面开始进行维度的剪枝，返回的是server计算完成之后，被剪枝后的维度
         // 所以每台机器都要向master发送采样后，每个V被访问的次数
         catPrunedRecord=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord(vAccessNum);
+        logger.info("prunedVSet"+catPrunedRecord.size());
 
 
         // 下面取出j=1，放在第insertI台机器上
@@ -51,7 +52,7 @@ public class PartitionUtil {
 
             PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
             insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
-            System.out.println("insertI:"+insertI);
+            logger.info("insert "+j+" into "+insertI);
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
                 Ti_com = getInitTiComInMemory(catPrunedRecord);
@@ -105,6 +106,14 @@ public class PartitionUtil {
 
 
     private static float getInitTiComInMemory(Set<Long> catPrunedRecord){
+        /**
+        *@Description: 初始的Ticom，就是所有的本地的需要访问的参数的次数。
+         * 也就是看每个参数被batch访问次数之和
+        *@Param: [catPrunedRecord]
+        *@return: float
+        *@Author: SongZhen
+        *@date: 上午8:22 19-1-22
+        */
         float sum=0;
         for(long l:catPrunedRecord){
             if(vAccessNum.get(l)!=null){

@@ -14,7 +14,7 @@ import java.io.IOException;
  * @create: 2018-12-02 15:49
  */
 public class PsForModelPartitionServer {
-    public static void main(String args[]) throws IOException, InterruptedException,ClassNotFoundException {
+    public static void main(String args[]) throws IOException, InterruptedException {
         Context.init();
         ServerContext.init();
 

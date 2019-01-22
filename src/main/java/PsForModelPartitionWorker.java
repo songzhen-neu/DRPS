@@ -36,7 +36,6 @@ public class PsForModelPartitionWorker {
         // 将原始数据处理成one-hot编码的数据，然后存储在kv数据库中
 
         DataProcessUtil.metaToDB(WorkerContext.myDataPath,Context.featureSize,WorkerContext.catSize);
-        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
 
         // 获取稀疏的维度个数，并发送给自己的本地服务器

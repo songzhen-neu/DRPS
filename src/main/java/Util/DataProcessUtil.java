@@ -41,10 +41,9 @@ public class DataProcessUtil {
 
         // 以下是离散特征在前连续特征在后的代码
         if (WorkerContext.isCatForwardFeature) {
-//            sparseDimSize=metaDataToSampleLevelDB(fileName, featureSize, catSize);
-//            sparseDimSize=metaDataToBatchSampleLevelDB(fileName,featureSize,catSize);
-//            getSampleBatchListByBatchIndexByMaster(fileName,featureSize,catSize);
-            getSampleBatchListByBatchIndex(fileName,featureSize,catSize);
+
+            getSampleBatchListByBatchIndexByMaster(fileName,featureSize,catSize);
+//            getSampleBatchListByBatchIndex(fileName,featureSize,catSize);
         } else if (!WorkerContext.isCatForwardFeature) {
             // 下面是连续特征在前，离散特征在后的代码
            System.out.println("方法还没写");
@@ -365,7 +364,6 @@ public class DataProcessUtil {
                     for(String key:dimMap.keySet()){
                         dimMaps.put(key,dimMap.get(key));
                     }
-                    WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
                 }
 

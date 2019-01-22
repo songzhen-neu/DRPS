@@ -531,7 +531,7 @@ public class PServer implements net.PSGrpc.PS {
             respMessage.addList(lMessage);
         }
         respMessage.setSize(prunedVSet.size());
-        logger.info("prunedVSet"+prunedVSet.size());
+//        logger.info("prunedVSet"+prunedVSet.size());
         resp.onNext(respMessage.build());
         resp.onCompleted();
 
