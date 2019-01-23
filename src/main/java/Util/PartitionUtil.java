@@ -64,7 +64,7 @@ public class PartitionUtil {
                 float T_localAccessVj = getVjAccessNumInMemory(j);
                 // 统计其他机器访问Vi的次数
                 if (insertI == WorkerContext.workerId) {
-                    System.out.println("haha1");
+                    System.out.println("hhaha1");
                     float accessNum_otherWorkers = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
                     System.out.println("haha2");
                     Ti_com = Ti_com - T_localAccessVj + accessNum_otherWorkers;
