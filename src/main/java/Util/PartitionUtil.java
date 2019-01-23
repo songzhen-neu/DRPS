@@ -49,6 +49,7 @@ public class PartitionUtil {
 
         // 下面取出j=1，放在第insertI台机器上
         for (long j : catPrunedRecord) {
+
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
                 Ti_com = getInitTiComInMemory(catPrunedRecord);
@@ -63,23 +64,32 @@ public class PartitionUtil {
                 float T_localAccessVj = getVjAccessNumInMemory(j);
                 // 统计其他机器访问Vi的次数
                 if (insertI == WorkerContext.workerId) {
+                    System.out.println("haha1");
                     float accessNum_otherWorkers = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
+                    System.out.println("haha2");
                     Ti_com = Ti_com - T_localAccessVj + accessNum_otherWorkers;
                     // 下面开始计算disk的时间,这里是初始化的时间
 
 
                 } else {
+                    System.out.println("haha3");
                     WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
+                    System.out.println("haha4");
                 }
             }
 
+            System.out.println("haha5");
+//            WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+
             PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
             insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
-            WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+            System.out.println("haha6");
+
             logger.info("insert "+j+" into "+insertI);
             // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
 
             vSet[insertI].add(j);
+            System.out.println("setSize:"+(vSet[0].size()+vSet[1].size()+vSet[2].size()));
         }
 
     }

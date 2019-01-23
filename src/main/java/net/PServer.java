@@ -11,6 +11,7 @@ import com.yahoo.sketches.quantiles.DoublesSketch;
 import com.yahoo.sketches.quantiles.UpdateDoublesSketch;
 import context.Context;
 import context.ServerContext;
+import context.WorkerContext;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
@@ -69,10 +70,21 @@ public class PServer implements net.PSGrpc.PS {
     private static volatile Float floatSum=0f;
     private static AtomicBoolean isFinished=new AtomicBoolean(false);
     private static AtomicBoolean isStart=new AtomicBoolean(false);
-    private static AtomicBoolean isWait=new AtomicBoolean(false);
+
 
     private static ConcurrentMap<Long,Integer> vAccessNumMap=new ConcurrentHashMap<Long, Integer>();
     private static ConcurrentSet<Long> prunedVSet=new ConcurrentSet<Long>();
+    private static AtomicInteger waitThread=new AtomicInteger(0);
+
+
+    //太乱了，下面是barrier专用变量
+    private static AtomicInteger barrier_waitThread=new AtomicInteger(0);
+    private static AtomicBoolean barrier_isExecuteFlag=new AtomicBoolean(false);
+
+    private static AtomicBoolean isExecuteFlag_otherLocal=new AtomicBoolean(false);
+    private static AtomicBoolean isFinished_otherLocal=new AtomicBoolean(false);
+    private static AtomicBoolean isWait_otherLocal=new AtomicBoolean(false);
+    private static AtomicInteger workerStepForBarrier_otherLocal=new AtomicInteger(0);
 
 
     public PServer(int port){
@@ -222,7 +234,7 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void barrier(RequestMetaMessage req,StreamObserver<BMessage> resp){
-        waitBarrier(Context.workerNum);
+        waitBarrier();
 
         BMessage.Builder boolMessage=BMessage.newBuilder();
         boolMessage.setB(true);
@@ -254,7 +266,8 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        waitBarrier(Context.workerNum);
+
+        waitBarrier();
 
         MaxAndMinArrayMessage.Builder respMaxAndMin=MaxAndMinArrayMessage.newBuilder();
         for(int i=0;i<Context.featureSize;i++){
@@ -270,17 +283,26 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-    public void waitBarrier(int num_waitOthers) {
+    public void waitBarrier() {
         try {
-            workerStepForBarrier.incrementAndGet();
-            if (workerStepForBarrier.get() == num_waitOthers) {
-                synchronized (workerStepForBarrier) {
-                    workerStepForBarrier.notifyAll();
+            if (!barrier_isExecuteFlag.getAndSet(true)) {
+//                System.out.println("chuxian2");
+                while(barrier_waitThread.get()<(Context.workerNum-1)){
+                    Thread.sleep(10);
+                }
+//                System.out.println("chuxian3");
+                synchronized (barrier_waitThread) {
+
+
+                    barrier_waitThread.set(0);
+                    barrier_waitThread.notifyAll();
                 }
 
             }else {
-                synchronized (workerStepForBarrier){
-                    workerStepForBarrier.wait();
+                synchronized (barrier_waitThread){
+//                    System.out.println("chuxian4");
+                    barrier_waitThread.incrementAndGet();
+                    barrier_waitThread.wait();
                 }
 
             }
@@ -289,9 +311,10 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
+        barrier_isExecuteFlag.set(false);
 //        System.out.println("num2:"+num_waitOthers);
 //        System.out.println(workerStepForBarrier.intValue());
-        workerStepForBarrier.set(0);
+
 
 
 
@@ -320,7 +343,7 @@ public class PServer implements net.PSGrpc.PS {
 
         ServerContext.kvStoreForLevelDB.updateParams(map);
         smessage.setStr("success");
-        waitBarrier(Context.workerNum);
+        waitBarrier();
 
         resp.onNext(smessage.build());
         resp.onCompleted();
@@ -342,7 +365,7 @@ public class PServer implements net.PSGrpc.PS {
 
         logger.info("req:"+req.getI());
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(),req.getF());
-        logger.info("TimeCostMapSize:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
+//        logger.info("TimeCostMapSize:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
         try{
             if(ServerContext.kvStoreForLevelDB.getTimeCostMap().size()==Context.workerNum){
                 synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()){
@@ -363,24 +386,63 @@ public class PServer implements net.PSGrpc.PS {
 
         System.out.println("size:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
 
-
-        if (!isFinished.getAndSet(true)) {
+        isFinished.set(false);
+        waitThread.set(0);
+        isExecuteFlag.set(false);
+        waitBarrier();
+//        logger.info("isFinish1:"+isFinished+",:waitThread:"+waitThread);
+        if (!isExecuteFlag.getAndSet(true)) {
             ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
+            while(waitThread.get()<(Context.workerNum-1)){
+                try{
+                    System.out.println("ka1");
+                    Thread.sleep(10);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+
+            }
+            isFinished.set(true);
+//            logger.info("test1");
 
         }
+//        logger.info("test2");
+        logger.info("isFinish2:"+isFinished+",:waitThread:"+waitThread);
+        waitFinishedWithWaitThread();
 
-        waitFinished();
-
-
+        logger.info("test3");
 
         logger.info("I:"+req.getI()+",F:"+req.getF()+",minI:"+ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
 
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
-        isExecuteFlag.set(false);
+        waitBarrier();
+        ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(0);
+        ServerContext.kvStoreForLevelDB.getTimeCostMap().clear();
+
         resp.onNext(intMessage.build());
         resp.onCompleted();
+
+    }
+
+    private void waitFinishedWithWaitThread() {
+        try {
+            if(isFinished.get()){
+
+                synchronized (isFinished){
+                    isFinished.notifyAll();
+
+                }
+            }else {
+                synchronized (isFinished){
+                    waitThread.incrementAndGet();
+                    isFinished.wait();
+                }
+            }
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -392,14 +454,16 @@ public class PServer implements net.PSGrpc.PS {
                 }
             }else {
                 synchronized (isFinished){
+
                     isFinished.wait();
                 }
             }
         }catch (InterruptedException e){
             e.printStackTrace();
         }
-
+        isExecuteFlag.set(false);
         isFinished.set(false);
+        waitThread.set(0);
     }
 
 
@@ -408,7 +472,7 @@ public class PServer implements net.PSGrpc.PS {
         Map<Integer,Float> map=ServerContext.kvStoreForLevelDB.getTimeCostMap();
         float minValue=Float.MAX_VALUE;
         for(int i:map.keySet()){
-            System.out.println("i:"+i);
+//            System.out.println("i:"+i);
             if(keyOfMaxValue==-1){
                 keyOfMaxValue=i;
                 minValue=map.get(i);
@@ -427,39 +491,67 @@ public class PServer implements net.PSGrpc.PS {
     public void pushLocalViAccessNum(FMessage req,StreamObserver<BMessage> resp){
 
         numSet_otherWorkerAccessVi.add(req.getF());
-        System.out.println("haha");
-        waitBarrier(Context.workerNum - 1);
         System.out.println("haha1");
+        waitBarrier2(Context.workerNum - 1);
+        System.out.println("haha2");
         // 开始计算numSet_otherWorkerAccessVi的总和
         synchronized (floatSum) {
-            if (!isExecuteFlag.getAndSet(true)) {
+//            logger.info("isExecuteFlag:"+isExecuteFlag_otherLocal.get());
+            if (!isExecuteFlag_otherLocal.getAndSet(true)) {
                 for (float f : numSet_otherWorkerAccessVi) {
-                    System.out.println("hahaadd");
+//                    System.out.println("hahaadd");
                     floatSum += f;
-                    isFinished.set(true);
+                    isFinished_otherLocal.set(true);
                 }
 
-                while(!isWait.get()){
+//                logger.info("iswait:"+isWait_otherLocal.get());
+                System.out.println("haha3");
+                while(!isWait_otherLocal.get()){
                     try {
                         Thread.sleep(10);
                     }catch (InterruptedException e){
                         e.printStackTrace();
                     }
                 }
-
-                synchronized (isFinished) {
-                    isFinished.notify();
-
+                System.out.println("haha4");
+                synchronized (isFinished_otherLocal) {
+                    isWait_otherLocal.set(false);
+                    isFinished_otherLocal.notify();
                 }
+
 
             }
         }
 
+        System.out.println("haha5");
+        // 同步
+        try {
+            workerStepForBarrier_otherLocal.incrementAndGet();
+            if (workerStepForBarrier_otherLocal.get() == Context.workerNum-1) {
+                synchronized (workerStepForBarrier_otherLocal) {
+                    workerStepForBarrier_otherLocal.notifyAll();
+                }
 
-        System.out.println("haha2");
+            }else {
+                synchronized (workerStepForBarrier_otherLocal){
+                    workerStepForBarrier_otherLocal.wait();
+                }
+
+            }
+
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+//        System.out.println("num2:"+num_waitOthers);
+//        System.out.println(workerStepForBarrier.intValue());
+        workerStepForBarrier_otherLocal.set(0);
+        System.out.println("haha6");
+
+//        System.out.println("haha2");
         BMessage.Builder executeStatus=BMessage.newBuilder();
         executeStatus.setB(true);
-        isExecuteFlag.set(false);
+        isExecuteFlag_otherLocal.set(false);
         resp.onNext(executeStatus.build());
         resp.onCompleted();
 
@@ -469,14 +561,14 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void pullOtherWorkerAccessForVi(RequestMetaMessage req,StreamObserver<FMessage> resp){
-        System.out.println("haha3");
+//        System.out.println("haha3");
 
-        synchronized (isFinished){
+        synchronized (isFinished_otherLocal){
             try{
-                isWait.set(true);
+                isWait_otherLocal.set(true);
                 // 这里是只有是多台机器的时候才wait，单机跑不wait
                 if(Context.workerNum>1){
-                    isFinished.wait();
+                    isFinished_otherLocal.wait();
                 }
 
 
@@ -485,10 +577,9 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        isStart.set(true);
 
-        isFinished.set(false);
-        System.out.println("haha4");
+        isFinished_otherLocal.set(false);
+//        System.out.println("haha4");
         logger.info("pullOtherWorkerAccessForVi from:"+req.getHost());
         FMessage.Builder floatMessage=FMessage.newBuilder();
         floatMessage.setF(floatSum);
@@ -517,7 +608,7 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        waitBarrier(Context.workerNum);
+        waitBarrier();
 
         // 取频率高于freqThreshold,统计到
         if(!isExecuteFlag.getAndSet(true)){
@@ -526,20 +617,21 @@ public class PServer implements net.PSGrpc.PS {
                     prunedVSet.add(l);
                 }
             }
-            System.out.println("isFinish02:"+isFinished.get());
+//            System.out.println("isFinish02:"+isFinished.get());
             isFinished.set(true);
-            System.out.println("isFinish03:"+isFinished.get());
+//            System.out.println("isFinish03:"+isFinished.get());
         }
 
-        System.out.println("isFinish04:"+isFinished.get());
+//        System.out.println("isFinish04:"+isFinished.get());
 
         waitFinished();
 
         isFinished.set(false);
+        isExecuteFlag.set(false);
 
 
 
-        System.out.println("isFinish05:");
+//        System.out.println("isFinish05:");
         LListMessage.Builder respMessage=LListMessage.newBuilder();
         for(long l:prunedVSet){
             LMessage.Builder lMessage=LMessage.newBuilder();
@@ -547,7 +639,7 @@ public class PServer implements net.PSGrpc.PS {
             respMessage.addList(lMessage);
         }
         respMessage.setSize(prunedVSet.size());
-        System.out.println("isFinish06:");
+//        System.out.println("isFinish06:");
 //        logger.info("prunedVSet"+prunedVSet.size());
         resp.onNext(respMessage.build());
         resp.onCompleted();
@@ -555,5 +647,31 @@ public class PServer implements net.PSGrpc.PS {
 
     }
 
+    public void waitBarrier2(int num_waitOthers) {
+        try {
+            workerStepForBarrier.incrementAndGet();
+            if (workerStepForBarrier.get() == num_waitOthers) {
+                synchronized (workerStepForBarrier) {
+                    workerStepForBarrier.notifyAll();
+                }
+
+            }else {
+                synchronized (workerStepForBarrier){
+                    workerStepForBarrier.wait();
+                }
+
+            }
+
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+//        System.out.println("num2:"+num_waitOthers);
+//        System.out.println(workerStepForBarrier.intValue());
+        workerStepForBarrier.set(0);
+
+
+
+    }
 
 }
