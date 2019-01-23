@@ -155,6 +155,10 @@ public class LogisticRegression {
             }
             for (int i = 0; i < sample.cat.length; i++) {
                 if (sample.cat[i] != -1) {
+                    System.out.println(sample.cat[i]);
+//                    if(paramsMap.get("catParam" + sample.cat[i])==null){
+//                        System.out.println("hakong");
+//                    }
                     value[l] += paramsMap.get("catParam" + sample.cat[i]);
                 }
             }
@@ -175,13 +179,13 @@ public class LogisticRegression {
     public Set<String>[] getNeededParamsKey(SampleList batch) {
         Set[] setArray = new HashSet[Context.serverNum];
         Set[] vSet = WorkerContext.kvStoreForLevelDB.getVSet();
-        boolean isContains = false;
         for (int i = 0; i < setArray.length; i++) {
             setArray[i] = new HashSet<String>();
         }
 
         for (Sample sample : batch.sampleList) {
             for (Long l : sample.cat) {
+                boolean isContains=false;
                 if (!l.equals(-1l)) {
                     // 判断l是否包含在vSet参数划分里，如果包含在，那么通过vset进行参数路由
                     for (int i = 0; i < vSet.length; i++) {
@@ -193,11 +197,11 @@ public class LogisticRegression {
 
                     // 如果不包含，说明并未进行参数划分，按照正常的取余进行分配
                     if (!isContains) {
-                        setArray[l.hashCode() % Context.serverNum].add("catParam" + l);
-                        isContains=false;
+                        setArray[l.intValue() % Context.serverNum].add("catParam" + l);
                     }
 
                 }
+
             }
         }
         return setArray;

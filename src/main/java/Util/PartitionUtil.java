@@ -89,7 +89,7 @@ public class PartitionUtil {
             // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
 
             vSet[insertI].add(j);
-            System.out.println("setSize:"+(vSet[0].size()+vSet[1].size()+vSet[2].size()));
+//            System.out.println("setSize:"+(vSet[0].size()+vSet[1].size()+vSet[2].size()));
         }
 
         return vSet;
