@@ -28,7 +28,7 @@ public class PartitionUtil {
     static Map<Long,Integer> vAccessNum=new HashMap<Long, Integer>();
 
 
-    public static void partitionV() throws IOException,ClassNotFoundException{
+    public static Set[] partitionV() throws IOException,ClassNotFoundException{
         boolean isInited=false;
         float Ti_com=0;
         float Ti_disk=0;
@@ -64,26 +64,26 @@ public class PartitionUtil {
                 float T_localAccessVj = getVjAccessNumInMemory(j);
                 // 统计其他机器访问Vi的次数
                 if (insertI == WorkerContext.workerId) {
-                    System.out.println("hhaha1");
+//                    System.out.println("hhaha1");
                     float accessNum_otherWorkers = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
-                    System.out.println("haha2");
+//                    System.out.println("haha2");
                     Ti_com = Ti_com - T_localAccessVj + accessNum_otherWorkers;
                     // 下面开始计算disk的时间,这里是初始化的时间
 
 
                 } else {
-                    System.out.println("haha3");
+//                    System.out.println("haha3");
                     WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
-                    System.out.println("haha4");
+//                    System.out.println("haha4");
                 }
             }
 
-            System.out.println("haha5");
+//            System.out.println("haha5");
 //            WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
             PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
             insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
-            System.out.println("haha6");
+//            System.out.println("haha6");
 
             logger.info("insert "+j+" into "+insertI);
             // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
@@ -91,6 +91,8 @@ public class PartitionUtil {
             vSet[insertI].add(j);
             System.out.println("setSize:"+(vSet[0].size()+vSet[1].size()+vSet[2].size()));
         }
+
+        return vSet;
 
     }
 

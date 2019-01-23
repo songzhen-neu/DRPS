@@ -9,7 +9,7 @@ service PS {
     rpc AFMatrixDimPartition(KeyValueListMessage) returns (PartitionListMessage){}
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
     rpc GetSparseDimSize(RequestMetaMessage) returns (LMessage){}
-    rpc SentSparseDimSizeAndInitParams(LMessage) returns (BMessage){}
+    rpc SentSparseDimSizeAndInitParams(InitVMessage) returns (BMessage){}
     rpc Barrier(RequestMetaMessage) returns (BMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
     rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
@@ -22,6 +22,16 @@ service PS {
 
 }
 
+
+message InitVMessage{
+    int64 l=1;
+    repeated ILListKVMessage list=2;
+}
+
+message ILListKVMessage{
+    int32 key=1;
+    repeated int64 llist=2;
+}
 
 message FMessage{
     float f=1;

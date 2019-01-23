@@ -55,12 +55,17 @@ public class PsForModelPartitionWorker {
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
-        PartitionUtil.partitionV();
+        Set[] vSet=PartitionUtil.partitionV();
+        WorkerContext.kvStoreForLevelDB.setVSet(vSet);
 
 
-        System.out.println("end");
-        // 将稀疏维度的大小发给本地server，然后初始化参数
-        WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
+        // 根据vSet重新分配一下参数，这些维度在vSet里找，其他维度按照取余的方式
+
+
+
+        // 将稀疏维度的大小发给本地server，然后初始化参数,这里如果vSet是空，也就是freqThreshold非常大，就相当于没划分了，所以不用单独写一个函数了
+        WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize,vSet);
+//        WorkerContext.psRouterClient.getLocalhostPSWorker().sentSparseDimSizeAndInitParams(Context.sparseDimSize);
 
 
 

@@ -66,7 +66,7 @@ public class WorkerContext {
         workerId=0;
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
-        sampleListSize=10000;
+        sampleListSize=1000;
 
 
 

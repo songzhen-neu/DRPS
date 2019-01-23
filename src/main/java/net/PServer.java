@@ -28,6 +28,7 @@ import store.KVStore;
 
 import java.io.IOException;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -213,12 +214,26 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void sentSparseDimSizeAndInitParams(LMessage req,StreamObserver<BMessage> responseObject){
+    public void sentSparseDimSizeAndInitParams(InitVMessage req,StreamObserver<BMessage> responseObject){
         Context.sparseDimSize=req.getL();
         // 开始利用sparseDimSize，采用取余的方式进行数据分配
-        try{
-            ServerContext.kvStoreForLevelDB.initParams();
+        // 把LList转换成Set
+        Set[] vSet=new Set[Context.serverNum];
+        for(int i=0;i<vSet.length;i++){
+            vSet[i]=new HashSet<Long>();
+        }
 
+        // 把list转换成Set[]
+        for(int i=0;i<vSet.length;i++){
+            for(long l:req.getList(i).getLlistList()){
+                System.out.println("key:"+req.getList(i).getKey()+",i:"+i);
+                vSet[i].add(l);
+            }
+        }
+
+
+        try{
+            ServerContext.kvStoreForLevelDB.initParams(req.getL(),vSet);
             BMessage.Builder booleanMessage=BMessage.newBuilder();
             booleanMessage.setB(true);
             responseObject.onNext(booleanMessage.build());

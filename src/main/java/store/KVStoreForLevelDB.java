@@ -39,6 +39,7 @@ public class KVStoreForLevelDB {
     private float[] featureParams=new float[Context.featureSize];
     Map<Integer,Float> timeCostMap=new ConcurrentHashMap<Integer, Float>();
     AtomicInteger minTimeCostI=new AtomicInteger(-1);
+    Set[] vSet;
 
 
     public void init(String path) throws IOException {
@@ -65,14 +66,34 @@ public class KVStoreForLevelDB {
         return map;
     }
 
-    public void initParams() throws IOException{
-        System.out.println("sparseDimSize:"+Context.sparseDimSize);
-        for(int i=0;i<Context.sparseDimSize;i++){
+    public void initParams(Long sparseDimSize,Set<Long>[] vSet) throws IOException{
+        System.out.println("sparseDimSize:"+sparseDimSize);
+
+        // 这是按照最初的取余进行分配的
+        for(long i=0;i<sparseDimSize;i++){
             if(i%Context.serverNum==ServerContext.serverId){
                 db.put(("catParam"+i).getBytes(),TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f,0.1f)));
                 System.out.println("params:"+i);
             }
         }
+        // 再把本地的vSet分配一下，ServerId
+        for(long i:vSet[ServerContext.serverId]){
+            db.put(("catParam"+i).getBytes(),TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f,0.1f)));
+            System.out.println("params:"+i);
+        }
+
+        // 再把放在别的server里vset删除
+        for(int i=0;i<vSet.length;i++){
+            if(i!=ServerContext.serverId){
+                for(long l:vSet[i]){
+                    if(db.get(("catParams"+l).getBytes())!=null){
+                        db.delete(("catParams"+l).getBytes());
+                    }
+                }
+            }
+        }
+
+
         if(Context.masterId==WorkerContext.workerId){
             for(int i=0;i<featureParams.length;i++){
                 featureParams[i]=RandomUtil.getRandomValue(-0.1f,0.1f);

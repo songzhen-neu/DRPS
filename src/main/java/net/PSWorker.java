@@ -111,10 +111,20 @@ public class PSWorker {
 
     }
 
-    public void sentSparseDimSizeAndInitParams(long sparseDimSize){
-        LMessage.Builder l=LMessage.newBuilder();
-        l.setL(sparseDimSize);
-        blockingStub.sentSparseDimSizeAndInitParams(l.build());
+    public void sentSparseDimSizeAndInitParams(long sparseDimSize,Set<Long>[] vSet){
+        InitVMessage.Builder message=InitVMessage.newBuilder();
+        message.setL(sparseDimSize);
+        for(int i=0;i<vSet.length;i++){
+            ILListKVMessage.Builder kvMessage=ILListKVMessage.newBuilder();
+            kvMessage.setKey(i);
+            for(Long l:vSet[i]){
+                kvMessage.addLlist(l);
+            }
+            message.addList(kvMessage.build());
+        }
+
+
+        blockingStub.sentSparseDimSizeAndInitParams(message.build());
     }
 
     public void barrier() throws UnknownHostException{

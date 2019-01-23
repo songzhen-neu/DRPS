@@ -75,8 +75,8 @@ public class Context {
         isDist=true;
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=1;
-        serverNum=1;
+        workerNum=3;
+        serverNum=3;
         dataPartitionNum=workerNum;
         partitionedDataSize=10000000;
         masterId=0;
@@ -92,7 +92,7 @@ public class Context {
         diskAccessTime=0.0001f;
         netTrafficTime=0.001f;
 
-        freqThreshold=8;
+        freqThreshold=0;
         usePruneRate=true;
     }
 }
