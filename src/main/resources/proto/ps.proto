@@ -19,7 +19,13 @@ service PS {
     rpc PushLocalViAccessNum(FMessage) returns(BMessage){};
     rpc PullOtherWorkerAccessForVi(RequestMetaMessage) returns(FMessage){};
     rpc PushVANumAndGetCatPrunedRecord(LIListMessage) returns(LListMessage){};
+    rpc PullPartitionedVset(RequestMetaMessage) returns(ListSetMessage){};
 
+}
+
+
+message ListSetMessage{
+    repeated LListMessage ls=1;
 }
 
 
@@ -139,8 +145,7 @@ message LIListMessage{
 }
 
 message LListMessage{
-    int32 size=1;
-    repeated LMessage List=2;
+    repeated int64 l=2;
 }
 
 

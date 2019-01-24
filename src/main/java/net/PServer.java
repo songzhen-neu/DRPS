@@ -87,6 +87,8 @@ public class PServer implements net.PSGrpc.PS {
     private static AtomicBoolean isWait_otherLocal=new AtomicBoolean(false);
     private static AtomicInteger workerStepForBarrier_otherLocal=new AtomicInteger(0);
 
+    private static ConcurrentSet<Long> localVSet=new ConcurrentSet<Long>();
+
 
     public PServer(int port){
         this.server = NettyServerBuilder.forPort(port).maxMessageSize(Context.maxMessageSize).addService(net.PSGrpc.bindService(this)).build();
@@ -430,6 +432,7 @@ public class PServer implements net.PSGrpc.PS {
         logger.info("I:"+req.getI()+",F:"+req.getF()+",minI:"+ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
 
+
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
         waitBarrier();
@@ -649,11 +652,8 @@ public class PServer implements net.PSGrpc.PS {
 //        System.out.println("isFinish05:");
         LListMessage.Builder respMessage=LListMessage.newBuilder();
         for(long l:prunedVSet){
-            LMessage.Builder lMessage=LMessage.newBuilder();
-            lMessage.setL(l);
-            respMessage.addList(lMessage);
+            respMessage.addL(l);
         }
-        respMessage.setSize(prunedVSet.size());
 //        System.out.println("isFinish06:");
 //        logger.info("prunedVSet"+prunedVSet.size());
         resp.onNext(respMessage.build());
@@ -686,6 +686,11 @@ public class PServer implements net.PSGrpc.PS {
         workerStepForBarrier.set(0);
 
 
+
+    }
+
+    @Override
+    public void pullPartitionedVset(RequestMetaMessage req,StreamObserver<ListSetMessage> resp){
 
     }
 

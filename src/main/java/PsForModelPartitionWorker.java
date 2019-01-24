@@ -77,7 +77,11 @@ public class PsForModelPartitionWorker {
         // 开始训练
         LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,50);
         MemoryUtil.releaseMemory();
+
+        CurrentTimeUtil.setStartTime();
         logisticRegression.train();
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("train_Time");
 
 
 

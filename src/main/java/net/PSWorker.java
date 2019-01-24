@@ -179,6 +179,13 @@ public class PSWorker {
     }
 
     public int sentInitedT(float Time){
+        /**
+        *@Description: 根据Time获取当前应该插入的server的id
+        *@Param: [Time]
+        *@return: int
+        *@Author: SongZhen
+        *@date: 上午8:49 19-1-24
+        */
         int minCostI;
         IFMessage.Builder sentMessage=IFMessage.newBuilder();
         sentMessage.setF(Time);
@@ -223,6 +230,12 @@ public class PSWorker {
         LListMessage lListMessage= blockingStub.pushVANumAndGetCatPrunedRecord(message);
 
         return MessageDataTransUtil.LListMessage_2_Set(lListMessage);
+    }
+
+
+
+    public List<Set> pullPartitionedVset(){
+        return null;
     }
 
 

@@ -161,9 +161,34 @@ public class MessageDataTransUtil {
 
     public static Set<Long> LListMessage_2_Set(LListMessage message){
         Set<Long> set=new HashSet<Long>();
-        for(int i=0;i<message.getSize();i++){
-            set.add(message.getList(i).getL());
+        for(int i=0;i<message.getLCount();i++){
+            set.add(message.getL(i));
         }
         return set;
+    }
+
+    public static List<Set> ListSetMessage_2_ListSet(ListSetMessage lsmessage){
+        List<Set> ls=new ArrayList<Set>();
+        for(int i=0;i<lsmessage.getLsCount();i++){
+            Set<Long> set=new HashSet<Long>();
+            for(int j=0;j<lsmessage.getLs(i).getLCount();j++){
+                set.add(lsmessage.getLs(i).getL(j));
+            }
+            ls.add(set);
+        }
+
+        return ls;
+    }
+
+    public static ListSetMessage ListSet_2_ListSetMessage(List<Set> ls){
+        ListSetMessage.Builder lsMessage=ListSetMessage.newBuilder();
+        for(Set<Long> set:ls){
+            LListMessage.Builder llistMessage=LListMessage.newBuilder();
+            for(Long l:set){
+                llistMessage.addL(l);
+            }
+            lsMessage.addLs(llistMessage);
+        }
+        return lsMessage.build();
     }
 }

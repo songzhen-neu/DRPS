@@ -155,7 +155,7 @@ public class LogisticRegression {
             }
             for (int i = 0; i < sample.cat.length; i++) {
                 if (sample.cat[i] != -1) {
-                    System.out.println(sample.cat[i]);
+//                    System.out.println(sample.cat[i]);
 //                    if(paramsMap.get("catParam" + sample.cat[i])==null){
 //                        System.out.println("hakong");
 //                    }
