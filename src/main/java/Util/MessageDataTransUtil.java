@@ -170,7 +170,7 @@ public class MessageDataTransUtil {
     public static List<Set> ListSetMessage_2_ListSet(ListSetMessage lsmessage){
         List<Set> ls=new ArrayList<Set>();
         for(int i=0;i<lsmessage.getLsCount();i++){
-            Set<Long> set=new HashSet<Long>();
+            Set<Long> set=new LinkedHashSet<Long>();
             for(int j=0;j<lsmessage.getLs(i).getLCount();j++){
                 set.add(lsmessage.getLs(i).getL(j));
             }
@@ -190,5 +190,39 @@ public class MessageDataTransUtil {
             lsMessage.addLs(llistMessage);
         }
         return lsMessage.build();
+    }
+
+    public static LListMessage LongArray_2_LListMessage(long[] longArray){
+        LListMessage.Builder message=LListMessage.newBuilder();
+        for(long l:longArray){
+            message.addL(l);
+        }
+
+        return message.build();
+    }
+
+    public static long[] LListMessage_2_LongArray(LListMessage message){
+        long[] lArray=new long[message.getLCount()];
+        for(int i=0;i<lArray.length;i++){
+            lArray[i]=message.getL(i);
+        }
+        return lArray;
+    }
+
+    public static float[] FListMessage_2_FloatArray(FListMessage message){
+        float[] fArray=new float[message.getFCount()];
+        for(int i=0;i<fArray.length;i++){
+            fArray[i]=message.getF(i);
+        }
+        return fArray;
+    }
+
+    public static FListMessage FloatArray_2_FListMessage(float[] fArray){
+        FListMessage.Builder message=FListMessage.newBuilder();
+        for(float f:fArray){
+            message.addF(f);
+        }
+
+        return message.build();
     }
 }

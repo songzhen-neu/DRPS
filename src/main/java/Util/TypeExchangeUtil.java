@@ -1,6 +1,10 @@
 package Util;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class TypeExchangeUtil {
     public static byte[] toByteArray(Object object) throws IOException {
@@ -23,6 +27,19 @@ public class TypeExchangeUtil {
         byteArrayInputStream.close();
 
         return object;
+    }
+
+    public static List<Set> copyListSet(List<Set> ls){
+        List<Set> ls_new=new ArrayList<Set>();
+        for(Set set:ls){
+            Set<Long> set_new=new HashSet<Long>();
+            for(Object l: set){
+                set_new.add((Long) l);
+            }
+            ls_new.add(set_new);
+        }
+
+        return ls_new;
     }
 
 

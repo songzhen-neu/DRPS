@@ -1,6 +1,8 @@
 package Util;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -16,5 +18,13 @@ public class SetUtil {
             set[i]=new HashSet();
         }
         return set;
+    }
+
+    public static List[] initListArray(int n){
+        List[] lArray=new ArrayList[n];
+        for(int i=0;i<n;i++){
+            lArray[i]=new ArrayList();
+        }
+        return lArray;
     }
 }

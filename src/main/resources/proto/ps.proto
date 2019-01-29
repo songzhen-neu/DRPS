@@ -19,10 +19,21 @@ service PS {
     rpc PushLocalViAccessNum(FMessage) returns(BMessage){};
     rpc PullOtherWorkerAccessForVi(RequestMetaMessage) returns(FMessage){};
     rpc PushVANumAndGetCatPrunedRecord(LIListMessage) returns(LListMessage){};
-    rpc PullPartitionedVset(RequestMetaMessage) returns(ListSetMessage){};
+    rpc PullPartitionedVset(IMessage) returns(ListSetMessage){};
+    rpc AddInitedPartitionedVSet(LIMessage) returns (BMessage){};
+    rpc PushDiskAccessForV(InsertjIntoViMessage) returns(FMessage){};
 
 }
 
+message FListMessage{
+    repeated float f=1;
+}
+
+message InsertjIntoViMessage{
+    FListMessage diskTimeArray=1;
+    int32 insertI=2;
+    int64 j=3;
+}
 
 message ListSetMessage{
     repeated LListMessage ls=1;

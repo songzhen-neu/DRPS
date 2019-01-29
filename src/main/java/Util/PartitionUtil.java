@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -63,6 +64,26 @@ public class PartitionUtil {
             } else {
                 // 统计本机访问Vi的次数
                 float T_localAccessVj = getVjAccessNumInMemory(j_last);
+                // 所有的worker都要pull一下划分后的vset
+                partitionedVSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset(insertI);
+
+                // 下面是对disk时间的计算
+                if(partitionedVSet.size()==0){
+                    if(insertI==WorkerContext.workerId){
+                        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).addInitedPartitionedVSet(j_last,insertI);
+                    }
+                }else {
+
+                    // 遍历数据集并开始统计，并返回对磁盘的访问次数
+                    float[] diskAccessForV=getDiskAccessTimeForV(partitionedVSet,j_last);
+
+                    // 每个worker都将diskAccessForV传递给server，server选择将j加入到vi的某个划分中（或者自己成为一个新的划分）
+                    Ti_disk=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushDiskAccessForV(diskAccessForV,insertI,j_last);
+
+
+
+
+                }
                 // 统计其他机器访问Vi的次数
                 if (insertI == WorkerContext.workerId) {
                     // 这些都还是对j_last插入后，做的Tdisk和Tcom的更新计算
@@ -73,10 +94,6 @@ public class PartitionUtil {
 
                     // 下面开始计算disk的时间,也是只修改插入的Tdisk的值。
                     // 先从server中获取vSet[insertId]的参数分配
-//                    partitionedVSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset();
-
-
-
 
                 } else {
 //                    System.out.println("haha3");
@@ -105,6 +122,104 @@ public class PartitionUtil {
 
         return vSet;
 
+    }
+
+
+    private static float[] getDiskAccessTimeForV(List<Set> ls_partitionedVSet,long j_last){
+        /**
+        *@Description: 还没写完，有点乱，list set其实就已经是要插入的V了。
+        *@Param: [ls_partitionedVSet, insertId, j_last]
+        *@return: long[]
+        *@Author: SongZhen
+        *@date: 上午11:26 19-1-26
+        */
+        // 因为是静态的上下文，所以diskAccessForV数组的元素全为0
+
+        float[] diskAccessForV=new float[ls_partitionedVSet.size()+1];
+
+        // 需要定义长度为n的list set数组
+        List<Set>[] lsArray=new ArrayList[ls_partitionedVSet.size()+1];
+
+        // 同来存储各种情况的各个partition的访问次数
+        List[] accessTimeOfEachPartition=SetUtil.initListArray(ls_partitionedVSet.size()+1);
+        for(int i=0;i<(ls_partitionedVSet.size()+1);i++){
+            for(int j=0;j<ls_partitionedVSet.size();j++){
+                accessTimeOfEachPartition[i].add(0);
+            }
+            if(i==ls_partitionedVSet.size()){
+                accessTimeOfEachPartition[i].add(0);
+            }
+        }
+
+
+        // 构建所有组合情况的list set，原Vi有n个partitions，现在组合就有n+1个（因为j可能单独成一个set）
+        for(int m=0;m<(ls_partitionedVSet.size()+1);m++){
+            List<Set> ls_partitionedVSet_temp=TypeExchangeUtil.copyListSet(ls_partitionedVSet);
+            // 如果是0～(m-1)，则说明是加入到原来的partition里面，m的时候是创建新的partition来存放j_last
+            if(m<ls_partitionedVSet.size()){
+                ls_partitionedVSet_temp.get(m).add(j_last);
+            }else {
+                Set<Long> set=new HashSet<Long>();
+                set.add(j_last);
+                ls_partitionedVSet_temp.add(set);
+            }
+            lsArray[m]=ls_partitionedVSet_temp;
+        }
+
+
+        for(int i:batchSampledRecord){
+            try{
+                SampleList sampleList=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+i).getBytes()));
+                Set<Long> batchCatSet=new HashSet<Long>();
+
+                // 把batch访问的cat放到batchCatSet里
+                for(Sample sample:sampleList.sampleList){
+                    long[] cat=sample.cat;
+                    for(long l:cat){
+                        batchCatSet.add(l);
+                    }
+
+                }
+
+                // 下面要填充accessTimeOfEachPartition这个数据结构，也就是各个partition的访问时间
+                for(int i_accessTime=0;i_accessTime<lsArray.length;i_accessTime++){
+                    List<Set> set_accessTime=lsArray[i_accessTime];
+                    for(Set<Long> set_temp:set_accessTime){
+                        for(long l:batchCatSet){
+                            if(set_temp.contains(l)){
+                                int index_accessTime=set_accessTime.indexOf(set_temp);
+                                int num=(Integer) accessTimeOfEachPartition[i_accessTime].get(index_accessTime);
+                                accessTimeOfEachPartition[i_accessTime].set(index_accessTime,++num);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+
+
+
+            }catch (IOException e){
+                e.printStackTrace();
+            }catch (ClassNotFoundException e){
+                e.printStackTrace();
+            }
+
+        }
+
+        // 等所有batch统计结束后，计算各个新的Vi的访问时间
+        for(int i=0;i<accessTimeOfEachPartition.length;i++){
+            float sum=0;
+            for(int j=0;j<accessTimeOfEachPartition[i].size();j++){
+                int accessNum=(Integer) accessTimeOfEachPartition[i].get(j);
+                float accessTime=lsArray[i].get(j).size()*Context.diskAccessTime+Context.diskSeekTime;
+                sum+=accessNum*accessTime;
+            }
+            diskAccessForV[i]+=sum;
+
+        }
+
+        return diskAccessForV;
     }
 
     private static float getVjAccessNum(long j) throws IOException,ClassNotFoundException{
