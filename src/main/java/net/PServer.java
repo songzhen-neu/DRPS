@@ -29,10 +29,7 @@ import store.KVStore;
 import java.io.IOException;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -92,6 +89,9 @@ public class PServer implements net.PSGrpc.PS {
     private static List<Set>[] ls_partitionedVSet = new ArrayList[Context.serverNum];
     private static AtomicDoubleArray diskAccessForV;
 
+
+    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
+    CyclicBarrier barrier_2 = new CyclicBarrier(Context.workerNum-1);
 
     public PServer(int port) {
         this.server = NettyServerBuilder.forPort(port).maxMessageSize(Context.maxMessageSize).addService(net.PSGrpc.bindService(this)).build();
@@ -380,6 +380,7 @@ public class PServer implements net.PSGrpc.PS {
         resp.onCompleted();
     }
 
+
     @Override
     public void sentInitedT(IFMessage req, StreamObserver<IMessage> resp) {
         IMessage.Builder intMessage = IMessage.newBuilder();
@@ -437,7 +438,17 @@ public class PServer implements net.PSGrpc.PS {
 
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
-        waitBarrier();
+        try {
+            barrier.await();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (BrokenBarrierException e) {
+            e.printStackTrace();
+        }
+
+
+        System.out.println("pp");
         ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(0);
         ServerContext.kvStoreForLevelDB.getTimeCostMap().clear();
 
@@ -511,7 +522,13 @@ public class PServer implements net.PSGrpc.PS {
 
         numSet_otherWorkerAccessVi.add(req.getF());
         System.out.println("haha1");
-        waitBarrier2(Context.workerNum - 1);
+
+        try {
+            barrier_2.await();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
         System.out.println("haha2");
         // 开始计算numSet_otherWorkerAccessVi的总和
         synchronized (floatSum) {
@@ -732,7 +749,7 @@ public class PServer implements net.PSGrpc.PS {
 
         barrie_forPushDiskAccessForV.incrementAndGet();
 
-        synchronized (barrie_forPushDiskAccessForV){
+        synchronized (barrie_forPushDiskAccessForV) {
             if (barrie_forPushDiskAccessForV.intValue() == Context.workerNum) {
                 barrie_forPushDiskAccessForV.notifyAll();
             } else {
@@ -745,16 +762,15 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-
+        System.out.println("haha21");
         barrie_forPushDiskAccessForV.set(0);
 
-        synchronized (diskAccessForV){
+        synchronized (diskAccessForV) {
             for (int i = 0; i < diskAccessForV.length(); i++) {
                 diskAccessForV.addAndGet(i, diskAccessForVFromWi[i]);
             }
         }
-
-
+        System.out.println("haha22");
 
         workerStep_forPushDiskAccessForV.incrementAndGet();
 
@@ -766,7 +782,7 @@ public class PServer implements net.PSGrpc.PS {
             }
 
         }
-
+        System.out.println("haha23");
         // 下面开始选一个最小的作为插入的partition
         int minI = -1;
         float minValue = Float.MAX_VALUE;
@@ -778,9 +794,9 @@ public class PServer implements net.PSGrpc.PS {
                 }
             }
 
-            if(minI<ls_partitionedVSet[req.getInsertI()].size()){
+            if (minI < ls_partitionedVSet[req.getInsertI()].size()) {
                 ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
-            }else {
+            } else {
                 ls_partitionedVSet[req.getInsertI()].add(new HashSet());
                 ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
             }
@@ -788,7 +804,7 @@ public class PServer implements net.PSGrpc.PS {
 
             isFinished_forPushDiskAccessForV.set(true);
         }
-
+        System.out.println("haha24");
         while (!isFinished_forPushDiskAccessForV.get()) {
             try {
                 Thread.sleep(10);
@@ -796,8 +812,9 @@ public class PServer implements net.PSGrpc.PS {
                 e.printStackTrace();
             }
         }
+        System.out.println("haha25");
 
-        FMessage.Builder fMessage=FMessage.newBuilder();
+        FMessage.Builder fMessage = FMessage.newBuilder();
         fMessage.setF(minValue);
         resp.onNext(fMessage.build());
         resp.onCompleted();

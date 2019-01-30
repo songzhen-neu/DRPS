@@ -55,7 +55,8 @@ public class PsForModelPartitionWorker {
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
-        Set[] vSet=PartitionUtil.partitionV();
+//        Set[] vSet=PartitionUtil.partitionV();
+        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
         WorkerContext.kvStoreForLevelDB.setVSet(vSet);
 
 
@@ -75,7 +76,7 @@ public class PsForModelPartitionWorker {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,50);
+        LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,10);
         MemoryUtil.releaseMemory();
 
         CurrentTimeUtil.setStartTime();
