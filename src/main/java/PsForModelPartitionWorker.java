@@ -55,8 +55,9 @@ public class PsForModelPartitionWorker {
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
-//        Set[] vSet=PartitionUtil.partitionV();
-        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
+        Set[] vSet=PartitionUtil.partitionV();
+//        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
+
         WorkerContext.kvStoreForLevelDB.setVSet(vSet);
 
 
