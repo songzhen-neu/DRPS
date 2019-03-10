@@ -117,28 +117,48 @@ public class KVStoreForLevelDB {
         DB db = ServerContext.kvStoreForLevelDB.getDb();
 
         SFKVListMessage.Builder sfkvlistMessage = SFKVListMessage.newBuilder();
+        // map仅存储需要的，而paramMap可能会包括一些catParamSet多余的参数
         Map<String, Float> map = new HashMap<String, Float>();
         List<Set> paramKeySetList = ls_partitionedVSet[ServerContext.serverId];
         long index = -1;
-        for (String key : set) {
+        // 存储需要访问的参数，也就是包含划分块的参数。catParamSet和catParam
+        Set<String> needParam=new HashSet<String>();
+        // 将需要用到的参数取出来，形成一个map
+        Map<String,Float> paramMap=new HashMap<String, Float>();
+
+        // 先转化需要取出来哪些参数
+        for(String key:set){
+            long index_forKey=-1;
             for (Set<Long> paramKeySet : paramKeySetList) {
                 if (paramKeySet.contains(key)) {
                     index = paramKeySetList.indexOf(paramKeySet);
                 }
             }
-            if (index == -1) {
-                Float f = (Float) TypeExchangeUtil.toObject(db.get(key.getBytes()));
-                map.put(key, f);
-            } else {
-                Set<Param> paramSet = (Set<Param>) TypeExchangeUtil.toObject(db.get(("catParamSet" + index).getBytes()));
-                for (Param param : paramSet) {
-                    if (param.key.equals(key)) {
-                        Float f = param.value;
-                        map.put(key, f);
-                    }
+            if(index==-1){
+                needParam.add(key);
+            }else {
+                needParam.add("catParamSet"+index_forKey);
+                index_forKey=-1;
+            }
+
+        }
+
+        // 构建参数map
+        for(String str:needParam){
+            if(str.indexOf("catParamSet")==-1){
+                Float f=(Float) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+                paramMap.put(str,f);
+            }else {
+                Set<Param> temp_catParamSet=(Set<Param>) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+                for(Param param:temp_catParamSet){
+                    paramMap.put(param.key,param.value);
                 }
             }
-            index = -1;
+        }
+
+
+        for (String key : set) {
+            map.put(key,paramMap.get(key));
         }
         if (ServerContext.serverId == Context.masterId) {
             for (int i = 0; i < featureParams.length; i++) {
