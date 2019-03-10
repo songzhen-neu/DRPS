@@ -10,6 +10,8 @@ import lombok.Synchronized;
 import net.PSWorker;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.util.SizeOf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -26,6 +28,9 @@ import java.util.concurrent.Future;
  * @create: 2018-11-12 16:38
  */
 public class DataProcessUtil {
+
+
+    static Logger logger=LoggerFactory.getLogger(DataProcessUtil.class.getName());
 
 
     public static void metaToDB(String fileName, int featureSize, int catSize) throws IOException,ClassNotFoundException {
@@ -66,6 +71,7 @@ public class DataProcessUtil {
         }
 
         // 遍历所有数据，找到每个feature的最大和最小值
+        logger.info("calculate local max and min value of features ");
         for(int i=0;i<WorkerContext.sampleBatchListSize;i++){
             SampleList batch=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+i).getBytes()));
             for(int j=0;j<batch.sampleList.size();j++){
@@ -82,12 +88,15 @@ public class DataProcessUtil {
 
         }
 
-        // 将最大和最小值发送给worker
+        // 将最大和最小值发送给server，并获得全局最大最小的feature
+        logger.info("sent local max and min features ");
         PSWorker psWorker=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
+        logger.info("get global Max Min Value of features");
         psWorker.getGlobalMaxMinOfFeature(max,min);
 
 
         // 遍历所有数据，对每一条数据的每个sample进行规范化
+        logger.info("linearNormalization start");
         for(int i=0;i<WorkerContext.sampleBatchListSize;i++){
             SampleList batch=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+i).getBytes()));
             for(int j=0;j<batch.sampleList.size();j++){
@@ -102,6 +111,7 @@ public class DataProcessUtil {
             db.put(("sampleBatch"+i).getBytes(),TypeExchangeUtil.toByteArray(batch));
 
         }
+        logger.info("linearNormalization end");
 
 
 

@@ -2,18 +2,16 @@ import Algotithm.LogisticRegression;
 import Util.*;
 import context.Context;
 import context.WorkerContext;
-import javafx.concurrent.Worker;
-import net.PSWorker;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import store.KVStoreForLevelDB;
+
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
+
 import java.util.Set;
 
-import static Partitioning.data.DataPartitioning.dataPartitioning;
+
 
 /**
  * @program: simplePsForModelPartition
@@ -49,7 +47,9 @@ public class PsForModelPartitionWorker {
 
 
         // 规范化连续feature属性
+        logger.info("linearNormalization start");
         DataProcessUtil.linerNormalization();
+        logger.info("linearNormalization end");
 
 
 
@@ -77,7 +77,7 @@ public class PsForModelPartitionWorker {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,10);
+        LogisticRegression logisticRegression=new LogisticRegression(0.001f,0.01f,100);
         MemoryUtil.releaseMemory();
 
         CurrentTimeUtil.setStartTime();

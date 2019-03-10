@@ -84,14 +84,13 @@ public class PServer implements net.PSGrpc.PS {
 
     private static ConcurrentSet<Long> localVSet = new ConcurrentSet<Long>();
 
+    private List<Set>[] ls_partitionedVSet=ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
 
-    // listSet其实是一个存储各个server中存储了哪些参数（有本地参数划分）的数据结构
-    private static List<Set>[] ls_partitionedVSet = new ArrayList[Context.serverNum];
     private static AtomicDoubleArray diskAccessForV;
 
 
     CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
-    CyclicBarrier barrier_2 = new CyclicBarrier(Context.workerNum-1);
+    CyclicBarrier barrier_2 = new CyclicBarrier(Context.workerNum - 1);
 
     public PServer(int port) {
         this.server = NettyServerBuilder.forPort(port).maxMessageSize(Context.maxMessageSize).addService(net.PSGrpc.bindService(this)).build();
@@ -225,7 +224,17 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void sentSparseDimSizeAndInitParams(InitVMessage req, StreamObserver<BMessage> responseObject) {
+        /**
+        *@Description: 初始化各自server服务器的参数到leveldb中
+        *@Param: [req, responseObject]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 下午2:37 19-3-10
+        */
         Context.sparseDimSize = req.getL();
+        // 这里面就包含了这个server要存的所有参数
+        List<Set> ls_params=ls_partitionedVSet[ServerContext.serverId];
+
         // 开始利用sparseDimSize，采用取余的方式进行数据分配
         // 把LList转换成Set
         Set[] vSet = new Set[Context.serverNum];
@@ -243,7 +252,7 @@ public class PServer implements net.PSGrpc.PS {
 
 
         try {
-            ServerContext.kvStoreForLevelDB.initParams(req.getL(), vSet);
+            ServerContext.kvStoreForLevelDB.initParams(req.getL(), vSet,ls_params);
             BMessage.Builder booleanMessage = BMessage.newBuilder();
             booleanMessage.setB(true);
             responseObject.onNext(booleanMessage.build());
@@ -310,11 +319,11 @@ public class PServer implements net.PSGrpc.PS {
     public void waitBarrier() {
         try {
             if (!barrier_isExecuteFlag.getAndSet(true)) {
-//                System.out.println("chuxian2");
+
                 while (barrier_waitThread.get() < (Context.workerNum - 1)) {
                     Thread.sleep(10);
                 }
-//                System.out.println("chuxian3");
+
                 synchronized (barrier_waitThread) {
 
 
@@ -324,7 +333,7 @@ public class PServer implements net.PSGrpc.PS {
 
             } else {
                 synchronized (barrier_waitThread) {
-//                    System.out.println("chuxian4");
+
                     barrier_waitThread.incrementAndGet();
                     barrier_waitThread.wait();
                 }
@@ -336,8 +345,6 @@ public class PServer implements net.PSGrpc.PS {
         }
 
         barrier_isExecuteFlag.set(false);
-//        System.out.println("num2:"+num_waitOthers);
-//        System.out.println(workerStepForBarrier.intValue());
 
 
     }
@@ -416,7 +423,6 @@ public class PServer implements net.PSGrpc.PS {
             ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(getKeyOfMinValue());
             while (waitThread.get() < (Context.workerNum - 1)) {
                 try {
-                    System.out.println("ka1");
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -428,16 +434,15 @@ public class PServer implements net.PSGrpc.PS {
 
         }
 //        logger.info("test2");
-        logger.info("isFinish2:" + isFinished + ",:waitThread:" + waitThread);
         waitFinishedWithWaitThread();
 
-        logger.info("test3");
 
         logger.info("I:" + req.getI() + ",F:" + req.getF() + ",minI:" + ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
 
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
+        logger.info("before await");
         try {
             barrier.await();
 
@@ -446,11 +451,12 @@ public class PServer implements net.PSGrpc.PS {
         } catch (BrokenBarrierException e) {
             e.printStackTrace();
         }
+        logger.info("after await");
 
-
-        System.out.println("pp");
         ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(0);
         ServerContext.kvStoreForLevelDB.getTimeCostMap().clear();
+
+        logger.info("sentInitT complete");
 
         resp.onNext(intMessage.build());
         resp.onCompleted();
@@ -517,49 +523,63 @@ public class PServer implements net.PSGrpc.PS {
         return keyOfMaxValue;
     }
 
+    AtomicInteger barrier_pushLocalViAccessNum = new AtomicInteger(0);
+
     @Override
     public void pushLocalViAccessNum(FMessage req, StreamObserver<BMessage> resp) {
 
         numSet_otherWorkerAccessVi.add(req.getF());
-        System.out.println("haha1");
 
-        try {
-            barrier_2.await();
-        }catch (Exception e){
-            e.printStackTrace();
+        synchronized (barrier_pushLocalViAccessNum) {
+            barrier_pushLocalViAccessNum.incrementAndGet();
+            if (barrier_pushLocalViAccessNum.intValue() >= Context.workerNum - 1) {
+                barrier_pushLocalViAccessNum.notifyAll();
+            } else {
+                try {
+                    barrier_pushLocalViAccessNum.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
         }
+        logger.info("barrier_pushLocalViAccessNum end");
 
-        System.out.println("haha2");
+        synchronized (barrier_pushLocalViAccessNum) {
+            barrier_pushLocalViAccessNum.set(0);
+        }
         // 开始计算numSet_otherWorkerAccessVi的总和
         synchronized (floatSum) {
 //            logger.info("isExecuteFlag:"+isExecuteFlag_otherLocal.get());
-            if (!isExecuteFlag_otherLocal.getAndSet(true)) {
-                for (float f : numSet_otherWorkerAccessVi) {
-//                    System.out.println("hahaadd");
-                    floatSum += f;
-                    isFinished_otherLocal.set(true);
-                }
 
-//                logger.info("iswait:"+isWait_otherLocal.get());
-                System.out.println("haha3");
+            if (!isExecuteFlag_otherLocal.getAndSet(true)) {
+                // 如果pull线程没有等待，则阻塞
                 while (!isWait_otherLocal.get()) {
                     try {
                         Thread.sleep(10);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+
                 }
-                System.out.println("haha4");
+                logger.info("wait other end");
+
+                for (float f : numSet_otherWorkerAccessVi) {
+                    floatSum += f;
+                }
+
+//                logger.info("iswait:"+isWait_otherLocal.get());
+
                 synchronized (isFinished_otherLocal) {
-                    isWait_otherLocal.set(false);
-                    isFinished_otherLocal.notify();
+                    isFinished_otherLocal.notifyAll();
                 }
 
 
             }
+
+
         }
 
-        System.out.println("haha5");
         // 同步
         try {
             workerStepForBarrier_otherLocal.incrementAndGet();
@@ -581,13 +601,16 @@ public class PServer implements net.PSGrpc.PS {
 
 //        System.out.println("num2:"+num_waitOthers);
 //        System.out.println(workerStepForBarrier.intValue());
-        workerStepForBarrier_otherLocal.set(0);
-        System.out.println("haha6");
+        synchronized (workerStepForBarrier_otherLocal) {
+            workerStepForBarrier_otherLocal.set(0);
+        }
+        synchronized (isExecuteFlag_otherLocal) {
+            isExecuteFlag_otherLocal.set(false);
+        }
 
-//        System.out.println("haha2");
         BMessage.Builder executeStatus = BMessage.newBuilder();
         executeStatus.setB(true);
-        isExecuteFlag_otherLocal.set(false);
+
         resp.onNext(executeStatus.build());
         resp.onCompleted();
 
@@ -596,7 +619,6 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void pullOtherWorkerAccessForVi(RequestMetaMessage req, StreamObserver<FMessage> resp) {
-//        System.out.println("haha3");
 
         synchronized (isFinished_otherLocal) {
             try {
@@ -612,9 +634,11 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
+        logger.info("pullOtherWorkerAccessForVi isFinished_otherLocal end");
+        synchronized (isWait_otherLocal){
+            isWait_otherLocal.set(false);
+        }
 
-        isFinished_otherLocal.set(false);
-//        System.out.println("haha4");
         logger.info("pullOtherWorkerAccessForVi from:" + req.getHost());
         FMessage.Builder floatMessage = FMessage.newBuilder();
         floatMessage.setF(floatSum);
@@ -747,9 +771,11 @@ public class PServer implements net.PSGrpc.PS {
         isExecuted_forPushDiskAccessForV.set(false);
         isFinished_forPushDiskAccessForV.set(false);
 
-        barrie_forPushDiskAccessForV.incrementAndGet();
 
+        logger.info("pushDiskAccessForV start");
+        logger.info("barrier start");
         synchronized (barrie_forPushDiskAccessForV) {
+            barrie_forPushDiskAccessForV.incrementAndGet();
             if (barrie_forPushDiskAccessForV.intValue() == Context.workerNum) {
                 barrie_forPushDiskAccessForV.notifyAll();
             } else {
@@ -762,15 +788,17 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        System.out.println("haha21");
-        barrie_forPushDiskAccessForV.set(0);
+        logger.info("barrier end");
+        synchronized (barrie_forPushDiskAccessForV) {
+            barrie_forPushDiskAccessForV.set(0);
+        }
+
 
         synchronized (diskAccessForV) {
             for (int i = 0; i < diskAccessForV.length(); i++) {
                 diskAccessForV.addAndGet(i, diskAccessForVFromWi[i]);
             }
         }
-        System.out.println("haha22");
 
         workerStep_forPushDiskAccessForV.incrementAndGet();
 
@@ -782,7 +810,6 @@ public class PServer implements net.PSGrpc.PS {
             }
 
         }
-        System.out.println("haha23");
         // 下面开始选一个最小的作为插入的partition
         int minI = -1;
         float minValue = Float.MAX_VALUE;
@@ -804,7 +831,6 @@ public class PServer implements net.PSGrpc.PS {
 
             isFinished_forPushDiskAccessForV.set(true);
         }
-        System.out.println("haha24");
         while (!isFinished_forPushDiskAccessForV.get()) {
             try {
                 Thread.sleep(10);
@@ -812,7 +838,8 @@ public class PServer implements net.PSGrpc.PS {
                 e.printStackTrace();
             }
         }
-        System.out.println("haha25");
+    // 目前还没有按照ls_partitionedVSet进行参数划分
+        logger.info("pushDiskAccessForV end");
 
         FMessage.Builder fMessage = FMessage.newBuilder();
         fMessage.setF(minValue);
