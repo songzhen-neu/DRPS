@@ -82,15 +82,15 @@ public class PServer implements net.PSGrpc.PS {
     private static AtomicBoolean isWait_otherLocal = new AtomicBoolean(false);
     private static AtomicInteger workerStepForBarrier_otherLocal = new AtomicInteger(0);
 
-    private static ConcurrentSet<Long> localVSet = new ConcurrentSet<Long>();
+
 
     private List<Set>[] ls_partitionedVSet=ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
 
     private static AtomicDoubleArray diskAccessForV;
 
 
-    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
-    CyclicBarrier barrier_2 = new CyclicBarrier(Context.workerNum - 1);
+//    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
+//    CyclicBarrier barrier_2 = new CyclicBarrier(Context.workerNum - 1);
 
     public PServer(int port) {
         this.server = NettyServerBuilder.forPort(port).maxMessageSize(Context.maxMessageSize).addService(net.PSGrpc.bindService(this)).build();
@@ -388,6 +388,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
+    AtomicInteger barrier_sentInitedT=new AtomicInteger(0);
     @Override
     public void sentInitedT(IFMessage req, StreamObserver<IMessage> resp) {
         IMessage.Builder intMessage = IMessage.newBuilder();
@@ -443,14 +444,23 @@ public class PServer implements net.PSGrpc.PS {
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
         logger.info("before await");
-        try {
-            barrier.await();
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (BrokenBarrierException e) {
-            e.printStackTrace();
+        synchronized (barrier_sentInitedT){
+            barrier_sentInitedT.incrementAndGet();
+            if(barrier_sentInitedT.intValue()==Context.serverNum){
+                barrier_sentInitedT.notifyAll();
+            }else {
+                try {
+                    barrier_sentInitedT.wait();
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
         }
+        synchronized (barrier_sentInitedT){
+            barrier_sentInitedT.set(0);
+        }
+
+
         logger.info("after await");
 
         ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(0);
