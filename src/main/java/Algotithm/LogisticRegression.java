@@ -61,7 +61,9 @@ public class LogisticRegression {
                 logger.info("echo " + i + ":Sent request of Params to servers");
                 for (int l = 0; l < Context.serverNum; l++) {
                     if (setArray[l].size() != 0) {
+                        logger.info("getNeededParams start");
                         paramsMapsTemp[l] = psRouterClient.get(l).getNeededParams(setArray[l]);
+                        logger.info("getNeededParams end");
                         for (String key : paramsMapsTemp[l].keySet()) {
                             // 把远程请求到的参数放到paramsMap里，这里内存是可以存得下一个batch的参数的
                             paramsMap.put(key, paramsMapsTemp[l].get(key));

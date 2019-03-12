@@ -857,4 +857,17 @@ public class PServer implements net.PSGrpc.PS {
         resp.onCompleted();
     }
 
+    @Override
+    public void getLsPartitionedVSet(SMessage req,StreamObserver<LSetListArrayMessage> resp){
+        LSetListArrayMessage lSetListArrayMessage=MessageDataTransUtil.SetListArray_2_LSetListArrayMessage(ls_partitionedVSet);
+        resp.onNext(lSetListArrayMessage);
+        resp.onCompleted();
+    }
+
+    @Override
+    public void putLsPartitionedVSet(LSetListArrayMessage req,StreamObserver<SMessage> resp){
+        ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        resp.onCompleted();
+    }
+
 }

@@ -22,7 +22,23 @@ service PS {
     rpc PullPartitionedVset(IMessage) returns(ListSetMessage){};
     rpc AddInitedPartitionedVSet(LIMessage) returns (BMessage){};
     rpc PushDiskAccessForV(InsertjIntoViMessage) returns(FMessage){};
+    rpc GetLsPartitionedVSet(SMessage) returns(LSetListArrayMessage){};
+    rpc PutLsPartitionedVSet(LSetListArrayMessage) returns(SMessage){};
 
+}
+
+
+message LSetListArrayMessage{
+    repeated LSetListMessage lSetList=1;
+}
+
+
+message LSetListMessage{
+    repeated LSetMessage lSet=1;
+}
+
+message LSetMessage{
+    repeated LMessage l=1;
 }
 
 message FListMessage{

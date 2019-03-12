@@ -225,4 +225,43 @@ public class MessageDataTransUtil {
 
         return message.build();
     }
+
+    public static LSetListArrayMessage SetListArray_2_LSetListArrayMessage(List<Set>[] slArray){
+        LSetListArrayMessage.Builder lSetListArrayMessage=LSetListArrayMessage.newBuilder();
+        for(int i=0;i<slArray.length;i++){
+            LSetListMessage.Builder slMessage=LSetListMessage.newBuilder();
+            List<Set> ls=slArray[i];
+            for(Set<Long> set:ls){
+                LSetMessage.Builder sMessage=LSetMessage.newBuilder();
+
+                for(Long l:set){
+                    LMessage.Builder lMessage=LMessage.newBuilder();
+                    lMessage.setL(l);
+                    sMessage.addL(lMessage);
+                }
+                slMessage.addLSet(sMessage);
+            }
+            lSetListArrayMessage.addLSetList(slMessage);
+        }
+        return lSetListArrayMessage.build();
+    }
+
+
+    public static List<Set>[] LSetListArrayMessage_2_SetListArray(LSetListArrayMessage lSLArrayMessage){
+        List<Set>[] slArray=new ArrayList[lSLArrayMessage.getLSetListCount()];
+        for(int i=0;i<lSLArrayMessage.getLSetListCount();i++){
+            LSetListMessage slMessage=lSLArrayMessage.getLSetList(i);
+            List<Set> sl=new ArrayList<Set>();
+            for(int j=0;j<slMessage.getLSetCount();j++){
+                LSetMessage setMessage=slMessage.getLSet(j);
+                Set<Long> set=new HashSet<Long>();
+                for(int k=0;k<setMessage.getLCount();k++){
+                    set.add(setMessage.getL(k).getL());
+                }
+                sl.add(set);
+            }
+            slArray[i]=sl;
+        }
+        return slArray;
+    }
 }

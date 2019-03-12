@@ -258,5 +258,20 @@ public class PSWorker {
         return f.getF();
     }
 
+    public LSetListArrayMessage getLsPartitionedVSet(){
+        SMessage.Builder sMessage=SMessage.newBuilder();
+        try {
+            sMessage.setStr(Inet4Address.getLocalHost().getHostName());
+        }catch (UnknownHostException e){
+            e.printStackTrace();
+        }
+        return blockingStub.getLsPartitionedVSet(sMessage.build());
+
+    }
+
+    public void putLsPartitionedVSet(LSetListArrayMessage lSetListArrayMessage){
+        blockingStub.putLsPartitionedVSet(lSetListArrayMessage);
+    }
+
 
 }
