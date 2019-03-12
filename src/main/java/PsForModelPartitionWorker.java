@@ -62,15 +62,17 @@ public class PsForModelPartitionWorker {
         Set[] vSet=PartitionUtil.partitionV();
 //        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
 
-        WorkerContext.kvStoreForLevelDB.setVSet(vSet);
-
-
-        // 需要获取一下ls_partitionedVSet，然后传递给每一个本地服务器
         if(WorkerContext.workerId!=Context.masterId){
             LSetListArrayMessage ls_partitionedVSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getLsPartitionedVSet();
             WorkerContext.psRouterClient.getPsWorkers().get(WorkerContext.workerId).putLsPartitionedVSet(ls_partitionedVSet);
         }
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+
+        WorkerContext.kvStoreForLevelDB.setVSet(vSet);
+
+
+        // 需要获取一下ls_partitionedVSet，然后传递给每一个本地服务器
+
 
 
         // 根据vSet重新分配一下参数，这些维度在vSet里找，其他维度按照取余的方式

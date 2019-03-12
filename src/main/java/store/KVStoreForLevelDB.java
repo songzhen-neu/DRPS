@@ -11,6 +11,8 @@ import net.*;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.plaf.ColorUIResource;
 import java.io.File;
@@ -42,6 +44,7 @@ public class KVStoreForLevelDB {
     public static List<Set>[] ls_partitionedVSet = new ArrayList[Context.serverNum];
     public static List<Set> localParitionVSet=ls_partitionedVSet[ServerContext.serverId];
     public static Map<String,String> catToCatSetMap=new HashMap<String, String>();
+    public static Logger logger=LoggerFactory.getLogger(KVStoreForLevelDB.class);
 
     public void init(String path) throws IOException {
         FileUtil.deleteFile(new File(path + "db/"));
@@ -73,20 +76,26 @@ public class KVStoreForLevelDB {
         for (long i = 0; i < sparseDimSize; i++) {
             if (i % Context.serverNum == ServerContext.serverId) {
                 db.put(("catParam" + i).getBytes(), TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f, 0.1f)));
-                System.out.println("params:" + i);
+//                System.out.println("params:" + i);
             }
         }
+
+        // 还有一部分数据是划分到这台服务器上，但是既不在catParamSet，又不在取余的参数中，而在Vset中
+
 
         // 这里不能简单的key，value分配了，因为已经进行磁盘划分，那么就有集合的形式了
         for (Set set : ls_params) {
             Set<Param> paramSet = new HashSet<Param>();
             for (Object l : set) {
                 Param param = new Param("catParam" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
+                logger.info("catParam"+l);
                 paramSet.add(param);
             }
             db.put(("catParamSet" + ls_params.indexOf(set)).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
-            // 查询的时候通过ls_params查询，反正是set集合，那么就用contains进行查询
+
         }
+
+
 //        for(long i:vSet[ServerContext.serverId]){
 //            db.put(("catParam"+i).getBytes(),TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f,0.1f)));
 //            System.out.println("params:"+i);
@@ -137,17 +146,22 @@ public class KVStoreForLevelDB {
         needParam = getNeedPartitionParam(set);
 
         // 构建参数map
-        for (String str : needParam) {
-            if (str.indexOf("catParamSet") == -1) {
-                Float f = (Float) TypeExchangeUtil.toObject(db.get(str.getBytes()));
-                paramMap.put(str, f);
-            } else {
-                Set<Param> temp_catParamSet = (Set<Param>) TypeExchangeUtil.toObject(db.get(str.getBytes()));
-                for (Param param : temp_catParamSet) {
-                    paramMap.put(param.key, param.value);
+
+        synchronized (ls_partitionedVSet){
+            for (String str : needParam) {
+                if (str.indexOf("catParamSet") == -1) {
+                    logger.info("str:"+str);
+                    Float f = (Float) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+                    paramMap.put(str, f);
+                } else {
+                    Set<Param> temp_catParamSet = (Set<Param>) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+                    for (Param param : temp_catParamSet) {
+                        paramMap.put(param.key, param.value);
+                    }
                 }
             }
         }
+
 
 
         for (String key : set) {
