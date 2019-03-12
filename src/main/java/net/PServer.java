@@ -265,10 +265,27 @@ public class PServer implements net.PSGrpc.PS {
 
     }
 
-
+    AtomicInteger barrier=new AtomicInteger(0);
     @Override
     public void barrier(RequestMetaMessage req, StreamObserver<BMessage> resp) {
-        waitBarrier();
+
+        synchronized (barrier){
+            barrier.incrementAndGet();
+            if(barrier.get()==Context.workerNum){
+                barrier.notifyAll();
+            }else {
+                try{
+                    barrier.wait();
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+        synchronized (barrier){
+            barrier.set(0);
+        }
 
         BMessage.Builder boolMessage = BMessage.newBuilder();
         boolMessage.setB(true);
@@ -866,7 +883,10 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void putLsPartitionedVSet(LSetListArrayMessage req,StreamObserver<SMessage> resp){
+        SMessage.Builder sMessage=SMessage.newBuilder();
+        sMessage.setStr(""+ServerContext.serverId);
         ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        resp.onNext(sMessage.build());
         resp.onCompleted();
     }
 

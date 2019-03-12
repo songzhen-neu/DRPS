@@ -70,6 +70,7 @@ public class PsForModelPartitionWorker {
             LSetListArrayMessage ls_partitionedVSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getLsPartitionedVSet();
             WorkerContext.psRouterClient.getPsWorkers().get(WorkerContext.workerId).putLsPartitionedVSet(ls_partitionedVSet);
         }
+        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
 
         // 根据vSet重新分配一下参数，这些维度在vSet里找，其他维度按照取余的方式
