@@ -126,6 +126,28 @@ public class PartitionUtil {
 //            System.out.println("setSize:"+(vSet[0].size()+vSet[1].size()+vSet[2].size()));
         }
 
+
+        // j_last没有插入
+        if(vSet[insertI].size()!=0){
+            // 统计本机访问Vi的次数
+            float T_localAccessVj = getVjAccessNumInMemory(j_last);
+            // 所有的worker都要pull一下划分后的vset
+            logger.info("pullPartitionedVSet start");
+            partitionedVSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset(insertI);
+            logger.info("pullPartitionedVSet end");
+            // 遍历数据集并开始统计，并返回对磁盘的访问次数
+            float[] diskAccessForV=getDiskAccessTimeForV(partitionedVSet,j_last);
+
+            // 每个worker都将diskAccessForV传递给server，server选择将j加入到vi的某个划分中（或者自己成为一个新的划分）
+            logger.info("pushDiskAccessForV start");
+            Ti_disk=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushDiskAccessForV(diskAccessForV,insertI,j_last);
+            logger.info("pushDiskAccessForV end");
+        }
+
+
+        for(Object l:vSet[WorkerContext.workerId]){
+            System.out.println("lvSet:"+l);
+        }
         return vSet;
 
     }

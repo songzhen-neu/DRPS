@@ -245,10 +245,12 @@ public class PServer implements net.PSGrpc.PS {
         // 把list转换成Set[]
         for (int i = 0; i < vSet.length; i++) {
             for (long l : req.getList(i).getLlistList()) {
-                System.out.println("key:" + req.getList(i).getKey() + ",i:" + i);
                 vSet[i].add(l);
+                logger.info("vset:"+l);
             }
         }
+
+
 
 
         try {
@@ -774,8 +776,10 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void addInitedPartitionedVSet(LIMessage req, StreamObserver<BMessage> resp) {
+        // insertId
         insertI.set(req.getI());
         Set<Long> set = new LinkedHashSet<Long>();
+        // j_last
         set.add(req.getL());
         ls_partitionedVSet[req.getI()].add(set);
         BMessage.Builder bMessage = BMessage.newBuilder();
@@ -792,7 +796,9 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void pushDiskAccessForV(InsertjIntoViMessage req, StreamObserver<FMessage> resp) {
+        // DiskAccessForV
         float[] diskAccessForVFromWi = MessageDataTransUtil.FListMessage_2_FloatArray(req.getDiskTimeArray());
+
         diskAccessForV = new AtomicDoubleArray(diskAccessForVFromWi.length);
         workerStep_forPushDiskAccessForV.set(0);
         isExecuted_forPushDiskAccessForV.set(false);
@@ -847,8 +853,9 @@ public class PServer implements net.PSGrpc.PS {
                     minI = i;
                 }
             }
-
+            // req.getInsertI()是insertId
             if (minI < ls_partitionedVSet[req.getInsertI()].size()) {
+                // req.getJ()要插入的Long
                 ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
             } else {
                 ls_partitionedVSet[req.getInsertI()].add(new HashSet());
@@ -885,7 +892,7 @@ public class PServer implements net.PSGrpc.PS {
     public void putLsPartitionedVSet(LSetListArrayMessage req,StreamObserver<SMessage> resp){
         SMessage.Builder sMessage=SMessage.newBuilder();
         sMessage.setStr(""+ServerContext.serverId);
-        ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        ServerContext.kvStoreForLevelDB.ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
         resp.onNext(sMessage.build());
         resp.onCompleted();
     }

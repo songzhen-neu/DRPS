@@ -6,10 +6,7 @@ import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @program: simplePsForModelPartition
@@ -58,7 +55,18 @@ public class PSRouterClient{
 
             }else {
                 String[] indexSplit=index.split("m");
-                maps[Integer.parseInt(indexSplit[1])%Context.serverNum].put(index,map.get(index));
+                Set<Long>[] VSet=(Set<Long>[]) WorkerContext.kvStoreForLevelDB.getVSet();
+                boolean isInVSet=false;
+                for(int i=0;i<VSet.length;i++){
+                    if(VSet[i].contains(Long.parseLong( indexSplit[1]))){
+                        maps[i].put(index,map.get(index));
+                        isInVSet=true;
+                    }
+                }
+                if(!isInVSet){
+                    maps[Integer.parseInt(indexSplit[1])%Context.serverNum].put(index,map.get(index));
+                }
+                isInVSet=false;
             }
 
         }

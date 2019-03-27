@@ -113,7 +113,7 @@ public class KVStoreForLevelDB {
         }
 
 
-        if (Context.masterId == WorkerContext.workerId) {
+        if (Context.masterId == ServerContext.serverId) {
             for (int i = 0; i < featureParams.length; i++) {
                 featureParams[i] = RandomUtil.getRandomValue(-0.1f, 0.1f);
             }
@@ -144,13 +144,19 @@ public class KVStoreForLevelDB {
 
         // 先转化需要取出来哪些参数
         needParam = getNeedPartitionParam(set);
-
+        for(Set<Long> set1:paramKeySetList){
+            for(Long l:set1){
+                System.out.println("vset1:"+l);
+            }
+        }
         // 构建参数map
 
         synchronized (ls_partitionedVSet){
             for (String str : needParam) {
                 if (str.indexOf("catParamSet") == -1) {
-                    logger.info("str:"+str);
+                    if(db.get(str.getBytes())==null){
+                        logger.info("nullstr:" + str);
+                    }
                     Float f = (Float) TypeExchangeUtil.toObject(db.get(str.getBytes()));
                     paramMap.put(str, f);
                 } else {
@@ -222,7 +228,12 @@ public class KVStoreForLevelDB {
                         }
                     }
                 } else {
+
+                    if(db.get(index.getBytes())==null){
+                        logger.info("updatenull:"+index);
+                    }
                     float f=(Float) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+
                     catParamMap.put(index, f);
                     allCatParamMap.put(index,f);
                 }

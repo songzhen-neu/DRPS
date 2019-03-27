@@ -194,6 +194,7 @@ public class LogisticRegression {
                         if (vSet[i].contains(l)) {
                             setArray[i].add("catParam" + l);
                             isContains = true;
+                            break;
                         }
                     }
 
