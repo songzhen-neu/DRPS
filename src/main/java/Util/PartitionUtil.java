@@ -126,7 +126,6 @@ public class PartitionUtil {
 //            System.out.println("setSize:"+(vSet[0].size()+vSet[1].size()+vSet[2].size()));
         }
 
-
         // j_last没有插入
         if(vSet[insertI].size()!=0){
             // 统计本机访问Vi的次数
@@ -143,8 +142,6 @@ public class PartitionUtil {
             Ti_disk=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushDiskAccessForV(diskAccessForV,insertI,j_last);
             logger.info("pushDiskAccessForV end");
         }
-
-
         for(Object l:vSet[WorkerContext.workerId]){
             System.out.println("lvSet:"+l);
         }
@@ -155,12 +152,12 @@ public class PartitionUtil {
 
     private static float[] getDiskAccessTimeForV(List<Set> ls_partitionedVSet,long j_last){
         /**
-        *@Description: 还没写完，有点乱，list set其实就已经是要插入的V了。
-        *@Param: [ls_partitionedVSet, insertId, j_last]
-        *@return: long[]
-        *@Author: SongZhen
-        *@date: 上午11:26 19-1-26
-        */
+         *@Description: 还没写完，有点乱，list set其实就已经是要插入的V了。
+         *@Param: [ls_partitionedVSet, insertId, j_last]
+         *@return: long[]
+         *@Author: SongZhen
+         *@date: 上午11:26 19-1-26
+         */
         // 因为是静态的上下文，所以diskAccessForV数组的元素全为0
 
         float[] diskAccessForV=new float[ls_partitionedVSet.size()+1];
@@ -273,13 +270,13 @@ public class PartitionUtil {
 
     private static float getInitTiComInMemory(Set<Long> catPrunedRecord){
         /**
-        *@Description: 初始的Ticom，就是所有的本地的需要访问的参数的次数。
+         *@Description: 初始的Ticom，就是所有的本地的需要访问的参数的次数。
          * 也就是看每个参数被batch访问次数之和
-        *@Param: [catPrunedRecord]
-        *@return: float
-        *@Author: SongZhen
-        *@date: 上午8:22 19-1-22
-        */
+         *@Param: [catPrunedRecord]
+         *@return: float
+         *@Author: SongZhen
+         *@date: 上午8:22 19-1-22
+         */
         float sum=0;
         for(long l:catPrunedRecord){
             if(vAccessNum.get(l)!=null){
@@ -333,12 +330,12 @@ public class PartitionUtil {
 
     private static void buildVSetOfBatch(Set<Long> set, SampleList sampleBatch) {
         /**
-        *@Description: 这个batch访问的所有稀疏维度cat的集合
-        *@Param: [set, sampleBatch]
-        *@return: void
-        *@Author: SongZhen
-        *@date: 上午9:29 19-1-21
-        */
+         *@Description: 这个batch访问的所有稀疏维度cat的集合
+         *@Param: [set, sampleBatch]
+         *@return: void
+         *@Author: SongZhen
+         *@date: 上午9:29 19-1-21
+         */
         for(int j=0;j<sampleBatch.sampleList.size();j++){
             for(Sample sample:sampleBatch.sampleList){
                 long[] catList=sample.cat;

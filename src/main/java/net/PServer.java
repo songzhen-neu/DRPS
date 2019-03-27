@@ -893,6 +893,7 @@ public class PServer implements net.PSGrpc.PS {
         SMessage.Builder sMessage=SMessage.newBuilder();
         sMessage.setStr(""+ServerContext.serverId);
         ServerContext.kvStoreForLevelDB.ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        ls_partitionedVSet=ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
         resp.onNext(sMessage.build());
         resp.onCompleted();
     }

@@ -58,7 +58,7 @@ public class PSRouterClient{
                 Set<Long>[] VSet=(Set<Long>[]) WorkerContext.kvStoreForLevelDB.getVSet();
                 boolean isInVSet=false;
                 for(int i=0;i<VSet.length;i++){
-                    if(VSet[i].contains(Long.parseLong( indexSplit[1]))){
+                    if(VSet[i].contains(Long.parseLong(indexSplit[1]))){
                         maps[i].put(index,map.get(index));
                         isInVSet=true;
                     }
