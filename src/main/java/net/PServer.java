@@ -1,6 +1,7 @@
 package net;
 
 
+import Util.DataProcessUtil;
 import Util.MemoryUtil;
 import Util.MessageDataTransUtil;
 import com.google.common.collect.Maps;
@@ -83,8 +84,7 @@ public class PServer implements net.PSGrpc.PS {
     private static AtomicInteger workerStepForBarrier_otherLocal = new AtomicInteger(0);
 
 
-
-    private List<Set>[] ls_partitionedVSet=ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
+    private List<Set>[] ls_partitionedVSet = ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
 
     private static AtomicDoubleArray diskAccessForV;
 
@@ -225,15 +225,22 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void sentSparseDimSizeAndInitParams(InitVMessage req, StreamObserver<BMessage> responseObject) {
         /**
-        *@Description: 初始化各自server服务器的参数到leveldb中
-        *@Param: [req, responseObject]
-        *@return: void
-        *@Author: SongZhen
-        *@date: 下午2:37 19-3-10
-        */
+         *@Description: 初始化各自server服务器的参数到leveldb中
+         *@Param: [req, responseObject]
+         *@return: void
+         *@Author: SongZhen
+         *@date: 下午2:37 19-3-10
+         */
         Context.sparseDimSize = req.getL();
         // 这里面就包含了这个server要存的所有参数
-        List<Set> ls_params=ls_partitionedVSet[ServerContext.serverId];
+        List<Set> ls_params = ls_partitionedVSet[ServerContext.serverId];
+        // 把ls_partitionVset中元素数量是1的删除
+
+
+
+
+        // 显示ls_partitionVSet
+        DataProcessUtil.printLs_partitionedVset(ls_partitionedVSet);
 
         // 开始利用sparseDimSize，采用取余的方式进行数据分配
         // 把LList转换成Set
@@ -246,15 +253,12 @@ public class PServer implements net.PSGrpc.PS {
         for (int i = 0; i < vSet.length; i++) {
             for (long l : req.getList(i).getLlistList()) {
                 vSet[i].add(l);
-                logger.info("vset:"+l);
             }
         }
 
 
-
-
         try {
-            ServerContext.kvStoreForLevelDB.initParams(req.getL(), vSet,ls_params);
+            ServerContext.kvStoreForLevelDB.initParams(req.getL(), vSet, ls_params);
             BMessage.Builder booleanMessage = BMessage.newBuilder();
             booleanMessage.setB(true);
             responseObject.onNext(booleanMessage.build());
@@ -267,25 +271,26 @@ public class PServer implements net.PSGrpc.PS {
 
     }
 
-    AtomicInteger barrier=new AtomicInteger(0);
+    AtomicInteger barrier = new AtomicInteger(0);
+
     @Override
     public void barrier(RequestMetaMessage req, StreamObserver<BMessage> resp) {
 
-        synchronized (barrier){
+        synchronized (barrier) {
             barrier.incrementAndGet();
-            if(barrier.get()==Context.workerNum){
+            if (barrier.get() == Context.workerNum) {
                 barrier.notifyAll();
-            }else {
-                try{
+            } else {
+                try {
                     barrier.wait();
-                }catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
             }
         }
 
-        synchronized (barrier){
+        synchronized (barrier) {
             barrier.set(0);
         }
 
@@ -407,32 +412,27 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-    AtomicInteger barrier_sentInitedT=new AtomicInteger(0);
+    AtomicInteger barrier_sentInitedT = new AtomicInteger(0);
+
     @Override
     public void sentInitedT(IFMessage req, StreamObserver<IMessage> resp) {
         IMessage.Builder intMessage = IMessage.newBuilder();
 
-        logger.info("req:" + req.getI());
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(), req.getF());
 //        logger.info("TimeCostMapSize:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
         try {
-            if (ServerContext.kvStoreForLevelDB.getTimeCostMap().size() == Context.workerNum) {
-                synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()) {
+            synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()) {
+                if (ServerContext.kvStoreForLevelDB.getTimeCostMap().size() == Context.workerNum) {
                     ServerContext.kvStoreForLevelDB.getTimeCostMap().notifyAll();
-                }
 
-            } else {
-                synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()) {
+                } else {
                     ServerContext.kvStoreForLevelDB.getTimeCostMap().wait();
                 }
-
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-
-        System.out.println("size:" + ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
 
         isFinished.set(false);
         waitThread.set(0);
@@ -457,35 +457,33 @@ public class PServer implements net.PSGrpc.PS {
         waitFinishedWithWaitThread();
 
 
-        logger.info("I:" + req.getI() + ",F:" + req.getF() + ",minI:" + ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
+//        logger.info("I:" + req.getI() + ",F:" + req.getF() + ",minI:" + ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
 
         intMessage.setI(ServerContext.kvStoreForLevelDB.getMinTimeCostI().get());
 
-        logger.info("before await");
-        synchronized (barrier_sentInitedT){
+
+        synchronized (barrier_sentInitedT) {
             barrier_sentInitedT.incrementAndGet();
-            if(barrier_sentInitedT.intValue()==Context.serverNum){
+            if (barrier_sentInitedT.intValue() == Context.serverNum) {
                 barrier_sentInitedT.notifyAll();
-            }else {
+            } else {
                 try {
                     barrier_sentInitedT.wait();
-                }catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }
-        synchronized (barrier_sentInitedT){
+        synchronized (barrier_sentInitedT) {
             barrier_sentInitedT.set(0);
         }
 
 
-        logger.info("after await");
-
         ServerContext.kvStoreForLevelDB.getMinTimeCostI().set(0);
-        ServerContext.kvStoreForLevelDB.getTimeCostMap().clear();
-
-        logger.info("sentInitT complete");
+        synchronized (ServerContext.kvStoreForLevelDB.getTimeCostMap()) {
+            ServerContext.kvStoreForLevelDB.getTimeCostMap().clear();
+        }
 
         resp.onNext(intMessage.build());
         resp.onCompleted();
@@ -572,12 +570,9 @@ public class PServer implements net.PSGrpc.PS {
 
             }
         }
-        logger.info("barrier_pushLocalViAccessNum end");
 
-        synchronized (barrier_pushLocalViAccessNum) {
-            barrier_pushLocalViAccessNum.set(0);
-        }
-        // 开始计算numSet_otherWorkerAccessVi的总和
+
+        // 开始计算numSet_otherWorkerAccessVi的总和,只允许计算一遍（一个线程计算）
         synchronized (floatSum) {
 //            logger.info("isExecuteFlag:"+isExecuteFlag_otherLocal.get());
 
@@ -591,7 +586,7 @@ public class PServer implements net.PSGrpc.PS {
                     }
 
                 }
-                logger.info("wait other end");
+
 
                 for (float f : numSet_otherWorkerAccessVi) {
                     floatSum += f;
@@ -609,24 +604,22 @@ public class PServer implements net.PSGrpc.PS {
 
         }
 
+
         // 同步
         try {
-            workerStepForBarrier_otherLocal.incrementAndGet();
-            if (workerStepForBarrier_otherLocal.get() == Context.workerNum - 1) {
-                synchronized (workerStepForBarrier_otherLocal) {
+            synchronized (workerStepForBarrier_otherLocal) {
+                workerStepForBarrier_otherLocal.incrementAndGet();
+                if (workerStepForBarrier_otherLocal.get() == Context.workerNum - 1) {
                     workerStepForBarrier_otherLocal.notifyAll();
-                }
-
-            } else {
-                synchronized (workerStepForBarrier_otherLocal) {
+                } else {
                     workerStepForBarrier_otherLocal.wait();
                 }
-
             }
 
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
 
 //        System.out.println("num2:"+num_waitOthers);
 //        System.out.println(workerStepForBarrier.intValue());
@@ -635,6 +628,10 @@ public class PServer implements net.PSGrpc.PS {
         }
         synchronized (isExecuteFlag_otherLocal) {
             isExecuteFlag_otherLocal.set(false);
+        }
+
+        synchronized (barrier_pushLocalViAccessNum) {
+            barrier_pushLocalViAccessNum.set(0);
         }
 
         BMessage.Builder executeStatus = BMessage.newBuilder();
@@ -663,12 +660,12 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        logger.info("pullOtherWorkerAccessForVi isFinished_otherLocal end");
-        synchronized (isWait_otherLocal){
+
+        synchronized (isWait_otherLocal) {
             isWait_otherLocal.set(false);
         }
 
-        logger.info("pullOtherWorkerAccessForVi from:" + req.getHost());
+
         FMessage.Builder floatMessage = FMessage.newBuilder();
         floatMessage.setF(floatSum);
         floatSum = 0f;
@@ -804,9 +801,6 @@ public class PServer implements net.PSGrpc.PS {
         isExecuted_forPushDiskAccessForV.set(false);
         isFinished_forPushDiskAccessForV.set(false);
 
-
-        logger.info("pushDiskAccessForV start");
-        logger.info("barrier start");
         synchronized (barrie_forPushDiskAccessForV) {
             barrie_forPushDiskAccessForV.incrementAndGet();
             if (barrie_forPushDiskAccessForV.intValue() == Context.workerNum) {
@@ -821,7 +815,7 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        logger.info("barrier end");
+
         synchronized (barrie_forPushDiskAccessForV) {
             barrie_forPushDiskAccessForV.set(0);
         }
@@ -853,7 +847,7 @@ public class PServer implements net.PSGrpc.PS {
                     minI = i;
                 }
             }
-            // req.getInsertI()是insertId
+            // req.getInsertI()是insertId,如果创建了ls，则直接加入，否则重新创建一个，然后再加入
             if (minI < ls_partitionedVSet[req.getInsertI()].size()) {
                 // req.getJ()要插入的Long
                 ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
@@ -872,8 +866,7 @@ public class PServer implements net.PSGrpc.PS {
                 e.printStackTrace();
             }
         }
-    // 目前还没有按照ls_partitionedVSet进行参数划分
-        logger.info("pushDiskAccessForV end");
+        // 目前还没有按照ls_partitionedVSet进行参数划分
 
         FMessage.Builder fMessage = FMessage.newBuilder();
         fMessage.setF(minValue);
@@ -882,18 +875,18 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void getLsPartitionedVSet(SMessage req,StreamObserver<LSetListArrayMessage> resp){
-        LSetListArrayMessage lSetListArrayMessage=MessageDataTransUtil.SetListArray_2_LSetListArrayMessage(ls_partitionedVSet);
+    public void getLsPartitionedVSet(SMessage req, StreamObserver<LSetListArrayMessage> resp) {
+        LSetListArrayMessage lSetListArrayMessage = MessageDataTransUtil.SetListArray_2_LSetListArrayMessage(ls_partitionedVSet);
         resp.onNext(lSetListArrayMessage);
         resp.onCompleted();
     }
 
     @Override
-    public void putLsPartitionedVSet(LSetListArrayMessage req,StreamObserver<SMessage> resp){
-        SMessage.Builder sMessage=SMessage.newBuilder();
-        sMessage.setStr(""+ServerContext.serverId);
-        ServerContext.kvStoreForLevelDB.ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
-        ls_partitionedVSet=ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
+    public void putLsPartitionedVSet(LSetListArrayMessage req, StreamObserver<SMessage> resp) {
+        SMessage.Builder sMessage = SMessage.newBuilder();
+        sMessage.setStr("" + ServerContext.serverId);
+        ServerContext.kvStoreForLevelDB.ls_partitionedVSet = MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        ls_partitionedVSet = ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
         resp.onNext(sMessage.build());
         resp.onCompleted();
     }

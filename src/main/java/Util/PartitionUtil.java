@@ -40,6 +40,7 @@ public class PartitionUtil {
         // 统计每个参数被本地的batch访问的次数，并放到worker的数据库里，以vAccessNum开头,
         logger.info("build local VAccessNum start");
         buildVAccessNum();
+        DataProcessUtil.showVAccessNum(vAccessNum);
         logger.info("getMaxMinValue of features end");
 
 
@@ -47,6 +48,7 @@ public class PartitionUtil {
         // 下面开始进行维度的剪枝，返回的是server计算完成之后，被剪枝后的维度
         // 所以每台机器都要向master发送采样后，每个V被访问的次数
         logger.info("send local VAN and get CarPrunedRecord");
+        // 是获取剪枝后的维度，每个worker都向server发送每个维度的访问次数
         catPrunedRecord=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord(vAccessNum);
         logger.info("prunedVSet:"+catPrunedRecord.size());
 
@@ -54,6 +56,7 @@ public class PartitionUtil {
         // 下面取出j=1，放在第insertI台机器上
         long j_last=0;
         List<Set> partitionedVSet;
+        // 剪枝后的维度就是要划分的维度
         for (long j : catPrunedRecord) {
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
@@ -237,7 +240,13 @@ public class PartitionUtil {
             float sum=0;
             for(int j=0;j<accessTimeOfEachPartition[i].size();j++){
                 int accessNum=(Integer) accessTimeOfEachPartition[i].get(j);
-                float accessTime=lsArray[i].get(j).size()*Context.diskAccessTime+Context.diskSeekTime;
+
+                float accessTime=0;
+                if(lsArray[i].get(j).size()>1){
+                    accessTime=(lsArray[i].get(j).size()*Context.singleParamOfSetSize_bytes+Context.setParamBaseSize_bytes)*Context.diskAccessTime+Context.diskSeekTime;
+                }else {
+                    accessTime=Context.floatSize_bytes*Context.diskAccessTime+Context.diskSeekTime;
+                }
                 sum+=accessNum*accessTime;
             }
             diskAccessForV[i]+=sum;

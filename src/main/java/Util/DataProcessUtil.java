@@ -564,4 +564,23 @@ public class DataProcessUtil {
         return cat;
     }
 
+    public static void printLs_partitionedVset(List<Set>[] lsArray){
+        for(int i=0;i<lsArray.length;i++){
+            System.out.println("ls["+i+"]:");
+            for(int j=0;j<lsArray[i].size();j++){
+                System.out.print("set["+j+"]:");
+                for(Long l:(Set<Long>)lsArray[i].get(j)){
+                    System.out.print(l+",");
+                }
+                System.out.println(" ");
+            }
+        }
+    }
+
+    public static void showVAccessNum(Map<Long,Integer> map){
+        for(long l:map.keySet()){
+            logger.info("l:"+l+",num:"+map.get(l));
+        }
+    }
+
 }

@@ -42,9 +42,9 @@ public class KVStoreForLevelDB {
     Set[] vSet;
     // listSet其实是一个存储各个server中存储了哪些参数（有本地参数划分）的数据结构
     public static List<Set>[] ls_partitionedVSet = new ArrayList[Context.serverNum];
-    public static List<Set> localParitionVSet=ls_partitionedVSet[ServerContext.serverId];
-    public static Map<String,String> catToCatSetMap=new HashMap<String, String>();
-    public static Logger logger=LoggerFactory.getLogger(KVStoreForLevelDB.class);
+    public static List<Set> localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
+    public static Map<String, String> catToCatSetMap = new HashMap<String, String>();
+    public static Logger logger = LoggerFactory.getLogger(KVStoreForLevelDB.class);
 
     public void init(String path) throws IOException {
         FileUtil.deleteFile(new File(path + "db/"));
@@ -85,13 +85,21 @@ public class KVStoreForLevelDB {
 
         // 这里不能简单的key，value分配了，因为已经进行磁盘划分，那么就有集合的形式了
         for (Set set : ls_params) {
-            Set<Param> paramSet = new HashSet<Param>();
-            for (Object l : set) {
-                Param param = new Param("catParam" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
-                logger.info("catParam"+l);
-                paramSet.add(param);
+            if (set.size() == 1) {
+                // 这里的意思是把ls_params中长度为1的set，按照普通不划分的方法存储
+                for (long l : (Set<Long>) set) {
+                    db.put(("catParam" + l).getBytes(), TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f, 0.1f)));
+                }
+            } else {
+                Set<Param> paramSet = new HashSet<Param>();
+                for (Object l : set) {
+                    Param param = new Param("catParam" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
+//                logger.info("catParam"+l);
+                    paramSet.add(param);
+                }
+                db.put(("catParamSet" + ls_params.indexOf(set)).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
             }
-            db.put(("catParamSet" + ls_params.indexOf(set)).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
+
 
         }
 
@@ -119,10 +127,10 @@ public class KVStoreForLevelDB {
             }
         }
 
-        localParitionVSet=ls_partitionedVSet[ServerContext.serverId];
-        for(Set<Long> set:localParitionVSet){
-            for(Long l:set){
-                catToCatSetMap.put("catParam"+l,"catParamSet"+localParitionVSet.indexOf(set));
+        localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
+        for (Set<Long> set : localParitionVSet) {
+            for (Long l : set) {
+                catToCatSetMap.put("catParam" + l, "catParamSet" + localParitionVSet.indexOf(set));
             }
         }
 
@@ -145,9 +153,9 @@ public class KVStoreForLevelDB {
         // 先转化需要取出来哪些参数
         needParam = getNeedPartitionParam(set);
 
-        for(Set<Long> set1:paramKeySetList){
-            for(Long l:set1){
-                System.out.println("vset1:"+l);
+        for (Set<Long> set1 : paramKeySetList) {
+            for (Long l : set1) {
+//                System.out.println("vset1:"+l);
             }
         }
 
@@ -157,7 +165,7 @@ public class KVStoreForLevelDB {
         for (String str : needParam) {
             if (str.indexOf("catParamSet") == -1) {
 
-                if(db.get(str.getBytes())==null){
+                if (db.get(str.getBytes()) == null) {
                     logger.info("nullstr:" + str);
                 }
                 Float f = (Float) TypeExchangeUtil.toObject(db.get(str.getBytes()));
@@ -169,8 +177,6 @@ public class KVStoreForLevelDB {
                 }
             }
         }
-
-
 
 
         for (String key : set) {
@@ -201,7 +207,7 @@ public class KVStoreForLevelDB {
         CurrentTimeUtil.setEndTime();
         CurrentTimeUtil.showExecuteTime("getNeedPartitionParam time:");
 
-        List<Set> localParitionVSet=ls_partitionedVSet[ServerContext.serverId];
+        List<Set> localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
         // 先将需要用到的参数读取到内存中,然后更新
         // 要更新的就三种参数，featParam在内存中好更新
         // 还剩catParam和catParamSet，那就建两个数据结构
@@ -209,9 +215,9 @@ public class KVStoreForLevelDB {
         // 存储catParam
         Map<String, Float> catParamMap = new HashMap<String, Float>();
         Map<String, Set<Param>> catParamSetMap = new HashMap<String, Set<Param>>();
-        Map<String,Float> allCatParamMap=new HashMap<String, Float>();
+        Map<String, Float> allCatParamMap = new HashMap<String, Float>();
         Map<String, Set<Param>> updateCatParamSetMap = new HashMap<String, Set<Param>>();
-        Map<String, Float> updateCatParamMap=new HashMap<String, Float>();
+        Map<String, Float> updateCatParamMap = new HashMap<String, Float>();
 
 
         CurrentTimeUtil.setStartTime();
@@ -224,16 +230,16 @@ public class KVStoreForLevelDB {
 
                 } else if (index.contains("catParamSet")) {
                     if (!catParamSetMap.keySet().contains(index)) {
-                        Set<Param> paramSetTemp=(Set<Param>) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+                        Set<Param> paramSetTemp = (Set<Param>) TypeExchangeUtil.toObject(db.get(index.getBytes()));
                         catParamSetMap.put(index, paramSetTemp);
-                        for(Param param:paramSetTemp ){
-                            allCatParamMap.put(param.key,param.value);
+                        for (Param param : paramSetTemp) {
+                            allCatParamMap.put(param.key, param.value);
                         }
                     }
                 } else {
-                    float f=(Float) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+                    float f = (Float) TypeExchangeUtil.toObject(db.get(index.getBytes()));
                     catParamMap.put(index, f);
-                    allCatParamMap.put(index,f);
+                    allCatParamMap.put(index, f);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -276,38 +282,36 @@ public class KVStoreForLevelDB {
 //        CurrentTimeUtil.showExecuteTime("update map time:");
 
 
-
         CurrentTimeUtil.setStartTime();
 
         // 就完全构建试试速度
         // 更新累加值
-        for(String index:map.keySet()){
-            if(!index.contains("featParam")){
-                float f=allCatParamMap.get(index)+map.get(index);
+        for (String index : map.keySet()) {
+            if (!index.contains("featParam")) {
+                float f = allCatParamMap.get(index) + map.get(index);
                 allCatParamMap.remove(index);
-                allCatParamMap.put(index,f);
+                allCatParamMap.put(index, f);
             }
 
         }
 
         // 构造新的catParamSet以及catParam
-        for(String index:allCatParamMap.keySet()){
-            if(catToCatSetMap.containsKey(index)){
-                String index_catParamSet=catToCatSetMap.get(index);
-                Set<Param> paramSet=updateCatParamSetMap.get(index_catParamSet);
-                Param param=new Param(index,allCatParamMap.get(index));
-                if(paramSet!=null){
+        for (String index : allCatParamMap.keySet()) {
+            if (catToCatSetMap.containsKey(index)) {
+                String index_catParamSet = catToCatSetMap.get(index);
+                Set<Param> paramSet = updateCatParamSetMap.get(index_catParamSet);
+                Param param = new Param(index, allCatParamMap.get(index));
+                if (paramSet != null) {
                     paramSet.add(param);
-                }else {
-                    paramSet=new HashSet<Param>();
+                } else {
+                    paramSet = new HashSet<Param>();
                     paramSet.add(param);
-                    updateCatParamSetMap.put(index_catParamSet,paramSet);
+                    updateCatParamSetMap.put(index_catParamSet, paramSet);
                 }
-            }else {
-                updateCatParamMap.put(index,allCatParamMap.get(index));
+            } else {
+                updateCatParamMap.put(index, allCatParamMap.get(index));
             }
         }
-
 
 
         CurrentTimeUtil.setEndTime();
@@ -315,22 +319,21 @@ public class KVStoreForLevelDB {
 
         // 遍历catParamMap和catParamSetMap写入
         CurrentTimeUtil.setStartTime();
-        try{
-            for(String str:updateCatParamMap.keySet()){
+        try {
+            for (String str : updateCatParamMap.keySet()) {
                 db.delete(str.getBytes());
-                db.put(str.getBytes(),TypeExchangeUtil.toByteArray(updateCatParamMap.get(str)));
+                db.put(str.getBytes(), TypeExchangeUtil.toByteArray(updateCatParamMap.get(str)));
             }
 
-            for(String str:updateCatParamSetMap.keySet()){
+            for (String str : updateCatParamSetMap.keySet()) {
                 db.delete(str.getBytes());
-                db.put(str.getBytes(),TypeExchangeUtil.toByteArray(updateCatParamSetMap.get(str)));
+                db.put(str.getBytes(), TypeExchangeUtil.toByteArray(updateCatParamSetMap.get(str)));
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         CurrentTimeUtil.setEndTime();
         CurrentTimeUtil.showExecuteTime("write to DB time");
-
 
 
     }
@@ -350,9 +353,11 @@ public class KVStoreForLevelDB {
         for (String key : set) {
             long index_forKey = -1;
             for (Set<Long> paramKeySet : paramKeySetList) {
-                // 这里key是string，而paramKeySet是long
-                if (paramKeySet.contains((Long.parseLong(key.split("m")[1]))) && !key.contains("featParam")) {
-                    index_forKey = paramKeySetList.indexOf(paramKeySet);
+                if(paramKeySet.size()>1){
+                    // 这里key是string，而paramKeySet是long
+                    if (paramKeySet.contains((Long.parseLong(key.split("m")[1]))) && !key.contains("featParam")) {
+                        index_forKey = paramKeySetList.indexOf(paramKeySet);
+                    }
                 }
             }
             if (index_forKey == -1) {

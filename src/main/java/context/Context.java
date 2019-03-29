@@ -50,6 +50,10 @@ public class Context {
     public static float freqThreshold;
     public static boolean usePruneRate;
 
+    public static int setParamBaseSize_bytes;
+    public static int singleParamOfSetSize_bytes;
+    public static int floatSize_bytes;
+
 
 
     public static void init() throws IOException {
@@ -57,26 +61,24 @@ public class Context {
             return;
         }
 
-        serverIp.put(0,"202.199.6.30");
-        serverIp.put(1,"202.199.6.30");
-        serverIp.put(2,"202.199.6.30");
+        serverIp.put(0,"202.199.13.80");
+        serverIp.put(1,"202.199.13.80");
+        serverIp.put(2,"202.199.13.80");
         serverPort.put(0,9010);
         serverPort.put(1,9011);
         serverPort.put(2,9012);
 
+        setParamBaseSize_bytes=128;
+        singleParamOfSetSize_bytes=22;
+
         featureSize=10;
-
-
-
-
-
 
 
         isDist=true;
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=3;
-        serverNum=3;
+        workerNum=1;
+        serverNum=1;
         dataPartitionNum=workerNum;
         partitionedDataSize=10000000;
         masterId=0;
@@ -88,11 +90,12 @@ public class Context {
 
         inited=true;
 
-        diskSeekTime=0.29f;
-        diskAccessTime=0.0001f;
-        netTrafficTime=0.001f;
+        diskSeekTime=1f;
+        diskAccessTime=0.0027f;
+        netTrafficTime=0;
+        floatSize_bytes=79;
 
-        freqThreshold=0;
+        freqThreshold=2;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
     }
 }
