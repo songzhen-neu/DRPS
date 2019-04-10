@@ -41,7 +41,9 @@ public class PartitionUtil {
         logger.info("build local VAccessNum start");
         buildVAccessNum();
         DataProcessUtil.showVAccessNum(vAccessNum);
+        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         logger.info("getMaxMinValue of features end");
+
 
 
         // 上述是已经采样完的数据的关于V的访问的统计，其中batchRecord是采样的batch的index
@@ -74,6 +76,7 @@ public class PartitionUtil {
                 logger.info("pullPartitionedVSet start");
                 partitionedVSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset(insertI);
                 logger.info("pullPartitionedVSet end");
+                WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
                 // 下面是对disk时间的计算
                 if(partitionedVSet.size()==0){
                     if(insertI==WorkerContext.workerId){

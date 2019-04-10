@@ -13,6 +13,9 @@ import com.yahoo.sketches.quantiles.UpdateDoublesSketch;
 import context.Context;
 import context.ServerContext;
 import context.WorkerContext;
+import dataStructure.enumType.ParallelismControlModel;
+import dataStructure.parallelismControlModel.IterationTimeTable;
+import dataStructure.parallelismControlModel.StrategyChoiceTable;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
@@ -25,6 +28,7 @@ import org.jblas.FloatMatrix;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import parallelism.WSP;
 import store.KVStore;
 
 import java.io.IOException;
@@ -87,6 +91,8 @@ public class PServer implements net.PSGrpc.PS {
     private List<Set>[] ls_partitionedVSet = ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
 
     private static AtomicDoubleArray diskAccessForV;
+
+
 
 
 //    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
@@ -374,14 +380,43 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
+
+
     @Override
-    public void getNeededParams(SListMessage req, StreamObserver<SFKVListMessage> resp) {
+    public void getNeededParams(SSListMessage req, StreamObserver<SFKVListMessage> resp) {
         // 获取需要访问的参数的key
-        Set<String> neededParamIndices = MessageDataTransUtil.SListMessage_2_Set(req);
+        Set<String> neededParamIndices = MessageDataTransUtil.SSListMessage_2_Set(req);
+        int workerId=req.getWorkerId();
+        SFKVListMessage sfkvListMessage;
         try {
-            SFKVListMessage sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
-            resp.onNext(sfkvListMessage);
-            resp.onCompleted();
+            switch (Context.parallelismControlModel){
+                case BSP:
+                    waitBarrier();
+                    sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
+                    resp.onNext(sfkvListMessage);
+                    resp.onCompleted();
+                    break;
+                case AP:
+                    sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
+                    resp.onNext(sfkvListMessage);
+                    resp.onCompleted();
+                    break;
+                case SSP:
+                    // 暂时还没写
+                    break;
+                case WSP:
+                    // Worker-Selection Parallelism Control Model
+                    WSP.init();
+                    WSP.isRespOrWaited(workerId,resp,neededParamIndices);
+//                    WSP.chooseNextStre
+
+
+                    break;
+                default:
+                    System.out.println("run to default");
+                    break;
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -395,7 +430,8 @@ public class PServer implements net.PSGrpc.PS {
 
         ServerContext.kvStoreForLevelDB.updateParams(map);
         smessage.setStr("success");
-        waitBarrier();
+        // 同步异步不要写在push操作里，要写在pull操作里
+//        waitBarrier();
 
         resp.onNext(smessage.build());
         resp.onCompleted();
@@ -550,61 +586,65 @@ public class PServer implements net.PSGrpc.PS {
         return keyOfMaxValue;
     }
 
-    AtomicInteger barrier_pushLocalViAccessNum = new AtomicInteger(0);
+    AtomicInteger IntBarrier = new AtomicInteger(0);
 
     @Override
     public void pushLocalViAccessNum(FMessage req, StreamObserver<BMessage> resp) {
 
         numSet_otherWorkerAccessVi.add(req.getF());
 
-        synchronized (barrier_pushLocalViAccessNum) {
-            barrier_pushLocalViAccessNum.incrementAndGet();
-            if (barrier_pushLocalViAccessNum.intValue() >= Context.workerNum - 1) {
-                barrier_pushLocalViAccessNum.notifyAll();
+        logger.info("1");
+        synchronized (IntBarrier) {
+            IntBarrier.incrementAndGet();
+            logger.info("IntBarrier:"+ IntBarrier);
+            if (IntBarrier.intValue() >= Context.workerNum - 1) {
+                IntBarrier.notifyAll();
+                IntBarrier.set(0);
             } else {
                 try {
-                    barrier_pushLocalViAccessNum.wait();
+                    IntBarrier.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
             }
         }
-
+        logger.info("2");
 
         // 开始计算numSet_otherWorkerAccessVi的总和,只允许计算一遍（一个线程计算）
         synchronized (floatSum) {
 //            logger.info("isExecuteFlag:"+isExecuteFlag_otherLocal.get());
+                if (!isExecuteFlag_otherLocal.getAndSet(true)) {
+                    // 如果pull线程没有等待，则阻塞
+                    while (!isWait_otherLocal.get()) {
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
 
-            if (!isExecuteFlag_otherLocal.getAndSet(true)) {
-                // 如果pull线程没有等待，则阻塞
-                while (!isWait_otherLocal.get()) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
 
-                }
 
-
-                for (float f : numSet_otherWorkerAccessVi) {
-                    floatSum += f;
-                }
+                    for (float f : numSet_otherWorkerAccessVi) {
+                        floatSum += f;
+                    }
 
 //                logger.info("iswait:"+isWait_otherLocal.get());
 
-                synchronized (isFinished_otherLocal) {
-                    isFinished_otherLocal.notifyAll();
+                    synchronized (isFinished_otherLocal) {
+                        isFinished_otherLocal.notifyAll();
+                    }
+
+
                 }
 
 
-            }
 
 
         }
 
-
+        logger.info("3");
         // 同步
         try {
             synchronized (workerStepForBarrier_otherLocal) {
@@ -620,7 +660,7 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
-
+        logger.info("4");
 //        System.out.println("num2:"+num_waitOthers);
 //        System.out.println(workerStepForBarrier.intValue());
         synchronized (workerStepForBarrier_otherLocal) {
@@ -630,10 +670,11 @@ public class PServer implements net.PSGrpc.PS {
             isExecuteFlag_otherLocal.set(false);
         }
 
-        synchronized (barrier_pushLocalViAccessNum) {
-            barrier_pushLocalViAccessNum.set(0);
-        }
+//        synchronized (IntBarrier) {
+//            IntBarrier.set(0);
+//        }
 
+        logger.info("5");
         BMessage.Builder executeStatus = BMessage.newBuilder();
         executeStatus.setB(true);
 
@@ -891,4 +932,19 @@ public class PServer implements net.PSGrpc.PS {
         resp.onCompleted();
     }
 
+    @Override
+    public void testGrpc(IMessage req,StreamObserver<IMessage> resp){
+        if(req.getI()==-1){
+            try{
+                Thread.sleep(1000);
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
+
+        }
+        resp.onNext(IMessage.newBuilder().setI(req.getI()).build());
+        resp.onCompleted();
+        // onCompleted后的语句可以继续执行的
+        System.out.println("haha1");
+    }
 }

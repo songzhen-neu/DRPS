@@ -156,8 +156,8 @@ public class PSWorker {
 
 
     public Map<String, Float> getNeededParams(Set<String> set) {
-        SListMessage sListMessage = MessageDataTransUtil.Set_2_SListMessage(set);
-        SFKVListMessage sfkvListMessage = blockingStub.getNeededParams(sListMessage);
+        SSListMessage sSListMessage = MessageDataTransUtil.Set_2_SSListMessage(set);
+        SFKVListMessage sfkvListMessage = blockingStub.getNeededParams(sSListMessage);
         return MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessage);
 
     }
@@ -272,6 +272,8 @@ public class PSWorker {
     public void putLsPartitionedVSet(LSetListArrayMessage lSetListArrayMessage){
         blockingStub.putLsPartitionedVSet(lSetListArrayMessage);
     }
+
+
 
 
 }

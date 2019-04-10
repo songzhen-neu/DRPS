@@ -12,7 +12,7 @@ service PS {
     rpc SentSparseDimSizeAndInitParams(InitVMessage) returns (BMessage){}
     rpc Barrier(RequestMetaMessage) returns (BMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
-    rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
+    rpc GetNeededParams(SSListMessage) returns (SFKVListMessage){}
     rpc SendSFMap(SFKVListMessage) returns (SMessage){};
     rpc SentCurIndexNum(LMessage) returns (SMessage){};
     rpc SentInitedT(IFMessage) returns(IMessage){};
@@ -24,6 +24,7 @@ service PS {
     rpc PushDiskAccessForV(InsertjIntoViMessage) returns(FMessage){};
     rpc GetLsPartitionedVSet(SMessage) returns(LSetListArrayMessage){};
     rpc PutLsPartitionedVSet(LSetListArrayMessage) returns(SMessage){};
+    rpc TestGrpc(IMessage) returns(IMessage){};
 
 }
 
@@ -142,6 +143,11 @@ message SListMessage{
     repeated string list=2;
 }
 
+message SSListMessage{
+    int32 size=1;
+    int32 workerId=2;
+    repeated string list=3;
+}
 message SMessage{
     string str=1;
 }

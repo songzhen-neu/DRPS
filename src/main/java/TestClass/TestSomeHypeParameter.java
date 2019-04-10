@@ -1,4 +1,6 @@
-import Util.TestSizeUtil;
+package TestClass;
+
+
 import dataStructure.parameter.Param;
 
 import java.io.IOException;
@@ -14,8 +16,14 @@ import java.util.Set;
 public class TestSomeHypeParameter {
     public static void main(String[] args) throws IOException {
         testSize();
+        testSeekTime();
 
 
+    }
+
+    private static void testSeekTime() throws IOException{
+        TestSeekTime.write();
+        TestSeekTime.seek();
     }
 
     private static void testSize() throws IOException{
@@ -49,13 +57,13 @@ public class TestSomeHypeParameter {
         TestSizeUtil.showSizeOfObject("f_float",f_float);
 
         // 测试结果
-        // [INFO] 2019-03-28 15:11:08,314 [Util.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of param_catParam:101
-        // [INFO] 2019-03-28 15:11:08,316 [Util.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of param_feat:102
-        // [INFO] 2019-03-28 15:11:08,317 [Util.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of l_Long:82
-        // [INFO] 2019-03-28 15:11:08,317 [Util.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of l_long:82
-        // [INFO] 2019-03-28 15:11:08,318 [Util.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of set_param_1:150
-        // [INFO] 2019-03-28 15:11:08,318 [Util.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of set_param_5:238
-        // [INFO] 2019-03-28 15:11:08,318 [Util.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of set_param_10:348
+        // [INFO] 2019-03-28 15:11:08,314 [TestClass.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of param_catParam:101
+        // [INFO] 2019-03-28 15:11:08,316 [TestClass.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of param_feat:102
+        // [INFO] 2019-03-28 15:11:08,317 [TestClass.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of l_Long:82
+        // [INFO] 2019-03-28 15:11:08,317 [TestClass.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of l_long:82
+        // [INFO] 2019-03-28 15:11:08,318 [TestClass.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of set_param_1:150
+        // [INFO] 2019-03-28 15:11:08,318 [TestClass.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of set_param_5:238
+        // [INFO] 2019-03-28 15:11:08,318 [TestClass.TestSizeUtil]-[showSizeOfObject line:31] Bytes size of set_param_10:348
 
         // 即set转化成byte的时候，基础占用128字节，每个Param占用22字节
 

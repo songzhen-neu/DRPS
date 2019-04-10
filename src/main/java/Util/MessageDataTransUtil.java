@@ -1,5 +1,6 @@
 package Util;
 
+import context.WorkerContext;
 import net.*;
 import org.jblas.FloatMatrix;
 
@@ -121,12 +122,29 @@ public class MessageDataTransUtil {
         return set;
     }
 
+    public static Set<String> SSListMessage_2_Set(SSListMessage req){
+        Set<String> set=new HashSet<String>();
+        for(int i=0;i<req.getListCount();i++){
+            set.add(req.getList(i));
+        }
+        return set;
+    }
+
     public static SListMessage Set_2_SListMessage(Set<String> set){
         SListMessage.Builder sListMessage=SListMessage.newBuilder();
         for(String key:set){
             sListMessage.addList(key);
         }
         return sListMessage.build();
+    }
+
+    public static SSListMessage Set_2_SSListMessage(Set<String> set){
+        SSListMessage.Builder sSListMessage=SSListMessage.newBuilder();
+        for(String key:set){
+            sSListMessage.addList(key);
+        }
+        sSListMessage.setWorkerId(WorkerContext.workerId);
+        return sSListMessage.build();
     }
 
     public static Map<String,Float> SFKVListMessage_2_Map(SFKVListMessage sfkvListMessage){

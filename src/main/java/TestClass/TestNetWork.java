@@ -1,4 +1,4 @@
-package Util;
+package TestClass;
 
 import context.WorkerContext;
 
@@ -24,5 +24,9 @@ public class TestNetWork {
         Set<String> set=new HashSet<String>();
         set.add("catParam"+1);
         Map<String,Float> map1=WorkerContext.psRouterClient.getPsWorkers().get(2).getNeededParams(set);
+    }
+
+    public static void testNetWorkTime(){
+
     }
 }

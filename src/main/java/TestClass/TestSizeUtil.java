@@ -1,10 +1,10 @@
-package Util;
+package TestClass;
 
+import Util.TypeExchangeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 
 /**
  * @program: simplePsForModelPartition

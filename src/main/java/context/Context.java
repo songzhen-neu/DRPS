@@ -2,16 +2,20 @@ package context;
 
 import store.KVStoreForLevelDB;
 
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
+import dataStructure.enumType.ParallelismControlModel;
 /**
  * @program: simplePsForModelPartition
  * @description: 共同的context
  * @author: SongZhen
  * @create: 2018-12-17 20:55
  */
+
+
+
 public class Context {
 
 
@@ -55,6 +59,10 @@ public class Context {
     public static int floatSize_bytes;
 
 
+    public static ParallelismControlModel parallelismControlModel;
+
+
+
 
     public static void init() throws IOException {
         if(inited==true){
@@ -76,6 +84,7 @@ public class Context {
 
         isDist=true;
 
+
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
         workerNum=1;
         serverNum=1;
@@ -95,7 +104,9 @@ public class Context {
         netTrafficTime=0;
         floatSize_bytes=79;
 
-        freqThreshold=2;   // 表示大于freqThreshold这个频率的
+        freqThreshold=29;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
+
+        parallelismControlModel=ParallelismControlModel.WSP;
     }
 }
