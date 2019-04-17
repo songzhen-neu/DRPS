@@ -58,6 +58,8 @@ public class Context {
     public static int singleParamOfSetSize_bytes;
     public static int floatSize_bytes;
 
+    public static int freqThresholdForSingleMachine;
+    public static int boundForSSP;
 
     public static ParallelismControlModel parallelismControlModel;
 
@@ -76,6 +78,8 @@ public class Context {
         serverPort.put(1,9011);
         serverPort.put(2,9012);
 
+        boundForSSP=2;
+
         setParamBaseSize_bytes=128;
         singleParamOfSetSize_bytes=22;
 
@@ -86,8 +90,8 @@ public class Context {
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=3;
-        serverNum=3;
+        workerNum=1;
+        serverNum=1;
         dataPartitionNum=workerNum;
         partitionedDataSize=1000000;
         masterId=0;
@@ -104,9 +108,10 @@ public class Context {
         netTrafficTime=0;
         floatSize_bytes=79;
 
-        freqThreshold=29;   // 表示大于freqThreshold这个频率的
+        freqThresholdForSingleMachine=9;
+        freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
 
-        parallelismControlModel=ParallelismControlModel.BSP;
+        parallelismControlModel=ParallelismControlModel.SSP;
     }
 }

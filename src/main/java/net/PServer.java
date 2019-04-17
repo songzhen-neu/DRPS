@@ -28,6 +28,7 @@ import org.jblas.FloatMatrix;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import parallelism.SSP;
 import parallelism.WSP;
 import store.KVStore;
 
@@ -402,7 +403,9 @@ public class PServer implements net.PSGrpc.PS {
                     resp.onCompleted();
                     break;
                 case SSP:
-                    // 暂时还没写
+                    SSP.init();
+                    SSP.isRespOrWaited(workerId,resp,neededParamIndices);
+
                     break;
                 case WSP:
                     // Worker-Selection Parallelism Control Model
@@ -593,7 +596,7 @@ public class PServer implements net.PSGrpc.PS {
 
         numSet_otherWorkerAccessVi.add(req.getF());
 
-        logger.info("1");
+//        logger.info("1");
         synchronized (IntBarrier) {
             IntBarrier.incrementAndGet();
             logger.info("IntBarrier:"+ IntBarrier);
@@ -609,7 +612,7 @@ public class PServer implements net.PSGrpc.PS {
 
             }
         }
-        logger.info("2");
+//        logger.info("2");
 
         // 开始计算numSet_otherWorkerAccessVi的总和,只允许计算一遍（一个线程计算）
         synchronized (floatSum) {
@@ -644,7 +647,7 @@ public class PServer implements net.PSGrpc.PS {
 
         }
 
-        logger.info("3");
+//        logger.info("3");
         // 同步
         try {
             synchronized (workerStepForBarrier_otherLocal) {
@@ -660,7 +663,7 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
-        logger.info("4");
+//        logger.info("4");
 //        System.out.println("num2:"+num_waitOthers);
 //        System.out.println(workerStepForBarrier.intValue());
         synchronized (workerStepForBarrier_otherLocal) {
@@ -674,7 +677,7 @@ public class PServer implements net.PSGrpc.PS {
 //            IntBarrier.set(0);
 //        }
 
-        logger.info("5");
+//        logger.info("5");
         BMessage.Builder executeStatus = BMessage.newBuilder();
         executeStatus.setB(true);
 

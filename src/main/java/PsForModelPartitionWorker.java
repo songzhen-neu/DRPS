@@ -80,7 +80,7 @@ public class PsForModelPartitionWorker {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LogisticRegression logisticRegression = new LogisticRegression(0.001f, 0.01f, 50);
+        LogisticRegression logisticRegression = new LogisticRegression(0.001f, 0.01f, 10);
         MemoryUtil.releaseMemory();
 
         CurrentTimeUtil.setStartTime();

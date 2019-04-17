@@ -40,7 +40,7 @@ public class PartitionUtil {
         // 统计每个参数被本地的batch访问的次数，并放到worker的数据库里，以vAccessNum开头,
         logger.info("build local VAccessNum start");
         buildVAccessNum();
-        DataProcessUtil.showVAccessNum(vAccessNum);
+//        DataProcessUtil.showVAccessNum(vAccessNum);
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         logger.info("getMaxMinValue of features end");
 
@@ -52,6 +52,8 @@ public class PartitionUtil {
         // 是获取剪枝后的维度，每个worker都向server发送每个维度的访问次数
         catPrunedRecord = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord(vAccessNum);
         logger.info("prunedVSet:" + catPrunedRecord.size());
+
+
 
 
         // 下面取出j=1，放在第insertI台机器上
@@ -72,16 +74,16 @@ public class PartitionUtil {
                 // 统计本机访问Vi的次数
                 float T_localAccessVj = getVjAccessNumInMemory(j_last);
                 // 所有的worker都要pull一下划分后的vset
-                logger.info("pullPartitionedVSet start");
+//                logger.info("pullPartitionedVSet start");
                 partitionedVSet = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset(insertI);
-                logger.info("pullPartitionedVSet end");
+//                logger.info("pullPartitionedVSet end");
                 WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
                 // 下面是对disk时间的计算
                 if (partitionedVSet.size() == 0) {
                     if (insertI == WorkerContext.workerId) {
-                        logger.info("addInitedPartitionedVSet start");
+//                        logger.info("addInitedPartitionedVSet start");
                         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).addInitedPartitionedVSet(j_last, insertI);
-                        logger.info("addInitedPartitionedVSet end");
+//                        logger.info("addInitedPartitionedVSet end");
                     }
                 } else {
 
@@ -89,35 +91,35 @@ public class PartitionUtil {
                     float[] diskAccessForV = getDiskAccessTimeForV(partitionedVSet, j_last);
 
                     // 每个worker都将diskAccessForV传递给server，server选择将j加入到vi的某个划分中（或者自己成为一个新的划分）
-                    logger.info("pushDiskAccessForV start");
+//                    logger.info("pushDiskAccessForV start");
                     Ti_disk = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushDiskAccessForV(diskAccessForV, insertI, j_last);
-                    logger.info("pushDiskAccessForV end");
+//                    logger.info("pushDiskAccessForV end");
 
 
                 }
                 // 统计其他机器访问Vi的次数,对网络通信时间的计算
                 if (insertI == WorkerContext.workerId) {
                     // 这些都还是对j_last插入后，做的Tdisk和Tcom的更新计算
-                    logger.info("pullOtherWorkerAccessForVi start");
+//                    logger.info("pullOtherWorkerAccessForVi start");
                     float accessNum_otherWorkers = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
-                    logger.info("pullOtherWorkerAccessForVi end");
+//                    logger.info("pullOtherWorkerAccessForVi end");
 //                    Ti_com = Ti_com - T_localAccessVj + accessNum_otherWorkers;   // 注释了，只用网络通信时间
 
                     // 下面开始计算disk的时间,也是只修改插入的Tdisk的值。
                     // 先从server中获取vSet[insertId]的参数分配
 
                 } else {
-                    logger.info("pushLocalViAccessNum start");
+//                    logger.info("pushLocalViAccessNum start");
                     WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
-                    logger.info("pushLocalViAccessNum end");
+//                    logger.info("pushLocalViAccessNum end");
                 }
             }
 
 
             PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
-            logger.info("sentInitedT start");
+//            logger.info("sentInitedT start");
             insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
-            logger.info("sentInitedT end");
+//            logger.info("sentInitedT end");
 
             logger.info("insert " + j + " into " + insertI);
             // 发送给server master，然后选出一个耗时最短的机器i，然后作为加入j的机器
@@ -133,16 +135,16 @@ public class PartitionUtil {
             // 统计本机访问Vi的次数
             float T_localAccessVj = getVjAccessNumInMemory(j_last);
             // 所有的worker都要pull一下划分后的vset
-            logger.info("pullPartitionedVSet start");
+//            logger.info("pullPartitionedVSet start");
             partitionedVSet = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset(insertI);
-            logger.info("pullPartitionedVSet end");
+//            logger.info("pullPartitionedVSet end");
             // 遍历数据集并开始统计，并返回对磁盘的访问次数
             float[] diskAccessForV = getDiskAccessTimeForV(partitionedVSet, j_last);
 
             // 每个worker都将diskAccessForV传递给server，server选择将j加入到vi的某个划分中（或者自己成为一个新的划分）
-            logger.info("pushDiskAccessForV start");
+//            logger.info("pushDiskAccessForV start");
             Ti_disk = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushDiskAccessForV(diskAccessForV, insertI, j_last);
-            logger.info("pushDiskAccessForV end");
+//            logger.info("pushDiskAccessForV end");
         }
         for (Object l : vSet[WorkerContext.workerId]) {
             System.out.println("lvSet:" + l);
