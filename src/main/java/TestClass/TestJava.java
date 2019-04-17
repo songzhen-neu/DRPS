@@ -41,6 +41,12 @@ public class TestJava {
         System.out.println(set.contains("haha2"));
         System.out.println(set.contains("haha3"));
 
+        Integer inta=1231;
+        Integer intb=1231;
+        System.out.println(inta==intb);
+
+
+
 
 
 

@@ -27,16 +27,15 @@ public class PsForModelPartitionWorker {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         Logger logger = LoggerFactory.getLogger(PsForModelPartitionWorker.class.getName());
-        MemoryUtil.showFreeMemory("start:");
+//        MemoryUtil.showFreeMemory("start:");
         Context.init();
         WorkerContext.init();
-        MemoryUtil.showFreeMemory("Context");
+//        MemoryUtil.showFreeMemory("Context");
 
 
 //        TestNetWork.test();
 
         // 将原始数据处理成one-hot编码的数据，然后存储在kv数据库中
-
         DataProcessUtil.metaToDB(WorkerContext.myDataPath, Context.featureSize, WorkerContext.catSize);
 
 
@@ -46,6 +45,7 @@ public class PsForModelPartitionWorker {
         } else {
             Context.sparseDimSize = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getSparseDimSize();
         }
+
         logger.info("sparseDimSize:" + Context.sparseDimSize);
 
 

@@ -69,9 +69,9 @@ public class Context {
             return;
         }
 
-        serverIp.put(0,"202.199.13.80");
-        serverIp.put(1,"202.199.13.80");
-        serverIp.put(2,"202.199.13.80");
+        serverIp.put(0,"202.199.13.120");
+        serverIp.put(1,"202.199.13.120");
+        serverIp.put(2,"202.199.13.120");
         serverPort.put(0,9010);
         serverPort.put(1,9011);
         serverPort.put(2,9012);
@@ -86,10 +86,10 @@ public class Context {
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=1;
-        serverNum=1;
+        workerNum=3;
+        serverNum=3;
         dataPartitionNum=workerNum;
-        partitionedDataSize=10000000;
+        partitionedDataSize=1000000;
         masterId=0;
 
         dataPath="data/train.csv/";
@@ -107,6 +107,6 @@ public class Context {
         freqThreshold=29;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
 
-        parallelismControlModel=ParallelismControlModel.WSP;
+        parallelismControlModel=ParallelismControlModel.BSP;
     }
 }
