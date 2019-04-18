@@ -126,13 +126,13 @@ public class SSP {
             } else {
                 synchronized (barrier[workerId]) {
                     try {
-                        Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(IMessage.newBuilder().setI(workerId).build());
                         barrier[workerId].wait();
                     } catch (InterruptedException  e) {
                         e.printStackTrace();
                     }
-                    respParam(resp, neededParamIndices);
                 }
+                Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(IMessage.newBuilder().setI(workerId).build());
+                respParam(resp, neededParamIndices);
 
             }
         }else {

@@ -991,8 +991,9 @@ public class PServer implements net.PSGrpc.PS {
                     e.printStackTrace();
                 }
             }
-
-            SSP.isWaiting.notifyAll();
+            synchronized (SSP.isWaiting){
+                SSP.isWaiting.notifyAll();
+            }
         }
     }
 }
