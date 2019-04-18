@@ -1,5 +1,7 @@
 package Algotithm;
 
+import Util.DataProcessUtil;
+import Util.MessageDataTransUtil;
 import Util.TypeExchangeUtil;
 import context.Context;
 import context.WorkerContext;
@@ -9,6 +11,7 @@ import dataStructure.sample.SampleList;
 import javafx.concurrent.Worker;
 import net.PSRouterClient;
 import net.PSWorker;
+import net.SFKVListMessage;
 import org.iq80.leveldb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
@@ -59,15 +63,31 @@ public class LogisticRegression {
 
                 // 下面可以向server发送请求了
                 logger.info("echo " + i + ":Sent request of Params to servers");
+                Future<SFKVListMessage> sfkvListMessageFuture[]=new Future[Context.workerNum];
                 for (int l = 0; l < Context.serverNum; l++) {
                     if (setArray[l].size() != 0) {
                         logger.info("getNeededParams start");
-                        paramsMapsTemp[l] = psRouterClient.get(l).getNeededParams(setArray[l]);
+                        sfkvListMessageFuture[l]=psRouterClient.get(l).getNeededParams(setArray[l]);
                         logger.info("getNeededParams end");
-                        for (String key : paramsMapsTemp[l].keySet()) {
-                            // 把远程请求到的参数放到paramsMap里，这里内存是可以存得下一个batch的参数的
-                            paramsMap.put(key, paramsMapsTemp[l].get(key));
+                    }
+                }
+                for(int l=0;l<Context.serverNum;l++){
+                    while (!sfkvListMessageFuture[l].isDone()){
+                        try{
+                            Thread.sleep(10);
+                        }catch (InterruptedException e){
+                            e.printStackTrace();
                         }
+                    }
+                    try{
+                        paramsMapsTemp[l] = MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessageFuture[l].get());
+                    }catch (InterruptedException|ExecutionException e){
+                        e.printStackTrace();
+                    }
+
+                    for (String key : paramsMapsTemp[l].keySet()) {
+                        // 把远程请求到的参数放到paramsMap里，这里内存是可以存得下一个batch的参数的
+                        paramsMap.put(key, paramsMapsTemp[l].get(key));
                     }
                 }
 

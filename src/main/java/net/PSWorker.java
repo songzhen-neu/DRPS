@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static Util.DataProcessUtil.isCatEmpty;
@@ -155,10 +156,10 @@ public class PSWorker {
     }
 
 
-    public Map<String, Float> getNeededParams(Set<String> set) {
+    public Future<SFKVListMessage> getNeededParams(Set<String> set) {
         SSListMessage sSListMessage = MessageDataTransUtil.Set_2_SSListMessage(set);
-        SFKVListMessage sfkvListMessage = blockingStub.getNeededParams(sSListMessage);
-        return MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessage);
+        Future<SFKVListMessage> sfkvListMessage = futureStub.getNeededParams(sSListMessage);
+        return sfkvListMessage;
 
     }
 

@@ -992,6 +992,7 @@ public class PServer implements net.PSGrpc.PS {
                 }
             }
             synchronized (SSP.isWaiting){
+                System.out.println("haha1");
                 SSP.isWaiting.notifyAll();
             }
         }
