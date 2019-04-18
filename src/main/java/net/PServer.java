@@ -953,7 +953,46 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void notifyForSSP(IMessage req,StreamObserver<BMessage> resp){
-        SSP.barrier[req.getI()].notifyAll();
-        resp.onNext(BMessage.newBuilder().setB(true).build());
+        synchronized (SSP.barrier[req.getI()]){
+            SSP.barrier[req.getI()].notifyAll();
+            resp.onNext(BMessage.newBuilder().setB(true).build());
+        }
+    }
+
+
+    @Override
+    public void isWaiting(IMessage req,StreamObserver<BMessage> resp){
+        /**
+        *@Description: 当除master之外的server都在等待时，通知master线程继续执行
+        *@Param: [req, resp]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 下午3:55 19-4-18
+        */
+        try{
+            Context.cyclicBarrier_sub1.await();
+        }catch (BrokenBarrierException|InterruptedException e){
+            e.printStackTrace();
+        }
+
+        while (Context.cyclicBarrier_sub1.getNumberWaiting()>0){
+            try {
+                Thread.sleep(1);
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
+        }
+
+        if(req.getI()==Context.masterId+1){
+            while(!SSP.isWaiting.get()){
+                try{
+                    Thread.sleep(10);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+
+            SSP.isWaiting.notifyAll();
+        }
     }
 }

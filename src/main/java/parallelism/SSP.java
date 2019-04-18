@@ -31,7 +31,7 @@ public class SSP {
     public static final int bound = Context.boundForSSP;
     public static AtomicBoolean[] isContains;
     public static Logger logger = LoggerFactory.getLogger(SSP.class);
-    public static CyclicBarrier cyclicBarrier ;
+    public static AtomicBoolean isWaiting=new AtomicBoolean(false);
 
     public static void init() {
         synchronized (isInited) {
@@ -48,9 +48,7 @@ public class SSP {
                     isContains[i] = new AtomicBoolean(false);
                 }
             }
-            if(Context.workerNum>1){
-                cyclicBarrier= new CyclicBarrier(Context.workerNum - 1);
-            }
+
 
         }
 
@@ -62,14 +60,16 @@ public class SSP {
         // worker同时只能有一个进入，因为如果一起进入的话，可能worker同时wait
         if(Context.workerNum>1){
             if (workerId == Context.masterId) {
-                while (cyclicBarrier.getNumberWaiting() != 0) {
+                synchronized (isWaiting){
                     try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
+                        if(isWaiting.getAndSet(true)){
+                            isWaiting.wait();
+                        }
+                    }catch (InterruptedException e){
                         e.printStackTrace();
                     }
                 }
-
+                isWaiting.set(false);
                 for (int j = 0; j < barrier.length; j++) {
                     if (barrier[j].contains(workerId)) {
                         count[j].incrementAndGet();
@@ -126,9 +126,9 @@ public class SSP {
             } else {
                 synchronized (barrier[workerId]) {
                     try {
-                        cyclicBarrier.await();
+                        Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(IMessage.newBuilder().setI(workerId).build());
                         barrier[workerId].wait();
-                    } catch (InterruptedException | BrokenBarrierException e) {
+                    } catch (InterruptedException  e) {
                         e.printStackTrace();
                     }
                     respParam(resp, neededParamIndices);

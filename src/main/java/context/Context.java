@@ -1,12 +1,16 @@
 package context;
 
 import net.PSRouterClient;
+import parallelism.SSP;
+import parallelism.WSP;
 import store.KVStoreForLevelDB;
 
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CyclicBarrier;
+
 import dataStructure.enumType.ParallelismControlModel;
 /**
  * @program: simplePsForModelPartition
@@ -65,6 +69,8 @@ public class Context {
     public static ParallelismControlModel parallelismControlModel;
     public static PSRouterClient psRouterClient;
 
+    public static CyclicBarrier cyclicBarrier_sub1;
+
 
 
 
@@ -92,8 +98,8 @@ public class Context {
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=1;
-        serverNum=1;
+        workerNum=3;
+        serverNum=3;
         dataPartitionNum=workerNum;
         partitionedDataSize=1000000;
         masterId=0;
@@ -116,5 +122,14 @@ public class Context {
 
         psRouterClient=new PSRouterClient();
         parallelismControlModel=ParallelismControlModel.SSP;
+        switch (parallelismControlModel){
+            case SSP:SSP.init();break;
+            case WSP:WSP.init();break;
+        }
+
+        if(workerNum>1){
+            cyclicBarrier_sub1=new CyclicBarrier(workerNum-1);
+        }
+
     }
 }
