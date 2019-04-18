@@ -1,5 +1,6 @@
 package context;
 
+import net.PSRouterClient;
 import store.KVStoreForLevelDB;
 
 
@@ -62,6 +63,7 @@ public class Context {
     public static int boundForSSP;
 
     public static ParallelismControlModel parallelismControlModel;
+    public static PSRouterClient psRouterClient;
 
 
 
@@ -112,6 +114,7 @@ public class Context {
         freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
 
+        psRouterClient=new PSRouterClient();
         parallelismControlModel=ParallelismControlModel.SSP;
     }
 }

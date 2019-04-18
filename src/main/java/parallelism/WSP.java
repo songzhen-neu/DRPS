@@ -86,7 +86,7 @@ public class WSP {
                         barrier_forWSP[i].notifyAll();
                         optimalPlanSet[i].clear();
                     } else {
-                        count[i].incrementAndGet();
+//                        count[i].incrementAndGet();
                         barrier_forWSP[i].wait();
                     }
                 }

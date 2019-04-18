@@ -25,6 +25,7 @@ service PS {
     rpc GetLsPartitionedVSet(SMessage) returns(LSetListArrayMessage){};
     rpc PutLsPartitionedVSet(LSetListArrayMessage) returns(SMessage){};
     rpc TestGrpc(IMessage) returns(IMessage){};
+    rpc NotifyForSSP(IMessage) returns(BMessage){};
 
 }
 

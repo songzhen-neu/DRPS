@@ -950,4 +950,10 @@ public class PServer implements net.PSGrpc.PS {
         // onCompleted后的语句可以继续执行的
         System.out.println("haha1");
     }
+
+    @Override
+    public void notifyForSSP(IMessage req,StreamObserver<BMessage> resp){
+        SSP.barrier[req.getI()].notifyAll();
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+    }
 }
