@@ -970,20 +970,24 @@ public class PServer implements net.PSGrpc.PS {
         *@date: 下午3:55 19-4-18
         */
         try{
-            Context.cyclicBarrier_sub1.await();
+            System.out.println("111");
+            Context.cyclicBarrier_sub1[req.getI()].await();
         }catch (BrokenBarrierException|InterruptedException e){
             e.printStackTrace();
         }
 
-        while (Context.cyclicBarrier_sub1.getNumberWaiting()>0){
+        System.out.println("222");
+        while (Context.cyclicBarrier_sub1[req.getI()].getNumberWaiting()>0){
             try {
                 Thread.sleep(1);
             }catch (InterruptedException e){
                 e.printStackTrace();
             }
         }
-
+        Context.cyclicBarrier_sub1[req.getI()].reset();
+        System.out.println("333");
         if(req.getI()==Context.masterId+1){
+            System.out.println("666");
             while(!SSP.isWaiting.get()){
                 try{
                     Thread.sleep(10);
@@ -991,10 +995,12 @@ public class PServer implements net.PSGrpc.PS {
                     e.printStackTrace();
                 }
             }
+            System.out.println("555");
             synchronized (SSP.isWaiting){
                 System.out.println("haha1");
                 SSP.isWaiting.notifyAll();
             }
         }
+        System.out.println("444");
     }
 }

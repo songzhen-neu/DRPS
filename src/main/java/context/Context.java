@@ -69,7 +69,7 @@ public class Context {
     public static ParallelismControlModel parallelismControlModel;
     public static PSRouterClient psRouterClient;
 
-    public static CyclicBarrier cyclicBarrier_sub1;
+    public static CyclicBarrier[] cyclicBarrier_sub1;
 
 
 
@@ -128,7 +128,10 @@ public class Context {
         }
 
         if(workerNum>1){
-            cyclicBarrier_sub1=new CyclicBarrier(workerNum-1);
+            cyclicBarrier_sub1=new CyclicBarrier[workerNum];
+            for(int i=0;i<cyclicBarrier_sub1.length;i++){
+                cyclicBarrier_sub1[i]=new CyclicBarrier(workerNum-1);
+            }
         }
 
     }

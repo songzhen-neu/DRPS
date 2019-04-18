@@ -5,6 +5,7 @@ import context.ServerContext;
 import io.grpc.stub.StreamObserver;
 import io.netty.util.internal.ConcurrentSet;
 import lombok.Synchronized;
+import net.BMessage;
 import net.IMessage;
 import net.SFKVListMessage;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -70,7 +72,10 @@ public class SSP {
                         e.printStackTrace();
                     }
                 }
-                isWaiting.set(false);
+                synchronized (isWaiting){
+                    isWaiting.set(false);
+                }
+
                 for (int j = 0; j < barrier.length; j++) {
                     if (barrier[j].contains(workerId)) {
                         count[j].incrementAndGet();
@@ -117,10 +122,12 @@ public class SSP {
                 barrier[workerId].clear();
                 count[workerId].set(0);
                 isContains[workerId].set(false);
+
+
                 for (int i = 0; i < Context.serverNum; i++) {
                     if (i != Context.masterId) {
                         System.out.println("已经notify其他的了");
-                        Context.psRouterClient.getPsWorkers().get(i).getBlockingStub().notifyForSSP(IMessage.newBuilder().setI(workerId).build());
+                        Context.psRouterClient.getPsWorkers().get(i).getFutureStub().notifyForSSP(IMessage.newBuilder().setI(workerId).build());
                     }
                 }
                 respParam(resp, neededParamIndices);
