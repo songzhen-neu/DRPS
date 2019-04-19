@@ -599,7 +599,7 @@ public class PServer implements net.PSGrpc.PS {
 //        logger.info("1");
         synchronized (IntBarrier) {
             IntBarrier.incrementAndGet();
-            logger.info("IntBarrier:"+ IntBarrier);
+//            logger.info("IntBarrier:"+ IntBarrier);
             if (IntBarrier.intValue() >= Context.workerNum - 1) {
                 IntBarrier.notifyAll();
                 IntBarrier.set(0);
@@ -982,13 +982,13 @@ public class PServer implements net.PSGrpc.PS {
         // 但是这里同步是需要server的信息，也就是其他两台server同时等待
         // 每个worker都会发（3个worker），每个worker发两次，要求每个worker发的这两次，有一次可以notify
         try{
-            System.out.println("111"+":"+req.getWorkerId());
+
             Context.cyclicBarrier_sub1[req.getWorkerId()].await();
         }catch (BrokenBarrierException|InterruptedException e){
             e.printStackTrace();
         }
 
-        System.out.println("222"+":"+req.getWorkerId());
+
         while (Context.cyclicBarrier_sub1[req.getWorkerId()].getNumberWaiting()>0){
             try {
                 Thread.sleep(1);
@@ -997,10 +997,13 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        System.out.println("333"+":"+req.getWorkerId());
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
+
+
         if(req.getServerId()==Context.masterId+1){
             Context.cyclicBarrier_sub1[req.getWorkerId()].reset();
-            System.out.println("444"+":"+req.getWorkerId());
+
             while(!SSP.isWaiting[req.getWorkerId()].get()){
                 try{
                     Thread.sleep(10);
@@ -1008,9 +1011,9 @@ public class PServer implements net.PSGrpc.PS {
                     e.printStackTrace();
                 }
             }
-            System.out.println("555"+":"+req.getWorkerId());
+
             synchronized (SSP.isWaiting[req.getWorkerId()]){
-                System.out.println("haha1"+":"+req.getWorkerId());
+
                 while(!SSP.isWaiting[req.getWorkerId()].get()){
                     try {
                         Thread.sleep(10);
@@ -1021,6 +1024,6 @@ public class PServer implements net.PSGrpc.PS {
                 SSP.isWaiting[req.getWorkerId()].notifyAll();
             }
         }
-        System.out.println("666"+":"+req.getWorkerId());
+
     }
 }
