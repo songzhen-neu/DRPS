@@ -33,7 +33,7 @@ public class SSP {
     public static final int bound = Context.boundForSSP;
     public static AtomicBoolean[] isContains;
     public static Logger logger = LoggerFactory.getLogger(SSP.class);
-    public static AtomicBoolean[] isWaiting = new AtomicBoolean[Context.workerNum];
+    public static AtomicBoolean[] isWaiting ;
 
     public static void init() {
         synchronized (isInited) {
@@ -42,12 +42,14 @@ public class SSP {
                 count = new AtomicInteger[Context.workerNum];
                 iteration = new AtomicInteger[Context.workerNum];
                 isContains = new AtomicBoolean[Context.workerNum];
+                isWaiting = new AtomicBoolean[Context.workerNum];
 
                 for (int i = 0; i < Context.workerNum; i++) {
                     barrier[i] = new ConcurrentSet();
                     count[i] = new AtomicInteger(0);
                     iteration[i] = new AtomicInteger(0);
                     isContains[i] = new AtomicBoolean(false);
+                    isWaiting[i]=new AtomicBoolean(false);
                 }
             }
 

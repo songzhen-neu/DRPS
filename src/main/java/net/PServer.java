@@ -996,7 +996,7 @@ public class PServer implements net.PSGrpc.PS {
         System.out.println("333");
         if(req.getI()==Context.masterId+1){
             System.out.println("666");
-            while(!SSP.isWaiting.get()){
+            while(!SSP.isWaiting[req.getI()].get()){
                 try{
                     Thread.sleep(10);
                 }catch (InterruptedException e){
@@ -1004,9 +1004,9 @@ public class PServer implements net.PSGrpc.PS {
                 }
             }
             System.out.println("555");
-            synchronized (SSP.isWaiting){
+            synchronized (SSP.isWaiting[req.getI()]){
                 System.out.println("haha1");
-                SSP.isWaiting.notifyAll();
+                SSP.isWaiting[req.getI()].notifyAll();
             }
         }
         System.out.println("444");
