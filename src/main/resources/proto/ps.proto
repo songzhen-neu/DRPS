@@ -26,10 +26,15 @@ service PS {
     rpc PutLsPartitionedVSet(LSetListArrayMessage) returns(SMessage){};
     rpc TestGrpc(IMessage) returns(IMessage){};
     rpc NotifyForSSP(IMessage) returns(BMessage){};
-    rpc IsWaiting(IMessage) returns(BMessage){};
+    rpc IsWaiting(ServerIdAndWorkerId) returns(BMessage){};
 
 }
 
+
+message ServerIdAndWorkerId{
+    int32 serverId=1;
+    int32 workerId=2;
+}
 
 message LSetListArrayMessage{
     repeated LSetListMessage lSetList=1;

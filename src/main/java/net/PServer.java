@@ -969,7 +969,7 @@ public class PServer implements net.PSGrpc.PS {
 
 
     @Override
-    public void isWaiting(IMessage req,StreamObserver<BMessage> resp){
+    public void isWaiting(ServerIdAndWorkerId req,StreamObserver<BMessage> resp){
         /**
         *@Description: 当除master之外的server都在等待时，通知master线程继续执行
         *@Param: [req, resp]
@@ -977,38 +977,50 @@ public class PServer implements net.PSGrpc.PS {
         *@Author: SongZhen
         *@date: 下午3:55 19-4-18
         */
+
+        // 这里代码写乱了，一共三台worker，req.getI，以及cyclivBarrier记录的都是worker的相关信息
+        // 但是这里同步是需要server的信息，也就是其他两台server同时等待
+        // 每个worker都会发（3个worker），每个worker发两次，要求每个worker发的这两次，有一次可以notify
         try{
-            System.out.println("111");
-            Context.cyclicBarrier_sub1[req.getI()].await();
+            System.out.println("111"+":"+req.getWorkerId());
+            Context.cyclicBarrier_sub1[req.getWorkerId()].await();
         }catch (BrokenBarrierException|InterruptedException e){
             e.printStackTrace();
         }
 
-        System.out.println("222");
-        while (Context.cyclicBarrier_sub1[req.getI()].getNumberWaiting()>0){
+        System.out.println("222"+":"+req.getWorkerId());
+        while (Context.cyclicBarrier_sub1[req.getWorkerId()].getNumberWaiting()>0){
             try {
                 Thread.sleep(1);
             }catch (InterruptedException e){
                 e.printStackTrace();
             }
         }
-        Context.cyclicBarrier_sub1[req.getI()].reset();
-        System.out.println("333");
-        if(req.getI()==Context.masterId+1){
-            System.out.println("666");
-            while(!SSP.isWaiting[req.getI()].get()){
+
+        System.out.println("333"+":"+req.getWorkerId());
+        if(req.getServerId()==Context.masterId+1){
+            Context.cyclicBarrier_sub1[req.getWorkerId()].reset();
+            System.out.println("444"+":"+req.getWorkerId());
+            while(!SSP.isWaiting[req.getWorkerId()].get()){
                 try{
                     Thread.sleep(10);
                 }catch (InterruptedException e){
                     e.printStackTrace();
                 }
             }
-            System.out.println("555");
-            synchronized (SSP.isWaiting[req.getI()]){
-                System.out.println("haha1");
-                SSP.isWaiting[req.getI()].notifyAll();
+            System.out.println("555"+":"+req.getWorkerId());
+            synchronized (SSP.isWaiting[req.getWorkerId()]){
+                System.out.println("haha1"+":"+req.getWorkerId());
+                while(!SSP.isWaiting[req.getWorkerId()].get()){
+                    try {
+                        Thread.sleep(10);
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                }
+                SSP.isWaiting[req.getWorkerId()].notifyAll();
             }
         }
-        System.out.println("444");
+        System.out.println("666"+":"+req.getWorkerId());
     }
 }

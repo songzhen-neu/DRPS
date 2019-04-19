@@ -8,6 +8,7 @@ import lombok.Synchronized;
 import net.BMessage;
 import net.IMessage;
 import net.SFKVListMessage;
+import net.ServerIdAndWorkerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,7 @@ public class SSP {
     public static final int bound = Context.boundForSSP;
     public static AtomicBoolean[] isContains;
     public static Logger logger = LoggerFactory.getLogger(SSP.class);
-    public static AtomicBoolean[] isWaiting ;
+    public static AtomicBoolean[] isWaiting;
 
     public static void init() {
         synchronized (isInited) {
@@ -49,7 +50,7 @@ public class SSP {
                     count[i] = new AtomicInteger(0);
                     iteration[i] = new AtomicInteger(0);
                     isContains[i] = new AtomicBoolean(false);
-                    isWaiting[i]=new AtomicBoolean(false);
+                    isWaiting[i] = new AtomicBoolean(false);
                 }
             }
 
@@ -67,14 +68,14 @@ public class SSP {
             if (ServerContext.serverId == Context.masterId) {
                 synchronized (isWaiting[workerId]) {
                     try {
-                        if (isWaiting[workerId].getAndSet(true)) {
+                        if (!isWaiting[workerId].getAndSet(true)) {
                             isWaiting[workerId].wait();
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                synchronized (isWaiting[workerId]){
+                synchronized (isWaiting[workerId]) {
                     isWaiting[workerId].set(false);
                 }
 
@@ -136,13 +137,17 @@ public class SSP {
             } else {
                 synchronized (barrier[workerId]) {
                     try {
+                        Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(ServerIdAndWorkerId.newBuilder()
+                                .setWorkerId(workerId)
+                                .setServerId(ServerContext.serverId)
+                                .build());
+                        respParam(resp, neededParamIndices);
                         barrier[workerId].wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(IMessage.newBuilder().setI(workerId).build());
-                respParam(resp, neededParamIndices);
+
 
             }
         } else {
