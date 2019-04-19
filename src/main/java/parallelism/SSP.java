@@ -33,7 +33,7 @@ public class SSP {
     public static final int bound = Context.boundForSSP;
     public static AtomicBoolean[] isContains;
     public static Logger logger = LoggerFactory.getLogger(SSP.class);
-    public static AtomicBoolean isWaiting = new AtomicBoolean(false);
+    public static AtomicBoolean[] isWaiting = new AtomicBoolean[Context.workerNum];
 
     public static void init() {
         synchronized (isInited) {
@@ -63,17 +63,17 @@ public class SSP {
         System.out.println("165161");
         if (Context.workerNum > 1) {
             if (ServerContext.serverId == Context.masterId) {
-                synchronized (isWaiting) {
+                synchronized (isWaiting[workerId]) {
                     try {
-                        if (isWaiting.getAndSet(true)) {
-                            isWaiting.wait();
+                        if (isWaiting[workerId].getAndSet(true)) {
+                            isWaiting[workerId].wait();
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                synchronized (isWaiting){
-                    isWaiting.set(false);
+                synchronized (isWaiting[workerId]){
+                    isWaiting[workerId].set(false);
                 }
 
                 for (int j = 0; j < barrier.length; j++) {
@@ -90,7 +90,7 @@ public class SSP {
 
                 // 同时只能有一个worker
 
-                logger.info("3");
+//                logger.info("3");
                 if (!isContains[workerId].get()) {
                     // 把所有迭代次数小于iteration[workerId]-2的进程全部加入barrier里
                     for (int i = 0; i < iteration.length; i++) {
@@ -105,7 +105,7 @@ public class SSP {
 
                     if (barrier[workerId].size() != 0) {
                         try {
-                            logger.info(workerId + ":" + "4");
+//                            logger.info(workerId + ":" + "4");
                             synchronized (barrier[workerId]) {
                                 barrier[workerId].wait();
                             }
