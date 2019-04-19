@@ -953,9 +953,17 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     public void notifyForSSP(IMessage req,StreamObserver<BMessage> resp){
+        /**
+        *@Description: master发送给其他server，通知某些worker可以notify了
+        *@Param: [req, resp]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 上午10:40 19-4-19
+        */
         synchronized (SSP.barrier[req.getI()]){
             SSP.barrier[req.getI()].notifyAll();
             resp.onNext(BMessage.newBuilder().setB(true).build());
+            resp.onCompleted();
         }
     }
 
