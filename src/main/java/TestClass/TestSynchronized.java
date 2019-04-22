@@ -37,5 +37,41 @@ public class TestSynchronized {
 
 
         executorService.shutdown();
+
+
+        // 测试锁的相关内容
+        testEmbeddingLock();
+    }
+
+    public static void testEmbeddingLock(){
+        Integer[] a=new Integer[5];
+        int totalThread=5;
+        ExecutorService executorService=Executors.newCachedThreadPool();
+        for(int i=0;i<a.length;i++){
+            a[i]=new Integer(i);
+        }
+
+        for(int i=0;i<totalThread;i++){
+            int finalI = i;
+            executorService.execute(()->{
+            synchronized (a){
+                synchronized (a[finalI]){
+                    try {
+                        if(finalI==2){
+                            Thread.sleep(1000);
+                        }
+                        Thread.sleep(1000);
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                    System.out.println(finalI +":"+a[0]);
+                }
+
+            }
+
+
+            });
+        }
+        executorService.shutdown();
     }
 }

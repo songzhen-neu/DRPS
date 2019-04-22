@@ -120,7 +120,7 @@ public class Context {
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();
-        parallelismControlModel=ParallelismControlModel.SSP_S;
+        parallelismControlModel=ParallelismControlModel.SSP;
         switch (parallelismControlModel){
             case SSP:SSP.init();break;
             case SSP_S:SSP.init();break;
