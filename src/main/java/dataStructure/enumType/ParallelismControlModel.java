@@ -11,5 +11,6 @@ public enum ParallelismControlModel{
     BSP,
     AP,
     SSP,
-    WSP
+    WSP,
+    SSP_S
 }

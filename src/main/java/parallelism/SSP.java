@@ -2,6 +2,7 @@ package parallelism;
 
 import context.Context;
 import context.ServerContext;
+import dataStructure.enumType.ParallelismControlModel;
 import io.grpc.stub.StreamObserver;
 import io.netty.util.internal.ConcurrentSet;
 import lombok.Synchronized;
@@ -120,7 +121,12 @@ public class SSP {
 
                 }
 
-                iteration[workerId].set(getMaxIteration(iteration) + 1);
+                if(Context.parallelismControlModel==ParallelismControlModel.SSP_S){
+                    iteration[workerId].set(getMaxIteration(iteration) + 1);
+                }else if(Context.parallelismControlModel==ParallelismControlModel.SSP){
+                    iteration[workerId].incrementAndGet();
+                }
+
                 barrier[workerId].clear();
                 count[workerId].set(0);
                 isContains[workerId].set(false);

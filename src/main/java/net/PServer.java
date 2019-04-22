@@ -2,28 +2,18 @@ package net;
 
 
 import Util.DataProcessUtil;
-import Util.MemoryUtil;
 import Util.MessageDataTransUtil;
 import com.google.common.collect.Maps;
 
 import com.google.common.util.concurrent.AtomicDoubleArray;
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import com.yahoo.sketches.quantiles.DoublesSketch;
-import com.yahoo.sketches.quantiles.UpdateDoublesSketch;
 import context.Context;
 import context.ServerContext;
-import context.WorkerContext;
-import dataStructure.enumType.ParallelismControlModel;
-import dataStructure.parallelismControlModel.IterationTimeTable;
-import dataStructure.parallelismControlModel.StrategyChoiceTable;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.netty.util.internal.ConcurrentSet;
 import lombok.Data;
 import lombok.Synchronized;
-import org.iq80.leveldb.DB;
 import org.jblas.FloatMatrix;
 
 import org.slf4j.Logger;
@@ -39,7 +29,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicLongArray;
 
 
 /**
@@ -405,8 +394,11 @@ public class PServer implements net.PSGrpc.PS {
                 case SSP:
                     SSP.init();
                     SSP.isRespOrWaited(workerId,resp,neededParamIndices);
-
                     break;
+                case SSP_S:
+                    SSP.init();
+                    SSP.isRespOrWaited(workerId,resp,neededParamIndices);
+
                 case WSP:
                     // Worker-Selection Parallelism Control Model
                     WSP.init();

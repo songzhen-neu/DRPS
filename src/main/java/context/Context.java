@@ -3,7 +3,6 @@ package context;
 import net.PSRouterClient;
 import parallelism.SSP;
 import parallelism.WSP;
-import store.KVStoreForLevelDB;
 
 
 import java.io.IOException;
@@ -121,9 +120,10 @@ public class Context {
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();
-        parallelismControlModel=ParallelismControlModel.SSP;
+        parallelismControlModel=ParallelismControlModel.SSP_S;
         switch (parallelismControlModel){
             case SSP:SSP.init();break;
+            case SSP_S:SSP.init();break;
             case WSP:WSP.init();break;
         }
 
