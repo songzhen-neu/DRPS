@@ -29,12 +29,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SSP {
     /**
-    *@Description: 这里SSP是每一个worker有各自的时钟，SSPS是只要pull了之后，时钟就统一
-    *@Param:
-    *@return:
-    *@Author: SongZhen
-    *@date: 上午10:55 19-4-22
-    */
+     * @Description: 这里SSP是每一个worker有各自的时钟，SSPS是只要pull了之后，时钟就统一
+     * @Param:
+     * @return:
+     * @Author: SongZhen
+     * @date: 上午10:55 19-4-22
+     */
     public static ConcurrentSet[] barrier;
     public static AtomicInteger[] count;
     public static AtomicInteger[] iteration;
@@ -43,6 +43,7 @@ public class SSP {
     public static AtomicBoolean[] isContains;
     public static Logger logger = LoggerFactory.getLogger(SSP.class);
     public static AtomicBoolean[] isWaiting;
+    public static AtomicInteger[] curIterationOfWorker;
 
     public static void init() {
         synchronized (isInited) {
@@ -52,6 +53,7 @@ public class SSP {
                 iteration = new AtomicInteger[Context.workerNum];
                 isContains = new AtomicBoolean[Context.workerNum];
                 isWaiting = new AtomicBoolean[Context.workerNum];
+                curIterationOfWorker=new AtomicInteger[Context.workerNum];
 
                 for (int i = 0; i < Context.workerNum; i++) {
                     barrier[i] = new ConcurrentSet();
@@ -59,6 +61,7 @@ public class SSP {
                     iteration[i] = new AtomicInteger(0);
                     isContains[i] = new AtomicBoolean(false);
                     isWaiting[i] = new AtomicBoolean(false);
+                    curIterationOfWorker[i]=new AtomicInteger(0);
                 }
             }
 
@@ -68,9 +71,10 @@ public class SSP {
     }
 
 
-    public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices) {
+    public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices,int iterationOfWi) {
         // 如果当前worker被其他worker等待，那么其他worker计数+1，并判断是否要notify
         // worker同时只能有一个进入，因为如果一起进入的话，可能worker同时wait
+        curIterationOfWorker[workerId].set(iterationOfWi);
         if (Context.workerNum > 1) {
             if (ServerContext.serverId == Context.masterId) {
                 synchronized (isWaiting[workerId]) {
@@ -86,7 +90,9 @@ public class SSP {
                     isWaiting[workerId].set(false);
                 }
 
-                synchronized (barrier){
+
+                synchronized (barrier) {
+
                     for (int j = 0; j < barrier.length; j++) {
                         if (barrier[j].contains(workerId)) {
                             count[j].incrementAndGet();
@@ -99,57 +105,69 @@ public class SSP {
                         }
                     }
 
+
                     // 同时只能有一个worker
 
 //                logger.info("3");
+
                     if (!isContains[workerId].get()) {
                         // 把所有迭代次数小于iteration[workerId]-2的进程全部加入barrier里
+
                         for (int i = 0; i < iteration.length; i++) {
-                            if (i != workerId) {
-                                if (iteration[i].get() <= getMaxIteration(iteration) + 1 - bound) {
-                                    barrier[workerId].add(i);
+                            if (i != workerId&&curIterationOfWorker[i].get()<Context.trainRoundNum.get()) {
+                                if (Context.parallelismControlModel == ParallelismControlModel.SSP_S) {
+                                    if (iteration[i].get() <= getMaxIteration(iteration) + 1 - bound) {
+                                        barrier[workerId].add(i);
 //                                logger.info("worker:" + workerId + ",wait:" + i);
+                                    }
+                                } else if (Context.parallelismControlModel == ParallelismControlModel.SSP) {
+                                    if (iteration[i].get() <= iteration[workerId].get() + 1 - bound) {
+                                        barrier[workerId].add(i);
+//                                logger.info("worker:" + workerId + ",wait:" + i);
+                                    }
                                 }
+
                             }
 
                         }
-
-                        if (barrier[workerId].size() != 0) {
-                            try {
-//                            logger.info(workerId + ":" + "4");
-                                synchronized (barrier[workerId]) {
-                                    System.out.println(workerId+":"+"begin");
-                                    barrier[workerId].wait();
-                                    System.out.println(workerId+":"+"end");
-                                }
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                        }
-
-
                     }
-
-                    if(Context.parallelismControlModel==ParallelismControlModel.SSP_S){
-                        iteration[workerId].set(getMaxIteration(iteration) + 1);
-                    }else if(Context.parallelismControlModel==ParallelismControlModel.SSP){
-                        iteration[workerId].incrementAndGet();
-                    }
-
-                    barrier[workerId].clear();
-                    count[workerId].set(0);
-                    isContains[workerId].set(false);
-
-
-                    for (int i = 0; i < Context.serverNum; i++) {
-                        if (i != Context.masterId) {
-//                        System.out.println("已经notify其他的了");
-                            Context.psRouterClient.getPsWorkers().get(i).getFutureStub().notifyForSSP(IMessage.newBuilder().setI(workerId).build());
-                        }
-                    }
-                    respParam(resp, neededParamIndices);
                 }
+
+
+                if (barrier[workerId].size() != 0) {
+                    try {
+//                            logger.info(workerId + ":" + "4");
+                        synchronized (barrier[workerId]) {
+                            System.out.println(workerId + ":" + "begin");
+                            barrier[workerId].wait();
+                            System.out.println(workerId + ":" + "end");
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+
+                if (Context.parallelismControlModel == ParallelismControlModel.SSP_S) {
+                    iteration[workerId].set(getMaxIteration(iteration) + 1);
+                } else if (Context.parallelismControlModel == ParallelismControlModel.SSP) {
+                    iteration[workerId].incrementAndGet();
+                }
+
+                barrier[workerId].clear();
+                count[workerId].set(0);
+                isContains[workerId].set(false);
+
+
+                for (int i = 0; i < Context.serverNum; i++) {
+                    if (i != Context.masterId) {
+//                        System.out.println("已经notify其他的了");
+                        Context.psRouterClient.getPsWorkers().get(i).getFutureStub().notifyForSSP(IMessage.newBuilder().setI(workerId).build());
+                    }
+                }
+                respParam(resp, neededParamIndices);
+
 
             } else {
                 synchronized (barrier[workerId]) {

@@ -45,6 +45,7 @@ public class WSP {
      */
     public static AtomicBoolean[] barrier_forWSP = new AtomicBoolean[Context.workerNum];
     public static AtomicBoolean isInited = new AtomicBoolean(false);
+    public static AtomicInteger[] curIterationOfWorker;
 
     @Synchronized
     public static void init() {
@@ -64,6 +65,7 @@ public class WSP {
                 for (int i = 0; i < Context.workerNum; i++) {
                     iTTableArray[i].startTime = System.currentTimeMillis();
                     iTTableArray[i].iteration = 0;
+                    curIterationOfWorker[i]=new AtomicInteger(0);
                 }
 
             }
@@ -77,7 +79,7 @@ public class WSP {
     public static CyclicBarrier cyclicBarrier = new CyclicBarrier(Context.workerNum);
 
 
-    public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices) throws ClassNotFoundException, IOException, InterruptedException {
+    public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) throws ClassNotFoundException, IOException, InterruptedException {
         for (int i = 0; i < Context.workerNum; i++) {
             if (optimalPlanSet[i].contains(workerId)) {
                 synchronized (barrier_forWSP[i]) {
@@ -180,7 +182,7 @@ public class WSP {
             }
         }
         for(int i=0;i<iTTableArray.length;i++){
-            if(iTTableArray[i].endTime<=iTTableArray[minI].endTime&&i!=workerId){
+            if(iTTableArray[i].endTime<=iTTableArray[minI].endTime&&i!=workerId&&curIterationOfWorker[i].get()<Context.trainRoundNum.get()){
                 set.add(i);
             }
         }

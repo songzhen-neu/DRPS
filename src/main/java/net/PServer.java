@@ -373,10 +373,11 @@ public class PServer implements net.PSGrpc.PS {
 
 
     @Override
-    public void getNeededParams(SSListMessage req, StreamObserver<SFKVListMessage> resp) {
+    public void getNeededParams(PullRequestMessage req, StreamObserver<SFKVListMessage> resp) {
         // 获取需要访问的参数的key
-        Set<String> neededParamIndices = MessageDataTransUtil.SSListMessage_2_Set(req);
+        Set<String> neededParamIndices = MessageDataTransUtil.ProtoStringList_2_Set(req.getNeededGradDimList());
         int workerId=req.getWorkerId();
+        int iterationOfWi=req.getIteration();
         SFKVListMessage sfkvListMessage;
         try {
             switch (Context.parallelismControlModel){
@@ -393,16 +394,16 @@ public class PServer implements net.PSGrpc.PS {
                     break;
                 case SSP:
                     SSP.init();
-                    SSP.isRespOrWaited(workerId,resp,neededParamIndices);
+                    SSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
                     break;
                 case SSP_S:
                     SSP.init();
-                    SSP.isRespOrWaited(workerId,resp,neededParamIndices);
+                    SSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
 
                 case WSP:
                     // Worker-Selection Parallelism Control Model
                     WSP.init();
-                    WSP.isRespOrWaited(workerId,resp,neededParamIndices);
+                    WSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
 //                    WSP.chooseNextStre
 
 
@@ -1017,5 +1018,12 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
+    }
+
+    @Override
+    public void sendTrainRoundNum(IMessage req,StreamObserver<BMessage> resp){
+        Context.trainRoundNum.set(req.getI());
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
     }
 }

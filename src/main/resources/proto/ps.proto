@@ -12,7 +12,7 @@ service PS {
     rpc SentSparseDimSizeAndInitParams(InitVMessage) returns (BMessage){}
     rpc Barrier(RequestMetaMessage) returns (BMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
-    rpc GetNeededParams(SSListMessage) returns (SFKVListMessage){}
+    rpc GetNeededParams(PullRequestMessage) returns (SFKVListMessage){}
     rpc SendSFMap(SFKVListMessage) returns (SMessage){};
     rpc SentCurIndexNum(LMessage) returns (SMessage){};
     rpc SentInitedT(IFMessage) returns(IMessage){};
@@ -27,6 +27,7 @@ service PS {
     rpc TestGrpc(IMessage) returns(IMessage){};
     rpc NotifyForSSP(IMessage) returns(BMessage){};
     rpc IsWaiting(ServerIdAndWorkerId) returns(BMessage){};
+    rpc SendTrainRoundNum(IMessage) returns(BMessage){};
 
 }
 
@@ -148,6 +149,12 @@ message IListMessage{
 message SListMessage{
     int32 size=1;
     repeated string list=2;
+}
+
+message PullRequestMessage{
+    repeated string neededGradDim=1;
+    int32 workerId=2;
+    int32 iteration=3;
 }
 
 message SSListMessage{

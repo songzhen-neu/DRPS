@@ -1,5 +1,6 @@
 package Util;
 
+import com.google.protobuf.ProtocolStringList;
 import context.WorkerContext;
 import net.*;
 import org.jblas.FloatMatrix;
@@ -114,29 +115,29 @@ public class MessageDataTransUtil {
         return listMessage.build();
     }
 
-    public static Set<String> SListMessage_2_Set(SListMessage req){
-        Set<String> set=new HashSet<String>();
-        for(int i=0;i<req.getListCount();i++){
-            set.add(req.getList(i));
-        }
-        return set;
-    }
-
-    public static Set<String> SSListMessage_2_Set(SSListMessage req){
-        Set<String> set=new HashSet<String>();
-        for(int i=0;i<req.getListCount();i++){
-            set.add(req.getList(i));
-        }
-        return set;
-    }
-
-    public static SListMessage Set_2_SListMessage(Set<String> set){
-        SListMessage.Builder sListMessage=SListMessage.newBuilder();
-        for(String key:set){
-            sListMessage.addList(key);
-        }
-        return sListMessage.build();
-    }
+//    public static Set<String> SListMessage_2_Set(SListMessage req){
+//        Set<String> set=new HashSet<String>();
+//        for(int i=0;i<req.getListCount();i++){
+//            set.add(req.getList(i));
+//        }
+//        return set;
+//    }
+//
+//    public static Set<String> SSListMessage_2_Set(SSListMessage req){
+//        Set<String> set=new HashSet<String>();
+//        for(int i=0;i<req.getListCount();i++){
+//            set.add(req.getList(i));
+//        }
+//        return set;
+//    }
+//
+//    public static SListMessage Set_2_SListMessage(Set<String> set){
+//        SListMessage.Builder sListMessage=SListMessage.newBuilder();
+//        for(String key:set){
+//            sListMessage.addList(key);
+//        }
+//        return sListMessage.build();
+//    }
 
     public static SSListMessage Set_2_SSListMessage(Set<String> set){
         SSListMessage.Builder sSListMessage=SSListMessage.newBuilder();
@@ -145,6 +146,16 @@ public class MessageDataTransUtil {
         }
         sSListMessage.setWorkerId(WorkerContext.workerId);
         return sSListMessage.build();
+    }
+
+    public static PullRequestMessage Set_2_PullRequestMessage(Set<String> set,int workerId,int iteration){
+        PullRequestMessage.Builder req=PullRequestMessage.newBuilder();
+        for(String key:set){
+            req.addNeededGradDim(key);
+        }
+        req.setWorkerId(workerId);
+        req.setIteration(iteration);
+        return req.build();
     }
 
     public static Map<String,Float> SFKVListMessage_2_Map(SFKVListMessage sfkvListMessage){
@@ -281,5 +292,13 @@ public class MessageDataTransUtil {
             slArray[i]=sl;
         }
         return slArray;
+    }
+
+    public static Set<String> ProtoStringList_2_Set(ProtocolStringList list){
+        Set<String> set=new HashSet<String>();
+        for(int i=0;i<list.size();i++){
+            set.add(list.get(i));
+        }
+        return set;
     }
 }

@@ -156,9 +156,9 @@ public class PSWorker {
     }
 
 
-    public Future<SFKVListMessage> getNeededParams(Set<String> set) {
-        SSListMessage sSListMessage = MessageDataTransUtil.Set_2_SSListMessage(set);
-        Future<SFKVListMessage> sfkvListMessage = futureStub.getNeededParams(sSListMessage);
+    public Future<SFKVListMessage> getNeededParams(Set<String> set,int workerId,int curIteration) {
+        PullRequestMessage pullRequestMessage = MessageDataTransUtil.Set_2_PullRequestMessage(set,workerId,curIteration);
+        Future<SFKVListMessage> sfkvListMessage = futureStub.getNeededParams(pullRequestMessage);
         return sfkvListMessage;
 
     }

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import dataStructure.enumType.ParallelismControlModel;
 /**
@@ -69,6 +70,7 @@ public class Context {
     public static PSRouterClient psRouterClient;
 
     public static CyclicBarrier[] cyclicBarrier_sub1;
+    public static AtomicInteger trainRoundNum=new AtomicInteger(0);
 
 
 
@@ -120,7 +122,7 @@ public class Context {
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();
-        parallelismControlModel=ParallelismControlModel.SSP;
+        parallelismControlModel=ParallelismControlModel.SSP_S;
         switch (parallelismControlModel){
             case SSP:SSP.init();break;
             case SSP_S:SSP.init();break;

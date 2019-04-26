@@ -3,12 +3,14 @@ package Algotithm;
 import Util.DataProcessUtil;
 import Util.MessageDataTransUtil;
 import Util.TypeExchangeUtil;
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
 import context.WorkerContext;
 import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
 
 import javafx.concurrent.Worker;
+import net.IMessage;
 import net.PSRouterClient;
 import net.PSWorker;
 import net.SFKVListMessage;
@@ -52,7 +54,9 @@ public class LogisticRegression {
         Map<String, Float> gradientMap;
         float loss = 0;
 
-
+        // 先把要执行的次数发给本地的server
+        WorkerContext.psRouterClient.getPsWorkers().get(WorkerContext.workerId).getBlockingStub()
+                .sendTrainRoundNum(IMessage.newBuilder().setI(WorkerContext.sampleBatchListSize*echo).build());
         // 该层是循环echo遍数据集
         for (int i = 0; i < echo; i++) {
             // 该层是循环所有的batch
@@ -67,7 +71,9 @@ public class LogisticRegression {
                 for (int l = 0; l < Context.serverNum; l++) {
                     if (setArray[l].size() != 0) {
                         logger.info("getNeededParams start");
-                        sfkvListMessageFuture[l]=psRouterClient.get(l).getNeededParams(setArray[l]);
+                        sfkvListMessageFuture[l]=psRouterClient.get(l).getNeededParams(setArray[l],
+                                WorkerContext.workerId,
+                                WorkerContext.sampleBatchListSize*(i)+j+1 );
                         logger.info("getNeededParams end");
                     }
                 }
