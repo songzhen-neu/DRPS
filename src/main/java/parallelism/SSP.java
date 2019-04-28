@@ -173,7 +173,7 @@ public class SSP {
                 for (int i = 0; i < Context.serverNum; i++) {
                     if (i != Context.masterId) {
 //                        System.out.println("已经notify其他的了");
-                        Context.psRouterClient.getPsWorkers().get(i).getFutureStub().notifyForSSP(IMessage.newBuilder().setI(workerId).build());
+                        Context.psRouterClient.getPsWorkers().get(i).getBlockingStub().notifyForSSP(IMessage.newBuilder().setI(workerId).build());
                     }
                 }
                 RespTool.respParam(resp, neededParamIndices);
@@ -181,30 +181,46 @@ public class SSP {
 
             } else {
                 // 做其他两个server的同步异步问题
-                synchronized (barrierForOtherServer[workerId]) {
-
-                        FutureTask<Boolean> task=new FutureTask<>(()->{
-                            try{
-                                barrierForOtherServer[workerId].wait();
-                            }catch (InterruptedException e){
-                                e.printStackTrace();
-                            }
-                        }, Boolean.TRUE);
-
-                        Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(ServerIdAndWorkerId.newBuilder()
-                                .setWorkerId(workerId)
-                                .setServerId(ServerContext.serverId)
-                                .build());
-                        // 等待master的notify
-                    while (!task.isDone()){
-                        try {
-                            Thread.sleep(10);
-                        }catch (InterruptedException e){
-                            e.printStackTrace();
+                AtomicBoolean isWaiting=new AtomicBoolean(false);
+                FutureTask<Boolean> task = new FutureTask<>(() -> {
+                    try {
+                        synchronized (barrierForOtherServer[workerId]) {
+                            System.out.println("bbba");
+                            isWaiting.set(true);
+                            barrierForOtherServer[workerId].wait();
+                            System.out.println("aaa");
                         }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }, Boolean.TRUE);
+                new Thread(task).start();
+
+                // 保证了一定进入了上面对barrierForOtherServer[workerId]的锁
+                while (!isWaiting.get()){
+                    try {
+                        Thread.sleep(1);
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
                     }
                 }
-                
+
+                // 这样可以保证只有在上面锁释放的时候，才能通知master，该进程在等待
+                synchronized (barrierForOtherServer[workerId]){
+                    Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(ServerIdAndWorkerId.newBuilder()
+                            .setWorkerId(workerId)
+                            .setServerId(ServerContext.serverId)
+                            .build());
+                }
+
+                // 等待master的notify
+                while (!task.isDone()) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 RespTool.respParam(resp, neededParamIndices);
             }
         } else {
