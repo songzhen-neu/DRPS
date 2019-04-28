@@ -83,8 +83,6 @@ public class PServer implements net.PSGrpc.PS {
     private static AtomicDoubleArray diskAccessForV;
 
 
-
-
 //    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
 //    CyclicBarrier barrier_2 = new CyclicBarrier(Context.workerNum - 1);
 
@@ -233,8 +231,6 @@ public class PServer implements net.PSGrpc.PS {
         // 把ls_partitionVset中元素数量是1的删除
 
 
-
-
         // 显示ls_partitionVSet
         DataProcessUtil.printLs_partitionedVset(ls_partitionedVSet);
 
@@ -370,17 +366,15 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-
-
     @Override
     public void getNeededParams(PullRequestMessage req, StreamObserver<SFKVListMessage> resp) {
         // 获取需要访问的参数的key
         Set<String> neededParamIndices = MessageDataTransUtil.ProtoStringList_2_Set(req.getNeededGradDimList());
-        int workerId=req.getWorkerId();
-        int iterationOfWi=req.getIteration();
+        int workerId = req.getWorkerId();
+        int iterationOfWi = req.getIteration();
         SFKVListMessage sfkvListMessage;
         try {
-            switch (Context.parallelismControlModel){
+            switch (Context.parallelismControlModel) {
                 case BSP:
                     waitBarrier();
                     sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
@@ -394,16 +388,16 @@ public class PServer implements net.PSGrpc.PS {
                     break;
                 case SSP:
                     SSP.init();
-                    SSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
+                    SSP.isRespOrWaited(workerId, resp, neededParamIndices, iterationOfWi);
                     break;
                 case SSP_S:
                     SSP.init();
-                    SSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
+                    SSP.isRespOrWaited(workerId, resp, neededParamIndices, iterationOfWi);
                     break;
                 case WSP:
                     // Worker-Selection Parallelism Control Model
                     WSP.init();
-                    WSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
+                    WSP.isRespOrWaited(workerId, resp, neededParamIndices, iterationOfWi);
 //                    WSP.chooseNextStre
                     break;
                 default:
@@ -608,32 +602,30 @@ public class PServer implements net.PSGrpc.PS {
         // 开始计算numSet_otherWorkerAccessVi的总和,只允许计算一遍（一个线程计算）
         synchronized (floatSum) {
 //            logger.info("isExecuteFlag:"+isExecuteFlag_otherLocal.get());
-                if (!isExecuteFlag_otherLocal.getAndSet(true)) {
-                    // 如果pull线程没有等待，则阻塞
-                    while (!isWait_otherLocal.get()) {
-                        try {
-                            Thread.sleep(10);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
+            if (!isExecuteFlag_otherLocal.getAndSet(true)) {
+                // 如果pull线程没有等待，则阻塞
+                while (!isWait_otherLocal.get()) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-
-
-                    for (float f : numSet_otherWorkerAccessVi) {
-                        floatSum += f;
-                    }
-
-//                logger.info("iswait:"+isWait_otherLocal.get());
-
-                    synchronized (isFinished_otherLocal) {
-                        isFinished_otherLocal.notifyAll();
-                    }
-
 
                 }
 
 
+                for (float f : numSet_otherWorkerAccessVi) {
+                    floatSum += f;
+                }
+
+//                logger.info("iswait:"+isWait_otherLocal.get());
+
+                synchronized (isFinished_otherLocal) {
+                    isFinished_otherLocal.notifyAll();
+                }
+
+
+            }
 
 
         }
@@ -927,11 +919,11 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void testGrpc(IMessage req,StreamObserver<IMessage> resp){
-        if(req.getI()==-1){
-            try{
+    public void testGrpc(IMessage req, StreamObserver<IMessage> resp) {
+        if (req.getI() == -1) {
+            try {
                 Thread.sleep(1000);
-            }catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
@@ -943,15 +935,15 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void notifyForSSP(IMessage req,StreamObserver<BMessage> resp){
+    public void notifyForSSP(IMessage req, StreamObserver<BMessage> resp) {
         /**
-        *@Description: master发送给其他server，通知某些worker可以notify了
-        *@Param: [req, resp]
-        *@return: void
-        *@Author: SongZhen
-        *@date: 上午10:40 19-4-19
-        */
-        synchronized (SSP.barrier[req.getI()]){
+         *@Description: master发送给其他server，通知某些worker可以notify了
+         *@Param: [req, resp]
+         *@return: void
+         *@Author: SongZhen
+         *@date: 上午10:40 19-4-19
+         */
+        synchronized (SSP.barrier[req.getI()]) {
             SSP.barrier[req.getI()].notifyAll();
             resp.onNext(BMessage.newBuilder().setB(true).build());
             resp.onCompleted();
@@ -960,30 +952,30 @@ public class PServer implements net.PSGrpc.PS {
 
 
     @Override
-    public void isWaiting(ServerIdAndWorkerId req,StreamObserver<BMessage> resp){
+    public void isWaiting(ServerIdAndWorkerId req, StreamObserver<BMessage> resp) {
         /**
-        *@Description: 当除master之外的server都在等待时，通知master线程继续执行
-        *@Param: [req, resp]
-        *@return: void
-        *@Author: SongZhen
-        *@date: 下午3:55 19-4-18
-        */
+         *@Description: 当除master之外的server都在等待时，通知master线程继续执行
+         *@Param: [req, resp]
+         *@return: void
+         *@Author: SongZhen
+         *@date: 下午3:55 19-4-18
+         */
 
         // 这里代码写乱了，一共三台worker，req.getI，以及cyclivBarrier记录的都是worker的相关信息
         // 但是这里同步是需要server的信息，也就是其他两台server同时等待
         // 每个worker都会发（3个worker），每个worker发两次，要求每个worker发的这两次，有一次可以notify
-        try{
+        try {
 
             Context.cyclicBarrier_sub1[req.getWorkerId()].await();
-        }catch (BrokenBarrierException|InterruptedException e){
+        } catch (BrokenBarrierException | InterruptedException e) {
             e.printStackTrace();
         }
 
 
-        while (Context.cyclicBarrier_sub1[req.getWorkerId()].getNumberWaiting()>0){
+        while (Context.cyclicBarrier_sub1[req.getWorkerId()].getNumberWaiting() > 0) {
             try {
                 Thread.sleep(1);
-            }catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -992,26 +984,18 @@ public class PServer implements net.PSGrpc.PS {
         resp.onCompleted();
 
 
-        if(req.getServerId()==Context.masterId+1){
+        if (req.getServerId() == Context.masterId + 1) {
             Context.cyclicBarrier_sub1[req.getWorkerId()].reset();
 
-            while(!SSP.isWaiting[req.getWorkerId()].get()){
-                try{
+            while (!SSP.isWaiting[req.getWorkerId()].get()) {
+                try {
                     Thread.sleep(10);
-                }catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
 
-            synchronized (SSP.isWaiting[req.getWorkerId()]){
-
-                while(!SSP.isWaiting[req.getWorkerId()].get()){
-                    try {
-                        Thread.sleep(10);
-                    }catch (InterruptedException e){
-                        e.printStackTrace();
-                    }
-                }
+            synchronized (SSP.isWaiting[req.getWorkerId()]) {
                 SSP.isWaiting[req.getWorkerId()].notifyAll();
             }
         }
@@ -1019,7 +1003,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void sendTrainRoundNum(IMessage req,StreamObserver<BMessage> resp){
+    public void sendTrainRoundNum(IMessage req, StreamObserver<BMessage> resp) {
         Context.trainRoundNum.set(req.getI());
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();

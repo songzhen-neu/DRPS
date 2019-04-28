@@ -53,7 +53,7 @@ public class SSP {
                 iteration = new AtomicInteger[Context.workerNum];
                 isContains = new AtomicBoolean[Context.workerNum];
                 isWaiting = new AtomicBoolean[Context.workerNum];
-                curIterationOfWorker=new AtomicInteger[Context.workerNum];
+                curIterationOfWorker = new AtomicInteger[Context.workerNum];
 
                 for (int i = 0; i < Context.workerNum; i++) {
                     barrier[i] = new ConcurrentSet();
@@ -61,7 +61,7 @@ public class SSP {
                     iteration[i] = new AtomicInteger(0);
                     isContains[i] = new AtomicBoolean(false);
                     isWaiting[i] = new AtomicBoolean(false);
-                    curIterationOfWorker[i]=new AtomicInteger(0);
+                    curIterationOfWorker[i] = new AtomicInteger(0);
                 }
             }
 
@@ -71,12 +71,13 @@ public class SSP {
     }
 
 
-    public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices,int iterationOfWi) {
+    public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) {
         // 如果当前worker被其他worker等待，那么其他worker计数+1，并判断是否要notify
         // worker同时只能有一个进入，因为如果一起进入的话，可能worker同时wait
         curIterationOfWorker[workerId].set(iterationOfWi);
         if (Context.workerNum > 1) {
             if (ServerContext.serverId == Context.masterId) {
+                // 先同步，让master进程wait其他server
                 synchronized (isWaiting[workerId]) {
                     try {
                         if (!isWaiting[workerId].getAndSet(true)) {
@@ -92,7 +93,8 @@ public class SSP {
 
 
                 synchronized (barrier) {
-
+                    // 判断当workerId执行完后，判断workerId是否被其他worker等待
+                    // 如果被等待，count++，判断是否通知等待的worker继续执行，如果不被等待，执行WSP
                     for (int j = 0; j < barrier.length; j++) {
                         if (barrier[j].contains(workerId)) {
                             count[j].incrementAndGet();
@@ -112,9 +114,8 @@ public class SSP {
 
                     if (!isContains[workerId].get()) {
                         // 把所有迭代次数小于iteration[workerId]-2的进程全部加入barrier里
-
                         for (int i = 0; i < iteration.length; i++) {
-                            if (i != workerId&&curIterationOfWorker[i].get()<Context.trainRoundNum.get()) {
+                            if (i != workerId && curIterationOfWorker[i].get() < Context.trainRoundNum.get()) {
                                 if (Context.parallelismControlModel == ParallelismControlModel.SSP_S) {
                                     if (iteration[i].get() <= getMaxIteration(iteration) + 1 - bound) {
                                         barrier[workerId].add(i);
@@ -134,7 +135,7 @@ public class SSP {
                 }
 
 
-                if (barrier[workerId].size() != 0) {
+                if (barrier[workerId].size() != 0&&!isContains[workerId].get()) {
                     try {
 //                            logger.info(workerId + ":" + "4");
                         synchronized (barrier[workerId]) {
@@ -176,6 +177,7 @@ public class SSP {
                                 .setWorkerId(workerId)
                                 .setServerId(ServerContext.serverId)
                                 .build());
+
                         barrier[workerId].wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -190,7 +192,6 @@ public class SSP {
 
 
     }
-
 
 
     public static int getMaxIteration(AtomicInteger[] iteration) {
