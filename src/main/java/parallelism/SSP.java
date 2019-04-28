@@ -90,8 +90,6 @@ public class SSP {
                 synchronized (isWaiting[workerId]) {
                     isWaiting[workerId].set(false);
                 }
-
-
                 synchronized (barrier) {
                     // 判断当workerId执行完后，判断workerId是否被其他worker等待
                     // 如果被等待，count++，判断是否通知等待的worker继续执行，如果不被等待，执行WSP
@@ -133,8 +131,6 @@ public class SSP {
                         }
                     }
                 }
-
-
                 if (barrier[workerId].size() != 0&&!isContains[workerId].get()) {
                     try {
 //                            logger.info(workerId + ":" + "4");
@@ -148,7 +144,6 @@ public class SSP {
                     }
 
                 }
-
 
                 if (Context.parallelismControlModel == ParallelismControlModel.SSP_S) {
                     iteration[workerId].set(getMaxIteration(iteration) + 1);
@@ -177,7 +172,6 @@ public class SSP {
                                 .setWorkerId(workerId)
                                 .setServerId(ServerContext.serverId)
                                 .build());
-
                         barrier[workerId].wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
