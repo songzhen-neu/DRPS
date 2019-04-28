@@ -45,7 +45,7 @@ public class WSP {
      */
     public static AtomicBoolean[] barrier_forWSP = new AtomicBoolean[Context.workerNum];
     public static AtomicBoolean isInited = new AtomicBoolean(false);
-    public static AtomicInteger[] curIterationOfWorker;
+    public static AtomicInteger[] curIterationOfWorker=new AtomicInteger[Context.workerNum];
 
     @Synchronized
     public static void init() {
@@ -63,8 +63,10 @@ public class WSP {
                 }
 
                 for (int i = 0; i < Context.workerNum; i++) {
+                    count[i]=new AtomicInteger(0);
                     iTTableArray[i].startTime = System.currentTimeMillis();
                     iTTableArray[i].iteration = 0;
+                    barrier_forWSP[i]=new AtomicBoolean(false);
                     curIterationOfWorker[i]=new AtomicInteger(0);
                 }
 
@@ -80,93 +82,105 @@ public class WSP {
 
 
     public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) throws ClassNotFoundException, IOException, InterruptedException {
-        for (int i = 0; i < Context.workerNum; i++) {
-            if (optimalPlanSet[i].contains(workerId)) {
-                synchronized (barrier_forWSP[i]) {
-                    count[i].incrementAndGet();
-                    if (optimalPlanSet[i].size() == count[i].get()) {
-                        barrier_forWSP[i].notifyAll();
-                        optimalPlanSet[i].clear();
-                    } else {
+        if(Context.workerNum>1){
+            if(ServerContext.serverId==Context.masterId){
+                for (int i = 0; i < Context.workerNum; i++) {
+                    if (optimalPlanSet[i].contains(workerId)) {
+                        synchronized (barrier_forWSP[i]) {
+                            count[i].incrementAndGet();
+                            if (optimalPlanSet[i].size() == count[i].get()) {
+                                barrier_forWSP[i].notifyAll();
+                                optimalPlanSet[i].clear();
+                            } else {
 //                        count[i].incrementAndGet();
-                        barrier_forWSP[i].wait();
+                                barrier_forWSP[i].wait();
+                            }
+                        }
+
+
+
+                        // 返回完参数之后开始更新时间，如果不在上述要求线程（等待线程）里面，那么需要进行策略选择，
+                        // 如果在的话，上面已经选择过等待还是继续了，当可以继续执行时需要更新当前的一写ITTable的信息
+
+                        // 只执行一次这段代码
+                        synchronized (isFinished) {
+                            if (isFinished.getAndSet(true)) {
+                                iTTableArray[i].execTime = System.currentTimeMillis() - iTTableArray[i].startTime;
+                                iTTableArray[i].startTime = System.currentTimeMillis();
+                                iTTableArray[i].endTime = iTTableArray[i].startTime + iTTableArray[i].endTime;
+                                int iteration = getMaxIteration(iTTableArray);
+                                iTTableArray[i].iteration = iteration + 1;
+
+                            }
+                        }
+
+                        isContainedInOtherPlan.set(true);
                     }
                 }
 
-                SFKVListMessage sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
-                resp.onNext(sfkvListMessage);
-                resp.onCompleted();
 
-                // 返回完参数之后开始更新时间，如果不在上述要求线程（等待线程）里面，那么需要进行策略选择，
-                // 如果在的话，上面已经选择过等待还是继续了，当可以继续执行时需要更新当前的一写ITTable的信息
+                // 如果不包含在其他worker的执行方案里，那么需要进行策略选择
+                if (!isContainedInOtherPlan.get()) {
+                    if (isFirstItaration.get()) {
+                        iTTableArray[workerId].endTime = System.currentTimeMillis();
+                        iTTableArray[workerId].execTime = iTTableArray[workerId].endTime - iTTableArray[workerId].startTime;
+                        // 同步代码
+                        try {
+                            cyclicBarrier.await();
+                        }catch (BrokenBarrierException e){
+                            e.printStackTrace();
+                        }
 
-                // 只执行一次这段代码
-                synchronized (isFinished) {
-                    if (isFinished.getAndSet(true)) {
-                        iTTableArray[i].execTime = System.currentTimeMillis() - iTTableArray[i].startTime;
-                        iTTableArray[i].startTime = System.currentTimeMillis();
-                        iTTableArray[i].endTime = iTTableArray[i].startTime + iTTableArray[i].endTime;
-                        int iteration = getMaxIteration(iTTableArray);
-                        iTTableArray[i].iteration = iteration + 1;
+                        while(cyclicBarrier.getNumberWaiting()>0){
+                            Thread.sleep(10);
+                        }
+                        cyclicBarrier.reset();
+                        isFirstItaration.set(false);
+                        RespTool.respParam(resp,neededParamIndices);
 
-                    }
-                }
-
-                isContainedInOtherPlan.set(true);
-            }
-        }
-
-        // 如果不包含在其他worker的执行方案里，那么需要进行策略选择
-        if (!isContainedInOtherPlan.get()) {
-            if (isFirstItaration.get()) {
-                iTTableArray[workerId].endTime = System.currentTimeMillis();
-                iTTableArray[workerId].execTime = iTTableArray[workerId].endTime - iTTableArray[workerId].startTime;
-                // 同步代码
-                try {
-                    cyclicBarrier.await();
-                }catch (BrokenBarrierException e){
-                    e.printStackTrace();
-                }
-
-                while(cyclicBarrier.getNumberWaiting()>0){
-                    Thread.sleep(10);
-                }
-                cyclicBarrier.reset();
-                SFKVListMessage sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
-                resp.onNext(sfkvListMessage);
-                resp.onCompleted();
-
-                iTTableArray[workerId].startTime=System.currentTimeMillis();
-                iTTableArray[workerId].endTime=iTTableArray[workerId].startTime+iTTableArray[workerId].execTime;
-                iTTableArray[workerId].iteration=1;
-            }else {
-                int maxIteration=getMaxIteration(iTTableArray);
-                iTTableArray[workerId].endTime=System.currentTimeMillis();
-                for(int i=0;i<Context.workerNum;i++){
-                    sCTArray[i].waitTime=iTTableArray[workerId].endTime-iTTableArray[i].iteration;
-                    if(i!=workerId){
-                        sCTArray[i].staleness=maxIteration+1-iTTableArray[i].iteration;
+                        iTTableArray[workerId].startTime=System.currentTimeMillis();
+                        iTTableArray[workerId].endTime=iTTableArray[workerId].startTime+iTTableArray[workerId].execTime;
+                        iTTableArray[workerId].iteration=1;
                     }else {
-                        sCTArray[i].staleness=0;
+                        int maxIteration=getMaxIteration(iTTableArray);
+                        iTTableArray[workerId].endTime=System.currentTimeMillis();
+                        for(int i=0;i<Context.workerNum;i++){
+                            sCTArray[i].waitTime=iTTableArray[workerId].endTime-iTTableArray[i].iteration;
+                            if(i!=workerId){
+                                sCTArray[i].staleness=maxIteration+1-iTTableArray[i].iteration;
+                            }else {
+                                sCTArray[i].staleness=0;
+                            }
+                            sCTArray[i].negGain=sCTArray[i].waitTime+sCTArray[i].staleness;
+
+                        }
+                        System.out.println("waitTime1111111111111111111111111:"+sCTArray[workerId].waitTime);
+                        System.out.println("staleness1111111111111111111111111:"+sCTArray[workerId].staleness);
+                        optimalPlanSet[workerId]=getIOfMinNegGain(iTTableArray,sCTArray,workerId);
+                        if(optimalPlanSet[workerId].size()==0){
+                            RespTool.respParam(resp,neededParamIndices);
+                        }else {
+                            synchronized (barrier_forWSP[workerId]){
+                                barrier_forWSP[workerId].wait();
+                            }
+                            RespTool.respParam(resp,neededParamIndices);
+                        }
+
                     }
-                    sCTArray[i].negGain=sCTArray[i].waitTime+sCTArray[i].staleness;
-                }
-                optimalPlanSet[workerId]=getIOfMinNegGain(iTTableArray,sCTArray,workerId);
-                if(optimalPlanSet[workerId].size()==0){
-                    SFKVListMessage sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
-                    resp.onNext(sfkvListMessage);
-                    resp.onCompleted();
                 }else {
-                    barrier_forWSP[workerId].wait();
+                    RespTool.respParam(resp,neededParamIndices);
                 }
-                SFKVListMessage sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
-                resp.onNext(sfkvListMessage);
-                resp.onCompleted();
+                synchronized (isFinished){
+                    isFinished.set(false);
+                }
+            }else {
+
             }
+
+        }else {
+            RespTool.respParam(resp,neededParamIndices);
         }
-        synchronized (isFinished){
-            isFinished.set(false);
-        }
+
 
     }
 
@@ -199,5 +213,7 @@ public class WSP {
         }
         return max;
     }
+
+
 
 }

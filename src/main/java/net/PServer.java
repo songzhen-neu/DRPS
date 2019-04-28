@@ -399,14 +399,12 @@ public class PServer implements net.PSGrpc.PS {
                 case SSP_S:
                     SSP.init();
                     SSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
-
+                    break;
                 case WSP:
                     // Worker-Selection Parallelism Control Model
                     WSP.init();
                     WSP.isRespOrWaited(workerId,resp,neededParamIndices,iterationOfWi);
 //                    WSP.chooseNextStre
-
-
                     break;
                 default:
                     System.out.println("run to default");

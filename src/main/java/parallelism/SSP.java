@@ -166,7 +166,7 @@ public class SSP {
                         Context.psRouterClient.getPsWorkers().get(i).getFutureStub().notifyForSSP(IMessage.newBuilder().setI(workerId).build());
                     }
                 }
-                respParam(resp, neededParamIndices);
+                RespTool.respParam(resp, neededParamIndices);
 
 
             } else {
@@ -176,30 +176,22 @@ public class SSP {
                                 .setWorkerId(workerId)
                                 .setServerId(ServerContext.serverId)
                                 .build());
-                        respParam(resp, neededParamIndices);
                         barrier[workerId].wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
+                RespTool.respParam(resp, neededParamIndices);
 //                System.out.println("应该除master之外的server每台有3个到这的才对");
             }
         } else {
-            respParam(resp, neededParamIndices);
+            RespTool.respParam(resp, neededParamIndices);
         }
 
 
     }
 
-    public static void respParam(StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices) {
-        try {
-            SFKVListMessage sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
-            resp.onNext(sfkvListMessage);
-            resp.onCompleted();
-        } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-        }
-    }
+
 
     public static int getMaxIteration(AtomicInteger[] iteration) {
         int maxValue = Integer.MIN_VALUE;
