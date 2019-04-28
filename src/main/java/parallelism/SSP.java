@@ -44,6 +44,8 @@ public class SSP {
     public static Logger logger = LoggerFactory.getLogger(SSP.class);
     public static AtomicBoolean[] isWaiting;
     public static AtomicInteger[] curIterationOfWorker;
+    public static AtomicBoolean[] barrierForOtherServer;
+
 
     public static void init() {
         synchronized (isInited) {
@@ -54,6 +56,7 @@ public class SSP {
                 isContains = new AtomicBoolean[Context.workerNum];
                 isWaiting = new AtomicBoolean[Context.workerNum];
                 curIterationOfWorker = new AtomicInteger[Context.workerNum];
+                barrierForOtherServer=new AtomicBoolean[Context.workerNum];
 
                 for (int i = 0; i < Context.workerNum; i++) {
                     barrier[i] = new ConcurrentSet();
@@ -62,6 +65,7 @@ public class SSP {
                     isContains[i] = new AtomicBoolean(false);
                     isWaiting[i] = new AtomicBoolean(false);
                     curIterationOfWorker[i] = new AtomicInteger(0);
+                    barrierForOtherServer[i] = new AtomicBoolean(false);
                 }
             }
 
@@ -74,6 +78,7 @@ public class SSP {
     public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) {
         // 如果当前worker被其他worker等待，那么其他worker计数+1，并判断是否要notify
         // worker同时只能有一个进入，因为如果一起进入的话，可能worker同时wait
+        System.out.println(iterationOfWi+",worker"+workerId+" in");
         curIterationOfWorker[workerId].set(iterationOfWi);
         if (Context.workerNum > 1) {
             if (ServerContext.serverId == Context.masterId) {
@@ -87,10 +92,13 @@ public class SSP {
                         e.printStackTrace();
                     }
                 }
+
                 synchronized (isWaiting[workerId]) {
                     isWaiting[workerId].set(false);
                 }
+
                 synchronized (barrier) {
+                    System.out.println(iterationOfWi+",worker"+workerId+" barrier in");
                     // 判断当workerId执行完后，判断workerId是否被其他worker等待
                     // 如果被等待，count++，判断是否通知等待的worker继续执行，如果不被等待，执行WSP
                     for (int j = 0; j < barrier.length; j++) {
@@ -131,13 +139,23 @@ public class SSP {
                         }
                     }
                 }
+
+                System.out.println(iterationOfWi+",worker"+workerId+" barrier out");
+
+                for(int j=0;j<barrier.length;j++){
+                    for(Object i:barrier[j]){
+                        System.out.println(j+":"+(Integer) i);
+                    }
+                }
+
+
                 if (barrier[workerId].size() != 0&&!isContains[workerId].get()) {
                     try {
 //                            logger.info(workerId + ":" + "4");
                         synchronized (barrier[workerId]) {
-                            System.out.println(workerId + ":" + "begin");
+                            System.out.println(iterationOfWi+","+workerId + ":" + "begin");
                             barrier[workerId].wait();
-                            System.out.println(workerId + ":" + "end");
+                            System.out.println(iterationOfWi+","+workerId + ":" + "end");
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -166,19 +184,19 @@ public class SSP {
 
 
             } else {
-                synchronized (barrier[workerId]) {
+                synchronized (barrierForOtherServer[workerId]) {
                     try {
                         Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(ServerIdAndWorkerId.newBuilder()
                                 .setWorkerId(workerId)
                                 .setServerId(ServerContext.serverId)
                                 .build());
-                        barrier[workerId].wait();
+                        // 等待master的notify
+                        barrierForOtherServer[workerId].wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
                 RespTool.respParam(resp, neededParamIndices);
-//                System.out.println("应该除master之外的server每台有3个到这的才对");
             }
         } else {
             RespTool.respParam(resp, neededParamIndices);

@@ -78,6 +78,7 @@ public class LogisticRegression {
                     }
                 }
                 for(int l=0;l<Context.serverNum;l++){
+                    logger.info(l+"barrier start");
                     while (!sfkvListMessageFuture[l].isDone()){
                         try{
                             Thread.sleep(10);
@@ -85,6 +86,7 @@ public class LogisticRegression {
                             e.printStackTrace();
                         }
                     }
+                    logger.info(l+"barrier end");
                     try{
                         paramsMapsTemp[l] = MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessageFuture[l].get());
                     }catch (InterruptedException|ExecutionException e){

@@ -943,8 +943,8 @@ public class PServer implements net.PSGrpc.PS {
          *@Author: SongZhen
          *@date: 上午10:40 19-4-19
          */
-        synchronized (SSP.barrier[req.getI()]) {
-            SSP.barrier[req.getI()].notifyAll();
+        synchronized (SSP.barrierForOtherServer[req.getI()]) {
+            SSP.barrierForOtherServer[req.getI()].notifyAll();
             resp.onNext(BMessage.newBuilder().setB(true).build());
             resp.onCompleted();
         }

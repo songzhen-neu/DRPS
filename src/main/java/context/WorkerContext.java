@@ -66,11 +66,11 @@ public class WorkerContext {
         workerId=0;
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
-        sampleListSize=10000;
+        sampleListSize=1000;
 
 
 
-        samplePrunedSize=10000;
+        samplePrunedSize=1000;
 
         pruneRate=0.001f;
 
@@ -81,7 +81,7 @@ public class WorkerContext {
 
         catSize=12;
 
-        sampleBatchSize=1000;
+        sampleBatchSize=100;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;
