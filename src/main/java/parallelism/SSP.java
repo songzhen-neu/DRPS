@@ -5,19 +5,14 @@ import context.ServerContext;
 import dataStructure.enumType.ParallelismControlModel;
 import io.grpc.stub.StreamObserver;
 import io.netty.util.internal.ConcurrentSet;
-import lombok.Synchronized;
-import net.BMessage;
 import net.IMessage;
 import net.SFKVListMessage;
 import net.ServerIdAndWorkerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -83,6 +78,7 @@ public class SSP {
         if (Context.workerNum > 1) {
             if (ServerContext.serverId == Context.masterId) {
                 // 先同步，让master进程wait其他server
+                // 做三个worker的同步异步问题
                 synchronized (isWaiting[workerId]) {
                     try {
                         if (!isWaiting[workerId].getAndSet(true)) {
@@ -184,18 +180,31 @@ public class SSP {
 
 
             } else {
+                // 做其他两个server的同步异步问题
                 synchronized (barrierForOtherServer[workerId]) {
-                    try {
+
+                        FutureTask<Boolean> task=new FutureTask<>(()->{
+                            try{
+                                barrierForOtherServer[workerId].wait();
+                            }catch (InterruptedException e){
+                                e.printStackTrace();
+                            }
+                        }, Boolean.TRUE);
+
                         Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(ServerIdAndWorkerId.newBuilder()
                                 .setWorkerId(workerId)
                                 .setServerId(ServerContext.serverId)
                                 .build());
                         // 等待master的notify
-                        barrierForOtherServer[workerId].wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    while (!task.isDone()){
+                        try {
+                            Thread.sleep(10);
+                        }catch (InterruptedException e){
+                            e.printStackTrace();
+                        }
                     }
                 }
+                
                 RespTool.respParam(resp, neededParamIndices);
             }
         } else {
