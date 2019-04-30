@@ -999,6 +999,8 @@ public class PServer implements net.PSGrpc.PS {
                 SSP.isWaiting[req.getWorkerId()].notifyAll();
             }
         }
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
 
     }
 

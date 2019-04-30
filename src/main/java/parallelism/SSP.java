@@ -40,6 +40,7 @@ public class SSP {
     public static AtomicBoolean[] isWaiting;
     public static AtomicInteger[] curIterationOfWorker;
     public static AtomicBoolean[] barrierForOtherServer;
+    public static AtomicBoolean[] barrierIsWaiting;
 
 
     public static void init() {
@@ -51,7 +52,8 @@ public class SSP {
                 isContains = new AtomicBoolean[Context.workerNum];
                 isWaiting = new AtomicBoolean[Context.workerNum];
                 curIterationOfWorker = new AtomicInteger[Context.workerNum];
-                barrierForOtherServer=new AtomicBoolean[Context.workerNum];
+                barrierForOtherServer = new AtomicBoolean[Context.workerNum];
+                barrierIsWaiting = new AtomicBoolean[Context.workerNum];
 
                 for (int i = 0; i < Context.workerNum; i++) {
                     barrier[i] = new ConcurrentSet();
@@ -61,6 +63,7 @@ public class SSP {
                     isWaiting[i] = new AtomicBoolean(false);
                     curIterationOfWorker[i] = new AtomicInteger(0);
                     barrierForOtherServer[i] = new AtomicBoolean(false);
+                    barrierIsWaiting[i] = new AtomicBoolean(false);
                 }
             }
 
@@ -73,7 +76,7 @@ public class SSP {
     public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) {
         // 如果当前worker被其他worker等待，那么其他worker计数+1，并判断是否要notify
         // worker同时只能有一个进入，因为如果一起进入的话，可能worker同时wait
-        System.out.println(iterationOfWi+",worker"+workerId+" in");
+        System.out.println(iterationOfWi + ",worker" + workerId + " in");
         curIterationOfWorker[workerId].set(iterationOfWi);
         if (Context.workerNum > 1) {
             if (ServerContext.serverId == Context.masterId) {
@@ -94,13 +97,20 @@ public class SSP {
                 }
 
                 synchronized (barrier) {
-                    System.out.println(iterationOfWi+",worker"+workerId+" barrier in");
+                    System.out.println(iterationOfWi + ",worker" + workerId + " barrier in");
                     // 判断当workerId执行完后，判断workerId是否被其他worker等待
                     // 如果被等待，count++，判断是否通知等待的worker继续执行，如果不被等待，执行WSP
                     for (int j = 0; j < barrier.length; j++) {
                         if (barrier[j].contains(workerId)) {
                             count[j].incrementAndGet();
                             if (count[j].get() == barrier[j].size()) {
+                                while (!barrierIsWaiting[j].get()){
+                                    try{
+                                        Thread.sleep(10);
+                                    }catch (InterruptedException e){
+                                        e.printStackTrace();
+                                    }
+                                }
                                 synchronized (barrier[j]) {
                                     barrier[j].notifyAll();
                                 }
@@ -110,9 +120,7 @@ public class SSP {
                     }
 
 
-                    // 同时只能有一个worker
 
-//                logger.info("3");
 
                     if (!isContains[workerId].get()) {
                         // 把所有迭代次数小于iteration[workerId]-2的进程全部加入barrier里
@@ -136,22 +144,23 @@ public class SSP {
                     }
                 }
 
-                System.out.println(iterationOfWi+",worker"+workerId+" barrier out");
+                System.out.println(iterationOfWi + ",worker" + workerId + " barrier out");
 
-                for(int j=0;j<barrier.length;j++){
-                    for(Object i:barrier[j]){
-                        System.out.println(j+":"+(Integer) i);
+                for (int j = 0; j < barrier.length; j++) {
+                    for (Object i : barrier[j]) {
+                        System.out.println(j + ":" + (Integer) i);
                     }
                 }
 
 
-                if (barrier[workerId].size() != 0&&!isContains[workerId].get()) {
+                if (barrier[workerId].size() != 0 && !isContains[workerId].get()) {
                     try {
 //                            logger.info(workerId + ":" + "4");
                         synchronized (barrier[workerId]) {
-                            System.out.println(iterationOfWi+","+workerId + ":" + "begin");
+                            System.out.println(iterationOfWi + "," + workerId + ":" + "begin");
+                            barrierIsWaiting[workerId].set(true);
                             barrier[workerId].wait();
-                            System.out.println(iterationOfWi+","+workerId + ":" + "end");
+                            System.out.println(iterationOfWi + "," + workerId + ":" + "end");
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -167,7 +176,11 @@ public class SSP {
 
                 barrier[workerId].clear();
                 count[workerId].set(0);
-                isContains[workerId].set(false);
+                barrierIsWaiting[workerId].set(false);
+                synchronized (isContains[workerId]){
+                    isContains[workerId].set(false);
+                }
+
 
 
                 for (int i = 0; i < Context.serverNum; i++) {
@@ -181,38 +194,41 @@ public class SSP {
 
             } else {
                 // 做其他两个server的同步异步问题
-                AtomicBoolean isWaiting=new AtomicBoolean(false);
+
                 FutureTask<Boolean> task = new FutureTask<>(() -> {
                     try {
-                        synchronized (barrierForOtherServer[workerId]) {
-                            System.out.println("bbba");
-                            isWaiting.set(true);
-                            barrierForOtherServer[workerId].wait();
-                            System.out.println("aaa");
-                        }
+
+                        System.out.println("bbba");
+                        barrierForOtherServer[workerId].set(true);
+                        barrierForOtherServer[workerId].wait();
+                        System.out.println("aaa");
+
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }, Boolean.TRUE);
-                new Thread(task).start();
+                synchronized (barrierForOtherServer[workerId]) {
+                    new Thread(task).start();
+                }
 
                 // 保证了一定进入了上面对barrierForOtherServer[workerId]的锁
-                while (!isWaiting.get()){
-                    try {
-                        Thread.sleep(1);
-                    }catch (InterruptedException e){
-                        e.printStackTrace();
+
+                    while (!barrierForOtherServer[workerId].get()) {
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
 
+                synchronized (barrierForOtherServer[workerId]) {
+                    barrierForOtherServer[workerId].set(false);
+                }
                 // 这样可以保证只有在上面锁释放的时候，才能通知master，该进程在等待
-                synchronized (barrierForOtherServer[workerId]){
-                    Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(ServerIdAndWorkerId.newBuilder()
-                            .setWorkerId(workerId)
-                            .setServerId(ServerContext.serverId)
-                            .build());
-                }
-
+                Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().isWaiting(ServerIdAndWorkerId.newBuilder()
+                        .setWorkerId(workerId)
+                        .setServerId(ServerContext.serverId)
+                        .build());
                 // 等待master的notify
                 while (!task.isDone()) {
                     try {
