@@ -82,19 +82,9 @@ public class SSP {
             if (ServerContext.serverId == Context.masterId) {
                 // 先同步，让master进程wait其他server
                 // 做三个worker的同步异步问题
-                synchronized (isWaiting[workerId]) {
-                    try {
-                        if (!isWaiting[workerId].getAndSet(true)) {
-                            isWaiting[workerId].wait();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+                RespTool.waitForNonMasterServerWaiting(workerId, isWaiting);
 
-                synchronized (isWaiting[workerId]) {
-                    isWaiting[workerId].set(false);
-                }
+
 
                 synchronized (barrier) {
                     System.out.println(iterationOfWi + ",worker" + workerId + " barrier in");
@@ -245,6 +235,8 @@ public class SSP {
 
 
     }
+
+
 
 
     public static int getMaxIteration(AtomicInteger[] iteration) {

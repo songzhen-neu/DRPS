@@ -6,6 +6,7 @@ import net.SFKVListMessage;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @program: simplePsForModelPartition
@@ -21,6 +22,23 @@ public class RespTool {
             resp.onCompleted();
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
+        }
+    }
+
+
+    public static void waitForNonMasterServerWaiting(int workerId, AtomicBoolean[] isWaiting) {
+        synchronized (isWaiting[workerId]) {
+            try {
+                if (!isWaiting[workerId].getAndSet(true)) {
+                    isWaiting[workerId].wait();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        synchronized (isWaiting[workerId]) {
+            isWaiting[workerId].set(false);
         }
     }
 }

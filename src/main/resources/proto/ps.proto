@@ -28,6 +28,8 @@ service PS {
     rpc NotifyForSSP(IMessage) returns(BMessage){};
     rpc IsWaiting(ServerIdAndWorkerId) returns(BMessage){};
     rpc SendTrainRoundNum(IMessage) returns(BMessage){};
+    rpc NotifyNonMasterIsWaitingWSP(ServerIdAndWorkerId) returns(BMessage){};
+    rpc NotifyForWSP(IMessage) returns(BMessage){};
 
 }
 

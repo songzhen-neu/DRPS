@@ -1010,4 +1010,53 @@ public class PServer implements net.PSGrpc.PS {
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }
+
+    @Override
+    public void notifyNonMasterIsWaitingWSP(ServerIdAndWorkerId req,StreamObserver<BMessage> resp){
+        try {
+            Context.cyclicBarrier_sub1[req.getWorkerId()].await();
+        } catch (BrokenBarrierException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        while (Context.cyclicBarrier_sub1[req.getWorkerId()].getNumberWaiting() > 0) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
+
+
+        if (req.getServerId() == Context.masterId + 1) {
+            Context.cyclicBarrier_sub1[req.getWorkerId()].reset();
+
+            while (!WSP.WSP_IsWaiting[req.getWorkerId()].get()) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            synchronized (WSP.WSP_IsWaiting[req.getWorkerId()]) {
+                WSP.WSP_IsWaiting[req.getWorkerId()].notifyAll();
+            }
+        }
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
+    }
+
+    @Override
+    public void notifyForWSP(IMessage req,StreamObserver<BMessage> resp){
+        synchronized (WSP.WSP_WaitBarrier[req.getI()]) {
+            WSP.WSP_WaitBarrier[req.getI()].notifyAll();
+            resp.onNext(BMessage.newBuilder().setB(true).build());
+            resp.onCompleted();
+        }
+    }
 }
