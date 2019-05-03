@@ -980,8 +980,6 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        resp.onNext(BMessage.newBuilder().setB(true).build());
-        resp.onCompleted();
 
 
         if (req.getServerId() == Context.masterId + 1) {
@@ -1028,8 +1026,6 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        resp.onNext(BMessage.newBuilder().setB(true).build());
-        resp.onCompleted();
 
 
         if (req.getServerId() == Context.masterId + 1) {

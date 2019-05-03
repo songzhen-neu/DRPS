@@ -39,9 +39,12 @@ public class PartitionUtil {
 
         // 统计每个参数被本地的batch访问的次数，并放到worker的数据库里，以vAccessNum开头,
         logger.info("build local VAccessNum start");
+        CurrentTimeUtil.setStartTime();
         buildVAccessNum();
 //        DataProcessUtil.showVAccessNum(vAccessNum);
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("buildVAccessNum");
         logger.info("getMaxMinValue of features end");
 
 
@@ -50,7 +53,10 @@ public class PartitionUtil {
         // 所以每台机器都要向master发送采样后，每个V被访问的次数
         logger.info("send local VAN and get CarPrunedRecord");
         // 是获取剪枝后的维度，每个worker都向server发送每个维度的访问次数
+        CurrentTimeUtil.setStartTime();
         catPrunedRecord = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord(vAccessNum);
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("pushVANumAndGetCatPrunedRecord");
         logger.info("prunedVSet:" + catPrunedRecord.size());
 
 
@@ -61,49 +67,55 @@ public class PartitionUtil {
         List<Set> partitionedVSet;
         // 剪枝后的维度就是要划分的维度
         for (long j : catPrunedRecord) {
+
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
                 Ti_com = getInitTiComInMemory(catPrunedRecord);
-
-
                 Ti_disk = 0;
-
-
                 isInited = true;
             } else {
                 // 统计本机访问Vi的次数
+
                 float T_localAccessVj = getVjAccessNumInMemory(j_last);
+
                 // 所有的worker都要pull一下划分后的vset
-//                logger.info("pullPartitionedVSet start");
+                CurrentTimeUtil.setStartTime();
                 partitionedVSet = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset(insertI);
-//                logger.info("pullPartitionedVSet end");
                 WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+                CurrentTimeUtil.setEndTime();
+                CurrentTimeUtil.showExecuteTime("获取vset的时间");
+
+
                 // 下面是对disk时间的计算
                 if (partitionedVSet.size() == 0) {
+                    // 如果当前workerId是第一次插入划分，那么初始化该划分
                     if (insertI == WorkerContext.workerId) {
-//                        logger.info("addInitedPartitionedVSet start");
                         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).addInitedPartitionedVSet(j_last, insertI);
-//                        logger.info("addInitedPartitionedVSet end");
                     }
                 } else {
 
                     // 遍历数据集并开始统计，并返回对磁盘的访问次数
+                    CurrentTimeUtil.setStartTime();
                     float[] diskAccessForV = getDiskAccessTimeForV(partitionedVSet, j_last);
-
+                    CurrentTimeUtil.setEndTime();
+                    CurrentTimeUtil.showExecuteTime("获取j_last加入每个partition的磁盘访问次数");
                     // 每个worker都将diskAccessForV传递给server，server选择将j加入到vi的某个划分中（或者自己成为一个新的划分）
-//                    logger.info("pushDiskAccessForV start");
+
+                    CurrentTimeUtil.setStartTime();
                     Ti_disk = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushDiskAccessForV(diskAccessForV, insertI, j_last);
-//                    logger.info("pushDiskAccessForV end");
+                    CurrentTimeUtil.setEndTime();
+                    CurrentTimeUtil.showExecuteTime("将磁盘访问次数push到server中的时间");
 
 
                 }
                 // 统计其他机器访问Vi的次数,对网络通信时间的计算
+                CurrentTimeUtil.setStartTime();
                 if (insertI == WorkerContext.workerId) {
                     // 这些都还是对j_last插入后，做的Tdisk和Tcom的更新计算
 //                    logger.info("pullOtherWorkerAccessForVi start");
                     float accessNum_otherWorkers = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullOtherWorkerAccessForVi();
 //                    logger.info("pullOtherWorkerAccessForVi end");
-//                    Ti_com = Ti_com - T_localAccessVj + accessNum_otherWorkers;   // 注释了，只用网络通信时间
+                    Ti_com = Ti_com - T_localAccessVj + accessNum_otherWorkers;   // 注释了，只用网络通信时间
 
                     // 下面开始计算disk的时间,也是只修改插入的Tdisk的值。
                     // 先从server中获取vSet[insertId]的参数分配
@@ -113,12 +125,18 @@ public class PartitionUtil {
                     WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushLocalViAccessNum(T_localAccessVj);
 //                    logger.info("pushLocalViAccessNum end");
                 }
+                CurrentTimeUtil.setEndTime();
+                CurrentTimeUtil.showExecuteTime("计算网络通信时间的");
+
             }
 
 
             PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
 //            logger.info("sentInitedT start");
+            CurrentTimeUtil.setStartTime();
             insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
+            CurrentTimeUtil.setEndTime();
+            CurrentTimeUtil.showExecuteTime("发送计算时间（网络通信+磁盘访问）");
 //            logger.info("sentInitedT end");
 
             logger.info("insert " + j + " into " + insertI);
@@ -166,22 +184,37 @@ public class PartitionUtil {
 
         float[] diskAccessForV = new float[ls_partitionedVSet.size() + 1];
 
-        // 需要定义长度为n的list set数组
+        // 需要定义长度为n+1的list set数组
         List<Set>[] lsArray = new ArrayList[ls_partitionedVSet.size() + 1];
 
+
+//        for (int i = 0; i < (ls_partitionedVSet.size() + 1); i++) {
+//            for (int j = 0; j < ls_partitionedVSet.size(); j++) {
+//                accessTimeOfEachPartition[i].add(0);
+//            }
+//            if (i == ls_partitionedVSet.size()) {
+//                accessTimeOfEachPartition[i].add(0);
+//            }
+//        }
         // 同来存储各种情况的各个partition的访问次数
         List[] accessTimeOfEachPartition = SetUtil.initListArray(ls_partitionedVSet.size() + 1);
-        for (int i = 0; i < (ls_partitionedVSet.size() + 1); i++) {
-            for (int j = 0; j < ls_partitionedVSet.size(); j++) {
-                accessTimeOfEachPartition[i].add(0);
-            }
-            if (i == ls_partitionedVSet.size()) {
-                accessTimeOfEachPartition[i].add(0);
+        // 这里前面n个长度应该都是n个，最后一个长度为n+1
+        for (int i = 0; i < accessTimeOfEachPartition.length; i++) {
+            if(i<accessTimeOfEachPartition.length-1){
+                for(int j=0;j<ls_partitionedVSet.size();j++){
+                    accessTimeOfEachPartition[i].add(0);
+                }
+            }else {
+                for(int j=0;j<ls_partitionedVSet.size()+1;j++){
+                    accessTimeOfEachPartition[i].add(0);
+                }
             }
         }
 
 
         // 构建所有组合情况的list set，原Vi有n个partitions，现在组合就有n+1个（因为j可能单独成一个set）
+        // 这里构建全部的情况，即如果set={(1,2),(3).(4,5)}，那么lsArray[0]={(1,2,6),(3).(4,5)}
+        // lsArray[1]={(1,2),(3,6),(4,5)};lsArray[2]={(1,2),(3),(4,5,6)};lsArray[2]={(1,2),(3),(4,5),(6)}
         for (int m = 0; m < (ls_partitionedVSet.size() + 1); m++) {
             List<Set> ls_partitionedVSet_temp = TypeExchangeUtil.copyListSet(ls_partitionedVSet);
             // 如果是0～(m-1)，则说明是加入到原来的partition里面，m的时候是创建新的partition来存放j_last
