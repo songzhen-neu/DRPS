@@ -103,6 +103,8 @@ public class PartitionUtil {
                     // 每个worker都将diskAccessForV传递给server，server选择将j加入到vi的某个划分中（或者自己成为一个新的划分）
 
                     CurrentTimeUtil.setStartTime();
+
+                    // 第insertI个worker的磁盘访问时间
                     Ti_disk = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushDiskAccessForV(diskAccessForV, insertI, j_last);
                     CurrentTimeUtil.setEndTime();
                     CurrentTimeUtil.showExecuteTime("将磁盘访问次数push到server中的时间");
@@ -135,7 +137,8 @@ public class PartitionUtil {
             PSWorker psWorker = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId);
 //            logger.info("sentInitedT start");
             CurrentTimeUtil.setStartTime();
-            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
+            // .选择下一次插入哪台机器（总时间最小的）
+            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk,insertI);
             CurrentTimeUtil.setEndTime();
             CurrentTimeUtil.showExecuteTime("发送计算时间（网络通信+磁盘访问）");
 //            logger.info("sentInitedT end");

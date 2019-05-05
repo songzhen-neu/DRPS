@@ -177,7 +177,7 @@ public class PSWorker {
 
     }
 
-    public int sentInitedT(float Time) {
+    public int sentInitedT(float Time,int insertI) {
         /**
          *@Description: 根据Time获取当前应该插入的server的id
          *@Param: [Time]
@@ -188,7 +188,7 @@ public class PSWorker {
         int minCostI;
         IFMessage.Builder sentMessage = IFMessage.newBuilder();
         sentMessage.setF(Time);
-        sentMessage.setI(WorkerContext.workerId);
+        sentMessage.setI(insertI);
         IMessage respM = blockingStub.sentInitedT(sentMessage.build());
         minCostI = respM.getI();
 //        logger.info("get Min time along machines:"+minCostI);
