@@ -67,7 +67,6 @@ public class PartitionUtil {
         List<Set> partitionedVSet;
         // 剪枝后的维度就是要划分的维度
         for (long j : catPrunedRecord) {
-
             if (!isInited) {
                 // 也就是初始化Ticom和Ti_disk
                 Ti_com = getInitTiComInMemory(catPrunedRecord);
@@ -138,7 +137,7 @@ public class PartitionUtil {
 //            logger.info("sentInitedT start");
             CurrentTimeUtil.setStartTime();
             // .选择下一次插入哪台机器（总时间最小的）
-            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk,insertI);
+            insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
             CurrentTimeUtil.setEndTime();
             CurrentTimeUtil.showExecuteTime("发送计算时间（网络通信+磁盘访问）");
 //            logger.info("sentInitedT end");
