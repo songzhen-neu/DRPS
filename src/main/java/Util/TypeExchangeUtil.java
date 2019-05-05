@@ -1,6 +1,11 @@
 package Util;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.zip.ZipEntry;
 
 public class TypeExchangeUtil {
     public static byte[] toByteArray(Object object) throws IOException {
@@ -23,6 +28,26 @@ public class TypeExchangeUtil {
         byteArrayInputStream.close();
 
         return object;
+    }
+
+    public static List<Set> copyListSet(List<Set> ls){
+        /**
+        *@Description: 新建一个和ls内容完全一直的ls对象
+        *@Param: [ls]
+        *@return: java.util.List<java.util.Set>
+        *@Author: SongZhen
+        *@date: 下午2:00 19-3-12
+        */
+        List<Set> ls_new=new ArrayList<Set>();
+        for(Set set:ls){
+            Set<Long> set_new=new HashSet<Long>();
+            for(Object l: set){
+                set_new.add((Long) l);
+            }
+            ls_new.add(set_new);
+        }
+
+        return ls_new;
     }
 
 

@@ -9,10 +9,10 @@ import java.io.Serializable;
  * @create: 2018-12-07 15:22
  */
 public class Sample implements Serializable {
-    public boolean click;
+    public float click;
     public float feature[];
     public long cat[];
-    public Sample(float[] feature,long[] cat, boolean click){
+    public Sample(float[] feature,long[] cat, float click){
         this.click=click;
         this.feature=feature;
         this.cat=cat;

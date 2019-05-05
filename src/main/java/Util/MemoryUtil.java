@@ -7,7 +7,9 @@ package Util;
  * @create: 2018-11-12 16:50
  */
 public class MemoryUtil {
-    public static long getFreeMemory(){
+    private static long startMemory;
+    private static long endMemory;
+    private static long getFreeMemory(){
         /**
         *@Description: 获取当前空闲内存大小,单位是MB
         *@Param: []
@@ -18,6 +20,26 @@ public class MemoryUtil {
         Runtime rt=Runtime.getRuntime();
         return rt.freeMemory()/1024/1024;
 
-
     }
+
+    public static void setStartMemory(){
+        startMemory=getFreeMemory();
+    }
+
+    public static void setEndMemory(){
+        endMemory=getFreeMemory();
+    }
+
+    public static void showUsedMemory(String flag){
+        System.out.println(flag+":"+(startMemory-endMemory)+"MB");
+    }
+
+    public static void showFreeMemory(String flag){
+        System.out.println(flag+":"+getFreeMemory()+"MB");
+    }
+
+    public static void releaseMemory(){
+        System.gc();
+    }
+
 }

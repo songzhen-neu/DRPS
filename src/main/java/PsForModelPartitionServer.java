@@ -1,7 +1,5 @@
-
 import context.Context;
 import context.ServerContext;
-import net.PSWorker;
 import net.PServer;
 
 import java.io.IOException;
@@ -14,7 +12,7 @@ import java.io.IOException;
  * @create: 2018-12-02 15:49
  */
 public class PsForModelPartitionServer {
-    public static void main(String args[]) throws IOException, InterruptedException,ClassNotFoundException {
+    public static void main(String args[]) throws IOException, InterruptedException {
         Context.init();
         ServerContext.init();
 
@@ -22,6 +20,7 @@ public class PsForModelPartitionServer {
         PServer pServer = new PServer(Context.serverPort.get(ServerContext.serverId));
         pServer.start();
         pServer.blockUntilShutdown();
+
 
 
     }

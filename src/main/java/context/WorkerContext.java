@@ -27,7 +27,6 @@ public class WorkerContext {
     public static Mode mode;
 
     /** 路径*/
-    public static String dataPath; // 包含全部数据的数据集
     public static String myDataPath; // 本地训练用到的数据集（划分后）
 
     /** cat是否在feature前面*/
@@ -43,9 +42,8 @@ public class WorkerContext {
 
 
     /** 剪枝*/
-    public static boolean usePruneRate;
+
     public static float pruneRate;
-    public static float freqThreshold;
     public static int samplePrunedSize;   // 用于剪枝和模型划分的训练样本个数
     public static int sampleBatchListPrunedSize; // 用于剪枝和模型划分的训练batch个数
 
@@ -67,16 +65,15 @@ public class WorkerContext {
 
         workerId=1;
         mode=Mode.DISTRIBUTED;
-        dataPath="data/train.csv/";
         isCatForwardFeature=true;
-        sampleListSize=30000;
+        sampleListSize=1000;
 
-        usePruneRate=true;
 
-        samplePrunedSize=50000;
+
+        samplePrunedSize=1000;
 
         pruneRate=0.001f;
-        freqThreshold=100;
+
 
         myDataPath="data/train"+workerId+".csv";
 
@@ -84,7 +81,7 @@ public class WorkerContext {
 
         catSize=12;
 
-        sampleBatchSize=3000;
+        sampleBatchSize=100;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;

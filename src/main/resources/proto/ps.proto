@@ -8,25 +8,103 @@ service PS {
     rpc PushAFMatrix (MatrixMessage) returns (MatrixMessage){}
     rpc AFMatrixDimPartition(KeyValueListMessage) returns (PartitionListMessage){}
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
-    rpc GetSparseDimSize(RequestMetaMessage) returns (LongMessage){}
-    rpc SentSparseDimSizeAndInitParams(LongMessage) returns (BooleanMessage){}
-    rpc Barrier(RequestMetaMessage) returns (BooleanMessage){}
+    rpc GetSparseDimSize(RequestMetaMessage) returns (LMessage){}
+    rpc SentSparseDimSizeAndInitParams(InitVMessage) returns (BMessage){}
+    rpc Barrier(RequestMetaMessage) returns (BMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
-    rpc GetNeededParams(SListMessage) returns (SFKVListMessage){}
+    rpc GetNeededParams(PullRequestMessage) returns (SFKVListMessage){}
+    rpc SendSFMap(SFKVListMessage) returns (SMessage){};
+    rpc SentCurIndexNum(LMessage) returns (SMessage){};
+    rpc SentInitedT(IFMessage) returns(IMessage){};
+    rpc PushLocalViAccessNum(FMessage) returns(BMessage){};
+    rpc PullOtherWorkerAccessForVi(RequestMetaMessage) returns(FMessage){};
+    rpc PushVANumAndGetCatPrunedRecord(LIListMessage) returns(LListMessage){};
+    rpc PullPartitionedVset(IMessage) returns(ListSetMessage){};
+    rpc AddInitedPartitionedVSet(LIMessage) returns (BMessage){};
+    rpc PushDiskAccessForV(InsertjIntoViMessage) returns(FMessage){};
+    rpc GetLsPartitionedVSet(SMessage) returns(LSetListArrayMessage){};
+    rpc PutLsPartitionedVSet(LSetListArrayMessage) returns(SMessage){};
+    rpc TestGrpc(IMessage) returns(IMessage){};
+    rpc NotifyForSSP(IMessage) returns(BMessage){};
+    rpc IsWaiting(ServerIdAndWorkerId) returns(BMessage){};
+    rpc SendTrainRoundNum(IMessage) returns(BMessage){};
+    rpc NotifyNonMasterIsWaitingWSP(ServerIdAndWorkerId) returns(BMessage){};
+    rpc NotifyForWSP(IMessage) returns(BMessage){};
+
 }
 
+
+message ServerIdAndWorkerId{
+    int32 serverId=1;
+    int32 workerId=2;
+}
+
+message LSetListArrayMessage{
+    repeated LSetListMessage lSetList=1;
+}
+
+
+message LSetListMessage{
+    repeated LSetMessage lSet=1;
+}
+
+message LSetMessage{
+    repeated LMessage l=1;
+}
+
+message FListMessage{
+    repeated float f=1;
+}
+
+message InsertjIntoViMessage{
+    FListMessage diskTimeArray=1;
+    int32 insertI=2;
+    int64 j=3;
+}
+
+message ListSetMessage{
+    repeated LListMessage ls=1;
+}
+
+
+message InitVMessage{
+    int64 l=1;
+    repeated ILListKVMessage list=2;
+}
+
+message ILListKVMessage{
+    int32 key=1;
+    repeated int64 llist=2;
+}
+
+message FMessage{
+    float f=1;
+}
+message IFMessage{
+    int32 i=1;
+    float f=2;
+}
 
 
 message RequestMetaMessage {
     string host = 1;
 }
 
-message BooleanMessage{
+message BMessage{
     bool b=1;
 }
 
-message LongMessage{
+message LMessage{
     int64 l=1;
+}
+
+message LIMessage{
+    int64 l=1;
+    int32 i=2;
+}
+
+message IMessage{
+    int32 i=1;
 }
 
 message PartitionMessage{
@@ -65,7 +143,7 @@ message AFMatrixMessage{
     MatrixMessage AFMatrix=2;
 }
 
-message IntListMessage{
+message IListMessage{
     int32 size=1;
     repeated int32 list=2;
 }
@@ -73,6 +151,21 @@ message IntListMessage{
 message SListMessage{
     int32 size=1;
     repeated string list=2;
+}
+
+message PullRequestMessage{
+    repeated string neededGradDim=1;
+    int32 workerId=2;
+    int32 iteration=3;
+}
+
+message SSListMessage{
+    int32 size=1;
+    int32 workerId=2;
+    repeated string list=3;
+}
+message SMessage{
+    string str=1;
 }
 
 message SLKVListMessage{
@@ -94,6 +187,15 @@ message SFKVMessage{
     float value=2;
 }
 
+
+message LIListMessage{
+    int32 size=1;
+    repeated LIMessage list=2;
+}
+
+message LListMessage{
+    repeated int64 l=2;
+}
 
 
 
