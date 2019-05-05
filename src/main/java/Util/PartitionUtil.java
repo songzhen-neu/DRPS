@@ -137,6 +137,7 @@ public class PartitionUtil {
 //            logger.info("sentInitedT start");
             CurrentTimeUtil.setStartTime();
             // .选择下一次插入哪台机器（总时间最小的）
+            // 所以这里的Ti_disk应该是放到
             insertI = psWorker.sentInitedT(Ti_com * Context.netTrafficTime + Ti_disk);
             CurrentTimeUtil.setEndTime();
             CurrentTimeUtil.showExecuteTime("发送计算时间（网络通信+磁盘访问）");

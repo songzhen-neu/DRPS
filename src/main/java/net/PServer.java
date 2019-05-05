@@ -442,7 +442,7 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void sentInitedT(IFMessage req, StreamObserver<IMessage> resp) {
         IMessage.Builder intMessage = IMessage.newBuilder();
-
+        // 这里的意思显然是将
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(), req.getF());
 //        logger.info("TimeCostMapSize:"+ServerContext.kvStoreForLevelDB.getTimeCostMap().size());
         try {
@@ -819,8 +819,8 @@ public class PServer implements net.PSGrpc.PS {
     private static AtomicBoolean isExecuted_forPushDiskAccessForV = new AtomicBoolean(false);
     private static AtomicBoolean isFinished_forPushDiskAccessForV = new AtomicBoolean(false);
     private static AtomicInteger barrie_forPushDiskAccessForV = new AtomicInteger(0);
-    private static AtomicInteger minI = new AtomicInteger(-1);
-    private static AtomicDouble minValue = new AtomicDouble(Double.MAX_VALUE);
+//    private static AtomicInteger minI = new AtomicInteger(-1);
+//    private static AtomicDouble minValue = new AtomicDouble(Double.MAX_VALUE);
 
     @Override
     public void pushDiskAccessForV(InsertjIntoViMessage req, StreamObserver<FMessage> resp) {
@@ -831,8 +831,8 @@ public class PServer implements net.PSGrpc.PS {
         workerStep_forPushDiskAccessForV.set(0);
         isExecuted_forPushDiskAccessForV.set(false);
         isFinished_forPushDiskAccessForV.set(false);
-        minI.set(-1);
-        minValue.set(Double.MAX_VALUE);
+        int minI=-1;
+        float minValue=Float.MAX_VALUE;
 
         synchronized (barrie_forPushDiskAccessForV) {
             barrie_forPushDiskAccessForV.incrementAndGet();
@@ -874,19 +874,19 @@ public class PServer implements net.PSGrpc.PS {
 
         if (!isExecuted_forPushDiskAccessForV.getAndSet(true)) {
             for (int i = 0; i < diskAccessForV.length(); i++) {
-                if (diskAccessForV.get(i) < minValue.get()) {
-                    minValue.set(diskAccessForV.get(i));
-                    minI.set(i);
+                if (diskAccessForV.get(i) < minValue) {
+                    minValue=(float) diskAccessForV.get(i);
+                    minI=i;
                 }
             }
             // req.getInsertI()是insertId,如果创建了ls，则直接加入，否则重新创建一个，然后再加入
             // 这里的minI就是选择那种插入方案，就把该参数给哪一个set
-            if (minI.get() < ls_partitionedVSet[req.getInsertI()].size()) {
+            if (minI < ls_partitionedVSet[req.getInsertI()].size()) {
                 // req.getJ()要插入的Long
-                ls_partitionedVSet[req.getInsertI()].get(minI.get()).add(req.getJ());
+                ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
             } else {
                 ls_partitionedVSet[req.getInsertI()].add(new HashSet());
-                ls_partitionedVSet[req.getInsertI()].get(minI.get()).add(req.getJ());
+                ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
             }
 
 
@@ -902,7 +902,7 @@ public class PServer implements net.PSGrpc.PS {
         // 目前还没有按照ls_partitionedVSet进行参数划分
 
         FMessage.Builder fMessage = FMessage.newBuilder();
-        fMessage.setF((float) minValue.get());
+        fMessage.setF(minValue);
         resp.onNext(fMessage.build());
         resp.onCompleted();
     }
