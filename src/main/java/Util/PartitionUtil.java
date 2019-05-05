@@ -80,6 +80,7 @@ public class PartitionUtil {
 
                 // 所有的worker都要pull一下划分后的vset
                 CurrentTimeUtil.setStartTime();
+                WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
                 partitionedVSet = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pullPartitionedVset(insertI);
                 WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
                 CurrentTimeUtil.setEndTime();
@@ -175,13 +176,14 @@ public class PartitionUtil {
     private static float[] getDiskAccessTimeForV(List<Set> ls_partitionedVSet, long j_last) {
         /**
          *@Description: 还没写完，有点乱，list set其实就已经是要插入的V了。
+         * 写完了，但是这个操作非常耗时，每10次插入就会大概消耗1s的时间
+         * 这里换一种计算方式
          *@Param: [ls_partitionedVSet, insertId, j_last]
          *@return: long[]
          *@Author: SongZhen
          *@date: 上午11:26 19-1-26
          */
         // 因为是静态的上下文，所以diskAccessForV数组的元素全为0
-
         float[] diskAccessForV = new float[ls_partitionedVSet.size() + 1];
 
         // 需要定义长度为n+1的list set数组
@@ -229,9 +231,14 @@ public class PartitionUtil {
         }
 
 
+        // 开始遍历数据集，统计lsArray的访问次数
+        // 这部分其实计算没用多少时间，主要是从磁盘中读取sampleBatch花费了
         for (int i : batchSampledRecord) {
             try {
+                CurrentTimeUtil.setStartTime();
                 SampleList sampleList = (SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch" + i).getBytes()));
+                CurrentTimeUtil.setEndTime();
+                CurrentTimeUtil.showExecuteTime("读取一个batch的时间");
                 Set<Long> batchCatSet = new HashSet<Long>();
 
                 // 把batch访问的cat放到batchCatSet里
@@ -244,6 +251,7 @@ public class PartitionUtil {
                 }
 
                 // 下面要填充accessTimeOfEachPartition这个数据结构，也就是各个partition的访问时间
+                CurrentTimeUtil.setStartTime();
                 for (int i_accessTime = 0; i_accessTime < lsArray.length; i_accessTime++) {
                     List<Set> set_accessTime = lsArray[i_accessTime];
                     for (Set<Long> set_temp : set_accessTime) {
@@ -257,6 +265,8 @@ public class PartitionUtil {
                         }
                     }
                 }
+                CurrentTimeUtil.setEndTime();
+                CurrentTimeUtil.showExecuteTime("一个batch的统计时间");
 
 
             } catch (IOException e) {

@@ -5,6 +5,7 @@ import Util.DataProcessUtil;
 import Util.MessageDataTransUtil;
 import com.google.common.collect.Maps;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.AtomicDoubleArray;
 import context.Context;
 import context.ServerContext;
@@ -781,6 +782,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
+    @Synchronized
     public void pullPartitionedVset(IMessage req, StreamObserver<ListSetMessage> resp) {
         /**
          *@Description: 主要是worker用来获取参数在各个server中怎么划分的（提高disk IO）,返回的仅仅是insertI对应的划分，而不是所有划分，所以就是个List<Set>
@@ -817,6 +819,8 @@ public class PServer implements net.PSGrpc.PS {
     private static AtomicBoolean isExecuted_forPushDiskAccessForV = new AtomicBoolean(false);
     private static AtomicBoolean isFinished_forPushDiskAccessForV = new AtomicBoolean(false);
     private static AtomicInteger barrie_forPushDiskAccessForV = new AtomicInteger(0);
+    private static AtomicInteger minI = new AtomicInteger(-1);
+    private static AtomicDouble minValue = new AtomicDouble(Double.MAX_VALUE);
 
     @Override
     public void pushDiskAccessForV(InsertjIntoViMessage req, StreamObserver<FMessage> resp) {
@@ -827,6 +831,8 @@ public class PServer implements net.PSGrpc.PS {
         workerStep_forPushDiskAccessForV.set(0);
         isExecuted_forPushDiskAccessForV.set(false);
         isFinished_forPushDiskAccessForV.set(false);
+        minI.set(-1);
+        minValue.set(Double.MAX_VALUE);
 
         synchronized (barrie_forPushDiskAccessForV) {
             barrie_forPushDiskAccessForV.incrementAndGet();
@@ -865,22 +871,22 @@ public class PServer implements net.PSGrpc.PS {
 
         }
         // 下面开始选一个最小的作为插入的partition
-        int minI = -1;
-        float minValue = Float.MAX_VALUE;
+
         if (!isExecuted_forPushDiskAccessForV.getAndSet(true)) {
             for (int i = 0; i < diskAccessForV.length(); i++) {
-                if (diskAccessForV.get(i) < minValue) {
-                    minValue = (float) diskAccessForV.get(i);
-                    minI = i;
+                if (diskAccessForV.get(i) < minValue.get()) {
+                    minValue.set(diskAccessForV.get(i));
+                    minI.set(i);
                 }
             }
             // req.getInsertI()是insertId,如果创建了ls，则直接加入，否则重新创建一个，然后再加入
-            if (minI < ls_partitionedVSet[req.getInsertI()].size()) {
+            // 这里的minI就是选择那种插入方案，就把该参数给哪一个set
+            if (minI.get() < ls_partitionedVSet[req.getInsertI()].size()) {
                 // req.getJ()要插入的Long
-                ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
+                ls_partitionedVSet[req.getInsertI()].get(minI.get()).add(req.getJ());
             } else {
                 ls_partitionedVSet[req.getInsertI()].add(new HashSet());
-                ls_partitionedVSet[req.getInsertI()].get(minI).add(req.getJ());
+                ls_partitionedVSet[req.getInsertI()].get(minI.get()).add(req.getJ());
             }
 
 
@@ -896,7 +902,7 @@ public class PServer implements net.PSGrpc.PS {
         // 目前还没有按照ls_partitionedVSet进行参数划分
 
         FMessage.Builder fMessage = FMessage.newBuilder();
-        fMessage.setF(minValue);
+        fMessage.setF((float) minValue.get());
         resp.onNext(fMessage.build());
         resp.onCompleted();
     }

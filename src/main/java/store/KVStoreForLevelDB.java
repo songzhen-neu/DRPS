@@ -146,6 +146,7 @@ public class KVStoreForLevelDB {
 
     @Synchronized
     public SFKVListMessage getNeededParams(Set<String> set) throws ClassNotFoundException, IOException {
+        CurrentTimeUtil.setStartTime();
         DB db = ServerContext.kvStoreForLevelDB.getDb();
 
         SFKVListMessage.Builder sfkvlistMessage = SFKVListMessage.newBuilder();
@@ -161,15 +162,12 @@ public class KVStoreForLevelDB {
         // 先转化需要取出来哪些参数
         needParam = getNeedPartitionParam(set);
 
-        for (Set<Long> set1 : paramKeySetList) {
-            for (Long l : set1) {
-//                System.out.println("vset1:"+l);
-            }
-        }
+
 
         // 构建参数map
 
 
+        CurrentTimeUtil.setStartTime();
         for (String str : needParam) {
             if (str.indexOf("catParamSet") == -1) {
 
@@ -185,8 +183,10 @@ public class KVStoreForLevelDB {
                 }
             }
         }
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("从kvstore数据库中读取参数的时间");
 
-
+        CurrentTimeUtil.setStartTime();
         for (String key : set) {
             map.put(key, paramMap.get(key));
         }
@@ -195,6 +195,8 @@ public class KVStoreForLevelDB {
                 map.put("featParam" + i, featureParams[i]);
             }
         }
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("从map中获取维度的时间");
         return MessageDataTransUtil.Map_2_SFKVListMessage(map);
     }
 
