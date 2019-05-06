@@ -1,4 +1,4 @@
-package Partitioning.data;
+package Partitioning;
 
 
 import com.sun.corba.se.spi.orbutil.threadpool.Work;

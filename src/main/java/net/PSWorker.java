@@ -1,11 +1,13 @@
 package net;
 
 
+import Util.DataProcessUtil;
 import Util.MessageDataTransUtil;
 
 
 import context.Context;
 import context.WorkerContext;
+import dataStructure.partition.PartitionList;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.netty.NettyChannelBuilder;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import java.lang.reflect.Type;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -46,17 +49,7 @@ public class PSWorker {
     }
 
 
-    public void pushKeyValueMap() {
-        Map<Long, Long> map = new HashMap<Long, Long>();
-        map.put(1l, 5l);
-        map.put(5l, 3l);
-        map.put(15l, 10l);
 
-        KeyValueListMessage keyValueListMessage = MessageDataTransUtil.Map_2_KeyValueListMessage(map);
-        PartitionListMessage partitionListMessage = blockingStub.aFMatrixDimPartition(keyValueListMessage);
-        System.out.println("sss");
-
-    }
 
 
     public void shutdown() throws InterruptedException {
@@ -231,6 +224,14 @@ public class PSWorker {
         return MessageDataTransUtil.LListMessage_2_Set(lListMessage);
     }
 
+    public List<Long> pushVANumAndGetCatPrunedRecord_ParamPartition(Map<Long, Integer> vAccessNum) {
+        LIListMessage message = MessageDataTransUtil.Map_2_LIListMessage(vAccessNum);
+        // 在server端使用的set，虽然实际顺序跟插入顺序不一致，但是所有worker获取的set是一致的
+        LListMessage lListMessage = blockingStub.pushVANumAndGetCatPrunedRecord(message);
+
+        return MessageDataTransUtil.LListMessage_2_List(lListMessage);
+    }
+
 
     public List<Set> pullPartitionedVset(int insertId) {
         IMessage.Builder req = IMessage.newBuilder();
@@ -272,6 +273,21 @@ public class PSWorker {
 
     public void putLsPartitionedVSet(LSetListArrayMessage lSetListArrayMessage){
         blockingStub.putLsPartitionedVSet(lSetListArrayMessage);
+    }
+
+    public PartitionList getBestPartition(){
+        PartitionListMessage partitionListMessage=blockingStub.getBestPartition(IMessage.newBuilder()
+                .setI(WorkerContext.workerId)
+                .build());
+        PartitionList partitionList=MessageDataTransUtil.PartitionListMessage_2_PartitionList(partitionListMessage);
+
+        return partitionList;
+    }
+
+    public boolean sendAFMatrix(int[][] afMatrix){
+        AFMatrixMessage afMatrixMessage=MessageDataTransUtil.AFMatrix_2_AFMatrixMessage(afMatrix);
+        BMessage bMessage=blockingStub.sendAFMatrix(afMatrixMessage);
+        return bMessage.getB();
     }
 
 

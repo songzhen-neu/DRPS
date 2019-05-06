@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Partition {
-    public List<Integer> partition=new ArrayList<Integer>();
+    public List<Long> partition=new ArrayList<Long>();
 
 //    public static byte[] toByteArray(Partition partition){
 //        byte[] bytes=null;

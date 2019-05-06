@@ -1,6 +1,6 @@
 import java.io.IOException;
 
-import static Partitioning.data.DataPartitioning.dataPartitioning;
+import static Partitioning.DataPartitioning.dataPartitioning;
 
 /**
  * @program: simplePsForModelPartition

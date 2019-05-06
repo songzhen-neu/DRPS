@@ -2,6 +2,8 @@ package Util;
 
 import context.Context;
 import context.WorkerContext;
+import dataStructure.partition.Partition;
+import dataStructure.partition.PartitionList;
 import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
 import net.PSWorker;
@@ -372,7 +374,7 @@ public class PartitionUtil {
                 // 这个是基于磁盘的
 //                buildVSetAccessNumOfBatch(set);
                 // 由于经过了采样和剪枝，那么其实可以基于内存做
-                buildVSetAccessNumOfBatchInMemory(set);
+                buildParamAccessNum(set, vAccessNum);
                 set.clear();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -418,9 +420,6 @@ public class PartitionUtil {
     }
 
 
-    private static void buildVSetAccessNumOfBatchInMemory(Set<Long> set) {
-        buildParamAccessNum(set, vAccessNum);
-    }
 
     public static void buildBatchVSet(Set<Long> set, SampleList sampleBatch) {
         for (Sample sample : sampleBatch.sampleList) {
@@ -447,6 +446,25 @@ public class PartitionUtil {
 
 
         }
+    }
+
+    public static PartitionList initPartitionList(Set<Long> prunedVSet){
+        /**
+         *@Description: 初始化每个模型参数到一个划分里,在server中初始化
+         *@Param: [prunedSparseDim]
+         *@return: ParaStructure.Partitioning.PartitionList
+         *@Author: SongZhen
+         *@date: 上午9:08 18-11-28
+         */
+
+        /*初始化partitionList，让稀疏维度的每一维都划分成一个Partition*/
+        PartitionList partitionList = new PartitionList();
+        for(long i:prunedVSet){
+            Partition p=new Partition();
+            p.partition.add(i);
+            partitionList.partitionList.add(p);
+        }
+        return partitionList;
     }
 
 

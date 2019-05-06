@@ -73,6 +73,7 @@ public class Context {
     public static AtomicInteger trainRoundNum=new AtomicInteger(0);
 
     public static final float alpha_WSP=0.01f;
+    public static float minGain=0;
 
 
 
@@ -101,8 +102,8 @@ public class Context {
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=3;
-        serverNum=3;
+        workerNum=1;
+        serverNum=1;
         dataPartitionNum=workerNum;
         partitionedDataSize=1000000;
         masterId=0;
@@ -114,17 +115,17 @@ public class Context {
 
         inited=true;
 
-        diskSeekTime=1f;
-        diskAccessTime=0.0027f;
+        diskSeekTime=0.29f;
+        diskAccessTime=0.00046f;
         netTrafficTime=0;
         floatSize_bytes=79;
 
-        freqThresholdForSingleMachine=9;
+        freqThresholdForSingleMachine=5;
         freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();
-        parallelismControlModel=ParallelismControlModel.SSP;
+        parallelismControlModel=ParallelismControlModel.BSP;
         switch (parallelismControlModel){
             case SSP:SSP.init();break;
             case SSP_S:SSP.init();break;

@@ -2,6 +2,8 @@ package Util;
 
 import com.google.protobuf.ProtocolStringList;
 import context.WorkerContext;
+import dataStructure.partition.Partition;
+import dataStructure.partition.PartitionList;
 import net.*;
 import org.jblas.FloatMatrix;
 
@@ -196,6 +198,14 @@ public class MessageDataTransUtil {
         return set;
     }
 
+    public static List<Long> LListMessage_2_List(LListMessage message){
+        List<Long> list=new ArrayList<Long>();
+        for(int i=0;i<message.getLCount();i++){
+            list.add(message.getL(i));
+        }
+        return list;
+    }
+
     public static List<Set> ListSetMessage_2_ListSet(ListSetMessage lsmessage){
         List<Set> ls=new ArrayList<Set>();
         for(int i=0;i<lsmessage.getLsCount();i++){
@@ -300,5 +310,57 @@ public class MessageDataTransUtil {
             set.add(list.get(i));
         }
         return set;
+    }
+
+    public static PartitionList PartitionListMessage_2_PartitionList(PartitionListMessage message){
+        PartitionList partitionList=new PartitionList();
+        for(int i=0;i<message.getPartitionCount();i++){
+            Partition partition=new Partition();
+            PartitionMessage partitionMessage=message.getPartition(i);
+            for(int j=0;j<partitionMessage.getDimCount();j++){
+                partition.partition.add(partitionMessage.getDim(j));
+            }
+            partitionList.partitionList.add(partition);
+        }
+
+        return partitionList;
+    }
+
+    public static PartitionListMessage PartitionList_2_PartitionListMessage(PartitionList partitionList){
+        PartitionListMessage.Builder partitionListMessage=PartitionListMessage.newBuilder();
+        for(Partition partition:partitionList.partitionList){
+            PartitionMessage.Builder partitionMessage=PartitionMessage.newBuilder();
+            for(long l:partition.partition){
+                partitionMessage.addDim(l);
+            }
+            partitionListMessage.addPartition(partitionMessage.build());
+        }
+        return partitionListMessage.build();
+
+    }
+
+    public static AFMatrixMessage AFMatrix_2_AFMatrixMessage(int[][] afMatrix){
+        AFMatrixMessage.Builder message=AFMatrixMessage.newBuilder();
+        for(int i=0;i<afMatrix.length;i++){
+            RowMessage.Builder rowMessage=RowMessage.newBuilder();
+            for(int j=0;j<afMatrix[i].length;j++){
+                rowMessage.addCol(afMatrix[i][j]);
+            }
+            message.addRow(rowMessage.build());
+        }
+        message.setReqHost(WorkerContext.workerId);
+        return message.build();
+    }
+
+    public static int[][] AFMatrixMessage_2_AFMatrix(AFMatrixMessage message){
+        // 这里afMatrix是对称的，所以按对称写吧，不通过额外判断增加可扩展性了
+        int[][] afMatrix=new int[message.getRowCount()][message.getRowCount()];
+        for(int i=0;i<message.getRowCount();i++){
+            RowMessage rowMessage=message.getRow(i);
+            for (int j=0;j<rowMessage.getColCount();j++){
+                afMatrix[i][j]=rowMessage.getCol(j);
+            }
+        }
+        return afMatrix;
     }
 }

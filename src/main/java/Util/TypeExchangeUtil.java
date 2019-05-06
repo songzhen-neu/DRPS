@@ -50,5 +50,13 @@ public class TypeExchangeUtil {
         return ls_new;
     }
 
+    public static Set<Long> List_2_LongSet(List<Long> list){
+        Set<Long> set=new HashSet<Long>();
+        for(long l:list){
+            set.add(l);
+        }
+        return set;
+    }
+
 
 }

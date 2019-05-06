@@ -79,11 +79,11 @@ public class PruneUtil {
         }
     }
 
-    public static List<Integer> removeOnceItemOfBPL(PartitionList bestPartitionList){
-        List<Integer> prunedDimWithNoOnceItem=new ArrayList<Integer>();
+    public static List<Long> removeOnceItemOfBPL(PartitionList bestPartitionList){
+        List<Long> prunedDimWithNoOnceItem=new ArrayList<Long>();
         for(Partition partition:bestPartitionList.partitionList){
             if(partition.partition.size()>(WorkerContext.minPartitionSize-1)){
-                for(int cat:partition.partition){
+                for(long cat:partition.partition){
                     prunedDimWithNoOnceItem.add(cat);
                 }
             }
