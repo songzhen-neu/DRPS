@@ -17,7 +17,7 @@ public class TestSynchronized {
         final int totalThread = 10;
         CyclicBarrier cyclicBarrier = new CyclicBarrier(totalThread);
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < totalThread; i++) {
+        for (int i = 0; i < 10; i++) {
             executorService.execute(() -> {
                 System.out.print("before..");
                 try {
@@ -29,8 +29,8 @@ public class TestSynchronized {
             });
         }
 
-        while (cyclicBarrier.getNumberWaiting() > 0) {
-            System.out.println(cyclicBarrier.getNumberWaiting());
+        while (cyclicBarrier.getNumberWaiting() >0) {
+            System.out.println("11:"+cyclicBarrier.getNumberWaiting());
             Thread.sleep(1);
         }
         cyclicBarrier.reset();
@@ -40,7 +40,7 @@ public class TestSynchronized {
 
 
         // 测试锁的相关内容
-        testEmbeddingLock();
+//        testEmbeddingLock();
 
 //        printAB();
     }

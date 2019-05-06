@@ -161,7 +161,6 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-
     @Override
     public void getIndexOfSparseDim(SListMessage req, StreamObserver<SLKVListMessage> responsedObject) {
         synchronized (ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim()) {
@@ -690,7 +689,6 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-
     @Override
     public void pushVANumAndGetCatPrunedRecord(LIListMessage req, StreamObserver<LListMessage> resp) {
         Map<Long, Integer> map = MessageDataTransUtil.LIListMessage_2_Map(req);
@@ -719,7 +717,7 @@ public class PServer implements net.PSGrpc.PS {
                 }
             }
 //            System.out.println("isFinish02:"+isFinished.get());
-            partitionList=PartitionUtil.initPartitionList(prunedVSet);
+            partitionList = PartitionUtil.initPartitionList(prunedVSet);
             isFinished.set(true);
 //            System.out.println("isFinish03:"+isFinished.get());
         }
@@ -745,8 +743,6 @@ public class PServer implements net.PSGrpc.PS {
 
 
     }
-
-
 
 
     public void waitBarrier2(int num_waitOthers) {
@@ -825,8 +821,8 @@ public class PServer implements net.PSGrpc.PS {
         workerStep_forPushDiskAccessForV.set(0);
         isExecuted_forPushDiskAccessForV.set(false);
         isFinished_forPushDiskAccessForV.set(false);
-        int minI=-1;
-        float minValue=Float.MAX_VALUE;
+        int minI = -1;
+        float minValue = Float.MAX_VALUE;
 
         synchronized (barrie_forPushDiskAccessForV) {
             barrie_forPushDiskAccessForV.incrementAndGet();
@@ -869,8 +865,8 @@ public class PServer implements net.PSGrpc.PS {
         if (!isExecuted_forPushDiskAccessForV.getAndSet(true)) {
             for (int i = 0; i < diskAccessForV.length(); i++) {
                 if (diskAccessForV.get(i) < minValue) {
-                    minValue=(float) diskAccessForV.get(i);
-                    minI=i;
+                    minValue = (float) diskAccessForV.get(i);
+                    minI = i;
                 }
             }
             // req.getInsertI()是insertId,如果创建了ls，则直接加入，否则重新创建一个，然后再加入
@@ -981,7 +977,6 @@ public class PServer implements net.PSGrpc.PS {
         }
 
 
-
         if (req.getServerId() == Context.masterId + 1) {
             Context.cyclicBarrier_sub1[req.getWorkerId()].reset();
 
@@ -1010,7 +1005,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void notifyNonMasterIsWaitingWSP(ServerIdAndWorkerId req,StreamObserver<BMessage> resp){
+    public void notifyNonMasterIsWaitingWSP(ServerIdAndWorkerId req, StreamObserver<BMessage> resp) {
         try {
             Context.cyclicBarrier_sub1[req.getWorkerId()].await();
         } catch (BrokenBarrierException | InterruptedException e) {
@@ -1025,7 +1020,6 @@ public class PServer implements net.PSGrpc.PS {
                 e.printStackTrace();
             }
         }
-
 
 
         if (req.getServerId() == Context.masterId + 1) {
@@ -1048,7 +1042,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void notifyForWSP(IMessage req,StreamObserver<BMessage> resp){
+    public void notifyForWSP(IMessage req, StreamObserver<BMessage> resp) {
         synchronized (WSP.WSP_WaitBarrier[req.getI()]) {
             WSP.WSP_WaitBarrier[req.getI()].notifyAll();
             resp.onNext(BMessage.newBuilder().setB(true).build());
@@ -1057,27 +1051,29 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void getBestPartition(IMessage req,StreamObserver<PartitionListMessage> resp){
-        PartitionListMessage partitionListMessage=MessageDataTransUtil.PartitionList_2_PartitionListMessage(partitionList);
+    public void getBestPartition(IMessage req, StreamObserver<PartitionListMessage> resp) {
+        PartitionListMessage partitionListMessage = MessageDataTransUtil.PartitionList_2_PartitionListMessage(partitionList);
         resp.onNext(partitionListMessage);
         resp.onCompleted();
     }
 
 
-    CyclicBarrier cyclicBarrier_workerNum=new CyclicBarrier(Context.workerNum);
-    AtomicBoolean isSatisfyMinGain=new AtomicBoolean(false);
+    CyclicBarrier cyclicBarrier_workerNum = new CyclicBarrier(Context.workerNum);
+    AtomicBoolean isSatisfyMinGain = new AtomicBoolean(false);
+    AtomicDouble[]  diskCost;
+
     @Override
-    public void sendAFMatrix(AFMatrixMessage req,StreamObserver<BMessage> resp){
+    public void sendAFMatrix(AFMatrixMessage req, StreamObserver<BMessage> resp) {
         // 三个worker发送到该master中，需要将worker累加到一个统一的AFMatrix中
         // 首先，每个worker需要先将message转化成int[][]
-        int[][] afMatrix_i=MessageDataTransUtil.AFMatrixMessage_2_AFMatrix(req);
+        int[][] afMatrix_i = MessageDataTransUtil.AFMatrixMessage_2_AFMatrix(req);
         // afMatrix是Atomic类型，线程见可见
         // 需要有一个线程初始化afMatrix
-        if(req.getReqHost()==Context.masterId){
-            afMatrix=new AtomicInteger[req.getRowCount()][req.getRowCount()];
-            for(int i=0;i<afMatrix.length;i++){
-                for(int j=0;j<afMatrix[i].length;j++){
-                    afMatrix[i][j]=new AtomicInteger(0);
+        if (req.getReqHost() == Context.masterId) {
+            afMatrix = new AtomicInteger[req.getRowCount()][req.getRowCount()];
+            for (int i = 0; i < afMatrix.length; i++) {
+                for (int j = 0; j < afMatrix[i].length; j++) {
+                    afMatrix[i][j] = new AtomicInteger(0);
                 }
             }
         }
@@ -1086,8 +1082,8 @@ public class PServer implements net.PSGrpc.PS {
         barrier_WorkerNum();
 
         // 开始进行累加
-        for(int i=0;i<afMatrix_i.length;i++){
-            for(int j=0;j<afMatrix_i[i].length;j++){
+        for (int i = 0; i < afMatrix_i.length; i++) {
+            for (int j = 0; j < afMatrix_i[i].length; j++) {
                 afMatrix[i][j].addAndGet(afMatrix_i[i][j]);
             }
         }
@@ -1098,10 +1094,10 @@ public class PServer implements net.PSGrpc.PS {
 
         // 然后需要有一个worker对这些数据进行加和，然后计算出最优的组合策略，更新partitionList
         // 其他worker只需要进行等待，直到这个worker计算完，再返回
-        if(req.getReqHost()==Context.masterId){ //这里采用的是master机器对应的worker进行计算
+        if (req.getReqHost() == Context.masterId) { //这里采用的是master机器对应的worker进行计算
             // 需要定义代价数组，即两两组合的建立索引的时间代价
-            int partitionListSize=partitionList.partitionList.size();
-            float[][] costTime=new float[afMatrix.length][afMatrix.length];
+            int partitionListSize = partitionList.partitionList.size();
+            float[][] costTime = new float[afMatrix.length][afMatrix.length];
 
             // 开始计算costTime
             for (int i = 0; i < partitionListSize; i++) {
@@ -1122,8 +1118,8 @@ public class PServer implements net.PSGrpc.PS {
             int pj = 0;
 
             // 计算最大的时间成本Reduce，也就是最佳合并pi，pj
-            for (int i = 0; i < partitionListSize-1; i++) {
-                for (int j = i+1; j < partitionListSize; j++) {
+            for (int i = 0; i < partitionListSize - 1; i++) {
+                for (int j = i + 1; j < partitionListSize; j++) {
                     float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
                     if (costReduce > maxTimeReduce) {
                         maxTimeReduce = costReduce;
@@ -1137,17 +1133,27 @@ public class PServer implements net.PSGrpc.PS {
 
             // 重新构建partitionList，也就是合并之后的partitionList
             // 如果小于最低收益的话，则不更新
-            if(maxTimeReduce>Context.minGain){
-                System.out.println(pi+","+pj);
-                int pjSize=getPiSize(partitionList.partitionList,pj);
-                for(int i=0;i<pjSize;i++){
+            if (maxTimeReduce > Context.minGain) {
+                System.out.println(pi + "," + pj);
+                int pjSize = getPiSize(partitionList.partitionList, pj);
+                for (int i = 0; i < pjSize; i++) {
                     partitionList.partitionList.get(pi).partition.add(partitionList.partitionList.get(pj).partition.get(i));
                 }
                 partitionList.partitionList.remove(pj);
 
-            }
-            else {
+            } else {
                 isSatisfyMinGain.set(true);
+                // 在划分结束后，且实现最优划分时，需要记录最佳划分中，每个划分块的访问时间
+                // 这里让master机器的worker线程进行计算
+                // 其实访问时间就是对角线的cost时间
+                if(req.getReqHost()==Context.masterId){
+                    diskCost=new AtomicDouble[costTime.length];
+                    for(int i=0;i<diskCost.length;i++){
+                        diskCost[i]=new AtomicDouble(costTime[i][i]);
+                    }
+                }
+
+
             }
 
         }
@@ -1160,12 +1166,12 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     /*获取划分i的大小*/
-    public static int getPiSize(List<Partition> partitionList, int pi){
+    public static int getPiSize(List<Partition> partitionList, int pi) {
         return partitionList.get(pi).partition.size();
     }
 
 
-    public static float cost( int singlePartitionSize){
+    public static float cost(int singlePartitionSize) {
         /**
          *@Description: 这是计算代价损失，表示，如果划分中有一个元素，那么就是按照ParaKV的结构存的，
          * 如果大于1就是按照ParaKVPartition存的。一个ParaKV需要的字节数是70
@@ -1175,41 +1181,31 @@ public class PServer implements net.PSGrpc.PS {
          *@Author: SongZhen
          *@date: 上午8:24 18-11-16
          */
-        if(singlePartitionSize==1){
-            return (Context.diskSeekTime+ Context.singleParamOfSetSize_bytes* Context.diskAccessTime);
-        }
-
-        else {
-            return (Context.diskSeekTime+(singlePartitionSize* Context.singleParamOfSetSize_bytes+ Context.setParamBaseSize_bytes)* Context.diskAccessTime);
+        if (singlePartitionSize == 1) {
+            return (Context.diskSeekTime + Context.singleParamOfSetSize_bytes * Context.diskAccessTime);
+        } else {
+            return (Context.diskSeekTime + (singlePartitionSize * Context.singleParamOfSetSize_bytes + Context.setParamBaseSize_bytes) * Context.diskAccessTime);
         }
 
     }
 
 
 
-    public void barrier_WorkerNum(){
+    public void barrier_WorkerNum() {
         /**
-        *@Description: 用来进行线程同步，同时在执行完reset了，可保证其复用性
+         *@Description: 用来进行线程同步，同时在执行完reset了，可保证其复用性
          * 但是注意，这里只针对同步线程个数是workerNum的
-        *@Param: []
-        *@return: void
-        *@Author: SongZhen
-        *@date: 下午3:14 19-5-6
-        */
+         *@Param: []
+         *@return: void
+         *@Author: SongZhen
+         *@date: 下午3:14 19-5-6
+         */
         try {
             cyclicBarrier_workerNum.await();
-        }catch (BrokenBarrierException|InterruptedException e){
+            // 只让一个线程执行reset
+        } catch (BrokenBarrierException | InterruptedException e) {
             e.printStackTrace();
         }
 
-        while (cyclicBarrier_workerNum.getNumberWaiting()>0){
-            try{
-                Thread.sleep(10);
-            }catch (InterruptedException e){
-                e.printStackTrace();
-            }
-        }
-
-        cyclicBarrier_workerNum.reset();
     }
 }

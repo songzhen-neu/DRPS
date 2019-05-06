@@ -37,6 +37,7 @@ public class ParamPartition {
     static Set<Integer> batchSampledRecord = new HashSet<Integer>();
     static List<Long> catPrunedRecord = new ArrayList<Long>();
     static PartitionList bestPartitionList;
+    static float[] commCost;
 
     // server是否已经达到精度，完成partition任务
     static boolean isFinishedPartition=false;
@@ -61,11 +62,51 @@ public class ParamPartition {
 
         }
 
+        // 现在master已经计算完成最佳参数划分bestPartitionLIst，这里表示为参数建立索引的划分
+        // 接下来需要考虑，这些划分块分配到哪些server中
+        // 应该为其建立一个长度为ServerNum的数组，用来存储划分到各个server中的网络通信时间
+        // 需要先统计每台机器对每个batch的访问次数
+        commCost=buildCommCost(bestPartitionList,batchSampledRecord,catPrunedRecord);
+        // 将本地的commCost发送给master，然后master进行整合，计算出完整的commCost[partitionSize][serverNum]
+        // 那么返回的应该就是
+
         System.out.println("111");
 
         return vSet;
     }
 
+    private static float[] buildCommCost(PartitionList partitionList,Set<Integer> batchSampledRecord,List<Long> catPrunedRecord) throws  ClassNotFoundException,IOException{
+        // java在静态方法中，定义变量会自动初始化为0.0f，因为编译阶段就已经分配空间
+        float[] commCost=new float[bestPartitionList.partitionList.size()];
+
+        int partitionListSize = partitionList.partitionList.size();
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
+        Set<Long> setPrunedSparseDim=TypeExchangeUtil.List_2_LongSet(catPrunedRecord);
+
+        for (int i :batchSampledRecord) {  //这是个大循环，在循环所有的数据集
+            SampleList sampleList=(SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch"+i).getBytes()));
+            // 统计batch包含的cat
+            Set<Long> batchVSet = buildBatchVSetBasedOnPruned(sampleList,setPrunedSparseDim);
+
+            // 如果这一条数据的cat属性能够组合出来Partition，就说明这个partition在这条数据中出现了
+            // 这里catContainsPartition存储的是第几个partition出现在batch的cat里了，所以用int（已经将维度转化成0,1,2,3,...)
+            Set<Integer> catContainsPartition=new HashSet<Integer>();
+            for(int l=0;l<partitionListSize;l++){
+                Partition partition=partitionList.partitionList.get(l);
+                int flag=0;
+                for(int m=0;m<partition.partition.size();m++){
+                    if(batchVSet.contains(partition.partition.get(m))){
+                        // 这里无论怎么样，都是只包含一个就可以
+                        commCost[m]++;
+                    }
+                }
+
+            }
+        }
+
+
+        return commCost;
+    }
 
     private static int[][] buildAFMatrix(PartitionList partitionList,Set<Integer> batchSampledRecord,List<Long> catPrunedRecord) throws IOException,ClassNotFoundException {
         /**
@@ -75,7 +116,6 @@ public class ParamPartition {
          *@Author: SongZhen
          *@date: 上午9:08 18-11-28
          */
-        int catSize ;
         int partitionListSize = partitionList.partitionList.size();
         int[][] afMatrix = new int[partitionListSize][partitionListSize];
         DB db=WorkerContext.kvStoreForLevelDB.getDb();
