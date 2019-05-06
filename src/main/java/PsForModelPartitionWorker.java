@@ -9,6 +9,7 @@ import javafx.concurrent.Worker;
 import net.LSetListArrayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import paramPartition.ParamPartition;
 
 
 import java.io.IOException;
@@ -56,7 +57,8 @@ public class PsForModelPartitionWorker {
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
-        Set[] vSet = PartitionUtil.partitionV();
+//        Set[] vSet = PartitionUtil.partitionV();
+        Set[] vSet=ParamPartition.partitionV();
 //        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
 
         if (WorkerContext.workerId != Context.masterId) {

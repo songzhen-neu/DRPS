@@ -9,6 +9,7 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.ReadOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import paramPartition.ParamPartition;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -390,14 +391,7 @@ public class PartitionUtil {
          *@Author: SongZhen
          *@date: 上午9:29 19-1-21
          */
-        for (Sample sample : sampleBatch.sampleList) {
-            long[] catList = sample.cat;
-            for (long cat : catList) {
-                if (cat != -1) {
-                    set.add(cat);
-                }
-            }
-        }
+        buildBatchVSet(set, sampleBatch);
 
     }
 
@@ -425,6 +419,23 @@ public class PartitionUtil {
 
 
     private static void buildVSetAccessNumOfBatchInMemory(Set<Long> set) {
+        buildParamAccessNum(set, vAccessNum);
+    }
+
+    public static void buildBatchVSet(Set<Long> set, SampleList sampleBatch) {
+        for (Sample sample : sampleBatch.sampleList) {
+            long[] catList = sample.cat;
+            for (long cat : catList) {
+                if (cat != -1) {
+                    set.add(cat);
+                }
+            }
+        }
+    }
+
+
+
+    public static void buildParamAccessNum(Set<Long> set, Map<Long, Integer> vAccessNum) {
         for (long i : set) {
             if (vAccessNum.get(i) != null) {
                 int num = vAccessNum.get(i);
