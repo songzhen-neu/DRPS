@@ -1208,4 +1208,10 @@ public class PServer implements net.PSGrpc.PS {
         }
 
     }
+
+    @Override
+    public void sendCommCost(CommCostMessage req,StreamObserver<VSetMessage> resp){
+        // 现在收到了每个worker发送来的CommCost
+        
+    }
 }

@@ -68,7 +68,9 @@ public class ParamPartition {
         // 需要先统计每台机器对每个batch的访问次数
         commCost=buildCommCost(bestPartitionList,batchSampledRecord,catPrunedRecord);
         // 将本地的commCost发送给master，然后master进行整合，计算出完整的commCost[partitionSize][serverNum]
-        // 那么返回的应该就是
+        // 这里给每个worker返回vSet[]，也就是每个server存储的参数的维度
+        vSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).sendCommCost(commCost);
+
 
         System.out.println("111");
 

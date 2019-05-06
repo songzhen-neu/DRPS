@@ -31,7 +31,17 @@ service PS {
     rpc NotifyForWSP(IMessage) returns(BMessage){};
     rpc GetBestPartition(IMessage) returns(PartitionListMessage){};
     rpc SendAFMatrix(AFMatrixMessage) returns(BMessage){};
+    rpc SendCommCost(CommCostMessage) returns(VSetMessage){};
 
+}
+
+message CommCostMessage{
+    int32 reqHost=1;
+    repeated float commCost=2;
+}
+
+message VSetMessage{
+    repeated LListMessage vSet=1;
 }
 
 message AFMatrixMessage{

@@ -290,6 +290,13 @@ public class PSWorker {
         return bMessage.getB();
     }
 
+    public Set[] sendCommCost(float[] commCost){
+        Set[] vSet;
+        CommCostMessage message=MessageDataTransUtil.FloatArray_2_CommCostMessage(commCost);
+        VSetMessage vSetMessage=blockingStub.sendCommCost(message);
+        vSet=MessageDataTransUtil.VSetMessage_2_VSet(vSetMessage);
+        return vSet;
+    }
 
 
 

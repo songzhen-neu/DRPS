@@ -1,6 +1,7 @@
 package Util;
 
 import com.google.protobuf.ProtocolStringList;
+import context.Context;
 import context.WorkerContext;
 import dataStructure.partition.Partition;
 import dataStructure.partition.PartitionList;
@@ -362,5 +363,27 @@ public class MessageDataTransUtil {
             }
         }
         return afMatrix;
+    }
+
+    public static CommCostMessage FloatArray_2_CommCostMessage(float[] commCost){
+        CommCostMessage.Builder message=CommCostMessage.newBuilder();
+        for(int i=0;i<commCost.length;i++){
+            message.addCommCost(commCost[i]);
+        }
+        message.setReqHost(WorkerContext.workerId);
+        return message.build();
+    }
+
+    public static Set[] VSetMessage_2_VSet(VSetMessage message){
+        Set[] sets=new Set[Context.serverNum];
+        for(int i=0;i<message.getVSetCount();i++){
+            LListMessage lListMessage=message.getVSet(i);
+            Set<Long> set=new HashSet<Long>();
+            for(int j=0;j<lListMessage.getLCount();j++){
+                set.add(lListMessage.getL(j));
+            }
+            sets[i]=set;
+        }
+        return sets;
     }
 }
