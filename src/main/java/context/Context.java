@@ -75,6 +75,9 @@ public class Context {
     public static final float alpha_WSP=0.01f;
     public static float minGain=0;
 
+    /** 最大磁盘划分的大小*/
+    public static int maxDiskPartitionNum=20;
+
 
 
 
@@ -102,8 +105,8 @@ public class Context {
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=1;
-        serverNum=1;
+        workerNum=3;
+        serverNum=3;
         dataPartitionNum=workerNum;
         partitionedDataSize=1000000;
         masterId=0;
@@ -115,12 +118,12 @@ public class Context {
 
         inited=true;
 
-        diskSeekTime=0.29f;
-        diskAccessTime=0.00046f;
+        diskSeekTime=0.0029f;
+        diskAccessTime=0.0000046f;
         netTrafficTime=0;
         floatSize_bytes=79;
 
-        freqThresholdForSingleMachine=5;
+        freqThresholdForSingleMachine=10;
         freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
 

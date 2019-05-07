@@ -27,4 +27,13 @@ public class SetUtil {
         }
         return lArray;
     }
+
+    public static Set List_2_Set(List list){
+        Set set=new HashSet();
+        for(int i=0;i<list.size();i++){
+            set.add(list.get(i));
+        }
+
+        return set;
+    }
 }

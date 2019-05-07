@@ -35,6 +35,8 @@ public class TestSynchronized {
         }
         cyclicBarrier.reset();
 
+        TestNonStaticMethod testNonStaticMethod=new TestNonStaticMethod();
+        testNonStaticMethod.haha();
 
         executorService.shutdown();
 
@@ -44,6 +46,8 @@ public class TestSynchronized {
 
 //        printAB();
     }
+
+
 
     public static void testEmbeddingLock() {
         Integer[] a = new Integer[5];

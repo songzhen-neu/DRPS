@@ -394,4 +394,17 @@ public class MessageDataTransUtil {
         }
         return commCost_i;
     }
+
+    public static VSetMessage VSet_2_VSetMessage(Set<Long>[] vSet){
+        VSetMessage.Builder message=VSetMessage.newBuilder();
+        for(int i=0;i<vSet.length;i++){
+            LListMessage.Builder lListMessage=LListMessage.newBuilder();
+            for(Long l:vSet[i]){
+                lListMessage.addL(l);
+            }
+            message.addVSet(lListMessage.build());
+        }
+
+        return message.build();
+    }
 }

@@ -4,10 +4,12 @@ package net;
 import Util.DataProcessUtil;
 import Util.MessageDataTransUtil;
 import Util.PartitionUtil;
+import Util.SetUtil;
 import com.google.common.collect.Maps;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.AtomicDoubleArray;
+import com.google.protobuf.Internal;
 import context.Context;
 import context.ServerContext;
 import context.WorkerContext;
@@ -90,6 +92,14 @@ public class PServer implements net.PSGrpc.PS {
 
     private static AtomicDouble[][] commCost_temp;
     private static AtomicDouble[][] commCost;
+
+    /** 用来存储每个server存储了哪些维度，i是sever，set是参数划分块*/
+    private static ConcurrentSet[] paramAssignSetArray;
+
+    /** 用来存储每个server都拥有哪些参数维度*/
+    private static ConcurrentSet[] vSet;
+
+
 
 
 //    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
@@ -1126,8 +1136,8 @@ public class PServer implements net.PSGrpc.PS {
                     float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
                     // 这块要保证根据disk IO代价划分的划分块最大大小不能超过maxDiskPartitionNum，不然有些划分块太大，没办法做网络通信优化了
                     if (costReduce > maxTimeReduce
-                            &&partitionList.partitionList.get(pi).partition.size()<=Context.maxDiskPartitionNum
-                            &&partitionList.partitionList.get(pj).partition.size()<=Context.maxDiskPartitionNum) {
+                            &&partitionList.partitionList.get(i).partition.size()<=Context.maxDiskPartitionNum
+                            &&partitionList.partitionList.get(j).partition.size()<=Context.maxDiskPartitionNum) {
                         maxTimeReduce = costReduce;
                         pi = i;
                         pj = j;
@@ -1262,19 +1272,117 @@ public class PServer implements net.PSGrpc.PS {
                             commCost[i][j].set(commCost[i][j].get()+commCost_temp[k][i].get());
                         }
                     }
+                    commCost[i][j].set(commCost[i][j].get()*Context.netTrafficTime);
                 }
             }
 
-            System.out.println("");
+
+            // 需要对磁盘时间和通信时间进行累加
+            for(int i=0;i<commCost.length;i++){
+                for(int j=0;j<commCost[i].length;j++){
+                    // commCost[i][j]是第i个划分在第j台机器上的通信代价
+                    // diskCost[i]是第i个划分的磁盘代价
+                    commCost[i][j].set(commCost[i][j].get()+diskCost[i].get());
+                }
+            }
+
+            // 磁盘和通信整体时间已经累加完成，现在需要进行划分了
+            // 这里采用贪心策略进行划分,注意commCost的i表示第i个划分，j表示第j台机器
+
+            // 先初始化paramAssignSetArray
+            paramAssignSetArray=new ConcurrentSet[Context.serverNum];
+            for(int i=0;i<paramAssignSetArray.length;i++){
+                paramAssignSetArray[i]=new ConcurrentSet();
+            }
+
+            // 定义每个桶的当前代价,java通过new方法创建了会初始化为0.0
+            float[] serverTotalCost=new float[Context.serverNum];
+            // 定义set存储当前哪些参数没有被划分,这里是用从0,1,2,3,...的方式存的
+            Set<Integer> notAssignedParamSet=new HashSet<Integer>();
+            for(int i=0;i<partitionList.partitionList.size();i++){
+                notAssignedParamSet.add(i);
+            }
+
+
+            // 开始进行贪心策略划分
+            while(notAssignedParamSet.size()>0){
+                // 先选择要插入的桶
+                int minI_bucket=-1;
+                float minValue_bucket=Float.MAX_VALUE;
+                for(int i=0;i<serverTotalCost.length;i++){
+                    if(serverTotalCost[i]<minValue_bucket){
+                        minI_bucket=i;
+                        minValue_bucket=serverTotalCost[i];
+                    }
+                }
+
+                // 在桶min_i中再选择插入的节点
+                int minI_node=-1;
+                float minValue_node=Float.MAX_VALUE;
+                for(int i=0;i<commCost.length;i++){
+                    // 如果是miniI_bucket桶里值最小的，而且没有被分配
+                    if(commCost[i][minI_bucket].get()<minValue_node&&notAssignedParamSet.contains(i)){
+                        minI_node=i;
+                        minValue_node=(float) commCost[i][minI_bucket].get();
+                    }
+                }
+
+                // 分配miniI_node这个节点到miniI_bucket桶里，并且从notAssignedParamSet中删除minI_node
+                // 注意paramAssignSetArray中i表示桶，set表示节点
+                paramAssignSetArray[minI_bucket].add(minI_node);
+                notAssignedParamSet.remove(minI_node);
+
+            }
+
+            // 贪心策略完成后，得到paramAssignSetArray
+            // 利用paramAssignSetArray和partitionList算出来vSet和ls_partitionedVSet
+            // 先初始化vSet
+            vSet=new ConcurrentSet[Context.serverNum];
+            for(int i=0;i<vSet.length;i++){
+                vSet[i]=new ConcurrentSet();
+            }
+
+            // 构建vSet
+            // i表示每台server
+            for(int i=0;i<paramAssignSetArray.length;i++){
+                // j表示server中的划分块
+                for(int j:(Set<Integer>)paramAssignSetArray[i]){
+                    Partition partition=partitionList.partitionList.get(j);
+                    for(long param:partition.partition){
+                        vSet[i].add(param);
+                    }
+                }
+            }
+
+            // 构建ls_partitionedVSet，其实它是一个List<Set>[]的形式
+            // i表示第i个server，list表示这个server中的划分块，Set表示每个划分的内容
+            // 这里应该用partitionList加paramAssignSetArray构建
+            // 第i个server
+            for(int i=0;i<paramAssignSetArray.length;i++){
+                // 第j个paramSet
+                for(int j:(Set<Integer>)paramAssignSetArray[i]){
+                    // 从partitionList中取出第j个paramSet
+                    // 需要将原来的list类型转化成set类型，可以一个数一个数的加入到set中
+                    Set<Long> set=SetUtil.List_2_Set(partitionList.partitionList.get(j).partition);
+                    // 将该set加入到第i个机器的list中
+                    ls_partitionedVSet[i].add(set);
+                }
+            }
+
+
         }
 
-        // 通信时间已经算完，现在需要进行划分了
 
+        barrier_WorkerNum();
 
+        // 返回vSet，首先将vSet转化成vSetMessage
+        VSetMessage vSetMessage=MessageDataTransUtil.VSet_2_VSetMessage(vSet);
 
         // 最后需要返回vset
-        resp.onNext(VSetMessage.newBuilder().build());
+        resp.onNext(vSetMessage);
         resp.onCompleted();
 
     }
+
+
 }
