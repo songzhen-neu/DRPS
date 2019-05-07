@@ -386,4 +386,12 @@ public class MessageDataTransUtil {
         }
         return sets;
     }
+
+    public static float[] CommCostMessage_2_CommCost(CommCostMessage message){
+        float[] commCost_i=new float[message.getCommCostCount()];
+        for(int i=0;i<commCost_i.length;i++){
+            commCost_i[i]=message.getCommCost(i);
+        }
+        return commCost_i;
+    }
 }

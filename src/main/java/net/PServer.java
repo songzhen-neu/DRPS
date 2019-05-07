@@ -88,6 +88,9 @@ public class PServer implements net.PSGrpc.PS {
 
     private static AtomicDoubleArray diskAccessForV;
 
+    private static AtomicDouble[][] commCost_temp;
+    private static AtomicDouble[][] commCost;
+
 
 //    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
 //    CyclicBarrier barrier_2 = new CyclicBarrier(Context.workerNum - 1);
@@ -1209,9 +1212,51 @@ public class PServer implements net.PSGrpc.PS {
 
     }
 
+
+
     @Override
     public void sendCommCost(CommCostMessage req,StreamObserver<VSetMessage> resp){
         // 现在收到了每个worker发送来的CommCost
-        
+        // 需要将CommCostMessage转化成float数组，也就是CommCost_i
+        float[] commCost_i=MessageDataTransUtil.CommCostMessage_2_CommCost(req);
+
+        if(req.getReqHost()==Context.masterId){
+            // 第一维表示第i台机器对每个划分块的访问次数，第二维表示划分块的个数
+            commCost_temp=new AtomicDouble[Context.workerNum][commCost_i.length];
+            // 真正的通信代价，第一维表示每个划分块，第二维表示划分块放到这个server中的时间代价
+            commCost=new AtomicDouble[commCost_i.length][Context.serverNum];
+        }
+
+        barrier_WorkerNum();
+
+        // 现在需要将各自的commCost_i整合到一个全局的float[][]里
+        for(int i=0;i<commCost_i.length;i++){
+            commCost_temp[req.getReqHost()][i].set(commCost_i[i]);
+        }
+
+        barrier_WorkerNum();
+
+        // 开始用commCost计算每个划分块放到每个服务器上的时间代价comm
+        if(req.getReqHost()==Context.masterId){
+            for(int i=0;i<commCost.length;i++){
+                for(int j=0;j<commCost[i].length;j++){
+                    for(int k=0;k<Context.serverNum;k++){
+                        if(j!=k){
+                            // 也就是第i个划分放在第j台机器上的访问时间为，除了第j台机器外的其他机器k，对划分i的访问
+                            commCost[i][j].set(commCost[i][j].get()+commCost_temp[k][i].get());
+                        }
+                    }
+                }
+            }
+        }
+
+        // 通信时间已经算完，现在需要进行划分了
+
+
+
+        // 最后需要返回vset
+        resp.onNext(VSetMessage.newBuilder().build());
+        resp.onCompleted();
+
     }
 }
