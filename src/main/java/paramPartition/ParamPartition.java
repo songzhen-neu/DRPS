@@ -62,6 +62,16 @@ public class ParamPartition {
 
         }
 
+        // 因为getBestPartition已经去掉了仅访问一次的partition，那么这里需要重新构建catPrunedRecord
+        List<Long> catPrunedRecord_temp=new ArrayList<Long>();
+        for(int i=0;i<bestPartitionList.partitionList.size();i++){
+            for(int j=0;j<bestPartitionList.partitionList.get(i).partition.size();j++){
+                catPrunedRecord_temp.add(bestPartitionList.partitionList.get(i).partition.get(j));
+            }
+        }
+        catPrunedRecord=catPrunedRecord_temp;
+
+
         // 现在master已经计算完成最佳参数划分bestPartitionLIst，这里表示为参数建立索引的划分
         // 接下来需要考虑，这些划分块分配到哪些server中
         // 应该为其建立一个长度为ServerNum的数组，用来存储划分到各个server中的网络通信时间

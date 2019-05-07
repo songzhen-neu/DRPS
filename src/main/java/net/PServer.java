@@ -1169,9 +1169,19 @@ public class PServer implements net.PSGrpc.PS {
                     }
                 }
 
-
+                // 这里需要把只有一个参数的划分块删除
+                PartitionList partitionList_temp=new PartitionList();
+                for(int i=0;i<partitionList.partitionList.size();i++){
+                    Partition partition_temp=new Partition();
+                    if(partitionList.partitionList.get(i).partition.size()>1){
+                        for(int j=0;j<partitionList.partitionList.get(i).partition.size();j++){
+                            partition_temp.partition.add(partitionList.partitionList.get(i).partition.get(j));
+                        }
+                        partitionList_temp.partitionList.add(partition_temp);
+                    }
+                }
+                partitionList=partitionList_temp;
             }
-
         }
 
         // 同步一下，直到master线程执行完partitionList的更新后返回结果
