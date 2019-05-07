@@ -1330,6 +1330,7 @@ public class PServer implements net.PSGrpc.PS {
                 // 分配miniI_node这个节点到miniI_bucket桶里，并且从notAssignedParamSet中删除minI_node
                 // 注意paramAssignSetArray中i表示桶，set表示节点
                 paramAssignSetArray[minI_bucket].add(minI_node);
+                serverTotalCost[minI_bucket]=serverTotalCost[minI_bucket]+(float) commCost[minI_node][minI_bucket].get();
                 notAssignedParamSet.remove(minI_node);
 
             }
