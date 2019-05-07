@@ -1124,7 +1124,10 @@ public class PServer implements net.PSGrpc.PS {
             for (int i = 0; i < partitionListSize - 1; i++) {
                 for (int j = i + 1; j < partitionListSize; j++) {
                     float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
-                    if (costReduce > maxTimeReduce) {
+                    // 这块要保证根据disk IO代价划分的划分块最大大小不能超过maxDiskPartitionNum，不然有些划分块太大，没办法做网络通信优化了
+                    if (costReduce > maxTimeReduce
+                            &&partitionList.partitionList.get(pi).partition.size()<=Context.maxDiskPartitionNum
+                            &&partitionList.partitionList.get(pj).partition.size()<=Context.maxDiskPartitionNum) {
                         maxTimeReduce = costReduce;
                         pi = i;
                         pj = j;
@@ -1223,8 +1226,21 @@ public class PServer implements net.PSGrpc.PS {
         if(req.getReqHost()==Context.masterId){
             // 第一维表示第i台机器对每个划分块的访问次数，第二维表示划分块的个数
             commCost_temp=new AtomicDouble[Context.workerNum][commCost_i.length];
+
+            for(int i=0;i<commCost_temp.length;i++){
+                for(int j=0;j<commCost_temp[i].length;j++){
+                    commCost_temp[i][j]=new AtomicDouble(0);
+                }
+            }
             // 真正的通信代价，第一维表示每个划分块，第二维表示划分块放到这个server中的时间代价
             commCost=new AtomicDouble[commCost_i.length][Context.serverNum];
+
+            for(int i=0;i<commCost.length;i++){
+                for(int j=0;j<commCost[i].length;j++){
+                    commCost[i][j]=new AtomicDouble(0);
+                }
+            }
+
         }
 
         barrier_WorkerNum();
@@ -1248,6 +1264,8 @@ public class PServer implements net.PSGrpc.PS {
                     }
                 }
             }
+
+            System.out.println("");
         }
 
         // 通信时间已经算完，现在需要进行划分了

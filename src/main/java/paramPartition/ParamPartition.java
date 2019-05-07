@@ -99,7 +99,7 @@ public class ParamPartition {
                 for(int m=0;m<partition.partition.size();m++){
                     if(batchVSet.contains(partition.partition.get(m))){
                         // 这里无论怎么样，都是只包含一个就可以
-                        commCost[m]++;
+                        commCost[l]++;
                     }
                 }
 
