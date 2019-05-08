@@ -56,8 +56,9 @@ public class LogisticRegression {
 
         // 先把要执行的次数发给本地的server
         WorkerContext.psRouterClient.getPsWorkers().get(WorkerContext.workerId).getBlockingStub()
-                .sendTrainRoundNum(IMessage.newBuilder().setI(WorkerContext.sampleBatchListSize*echo).build());
+                .sendTrainRoundNum(IMessage.newBuilder().setI(WorkerContext.sampleBatchListSize * echo).build());
         // 该层是循环echo遍数据集
+        long totalTime = 0;
         for (int i = 0; i < echo; i++) {
             // 该层是循环所有的batch
             for (int j = 0; j < WorkerContext.sampleBatchListSize; j++) {
@@ -67,29 +68,31 @@ public class LogisticRegression {
 
                 // 下面可以向server发送请求了
                 logger.info("echo " + i + ":Sent request of Params to servers");
-                Future<SFKVListMessage> sfkvListMessageFuture[]=new Future[Context.workerNum];
+                Future<SFKVListMessage> sfkvListMessageFuture[] = new Future[Context.workerNum];
+
+                long startTime = System.currentTimeMillis();
                 for (int l = 0; l < Context.serverNum; l++) {
-                    if (setArray[l].size() != 0) {
-                        logger.info("getNeededParams start");
-                        sfkvListMessageFuture[l]=psRouterClient.get(l).getNeededParams(setArray[l],
-                                WorkerContext.workerId,
-                                WorkerContext.sampleBatchListSize*(i)+j+1 );
-                        logger.info("getNeededParams end");
-                    }
+//                    if (setArray[l].size() != 0) {
+                    logger.info("getNeededParams start");
+                    sfkvListMessageFuture[l] = psRouterClient.get(l).getNeededParams(setArray[l],
+                            WorkerContext.workerId,
+                            WorkerContext.sampleBatchListSize * (i) + j + 1);
+                    logger.info("getNeededParams end");
+//                    }
                 }
-                for(int l=0;l<Context.serverNum;l++){
-                    logger.info(l+"barrier start");
-                    while (!sfkvListMessageFuture[l].isDone()){
-                        try{
-                            Thread.sleep(10);
-                        }catch (InterruptedException e){
+                for (int l = 0; l < Context.serverNum; l++) {
+                    logger.info(l + "barrier start");
+                    while (!sfkvListMessageFuture[l].isDone()) {
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
-                    logger.info(l+"barrier end");
-                    try{
+                    logger.info(l + "barrier end");
+                    try {
                         paramsMapsTemp[l] = MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessageFuture[l].get());
-                    }catch (InterruptedException|ExecutionException e){
+                    } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
 
@@ -98,6 +101,8 @@ public class LogisticRegression {
                         paramsMap.put(key, paramsMapsTemp[l].get(key));
                     }
                 }
+                long endTime = System.currentTimeMillis();
+                totalTime += (endTime - startTime);
 
 
                 outputValueOfBatch = getActivateValue(batch, paramsMap);
@@ -115,6 +120,7 @@ public class LogisticRegression {
 
             }
         }
+        System.out.println("zongshijian:" + totalTime);
     }
 
     public float calculateLoss(float[] outputValueOfBatch, SampleList batch) {
@@ -132,12 +138,12 @@ public class LogisticRegression {
             Sample sample = batch.sampleList.get(i);
             for (int j = 0; j < sample.feature.length; j++) {
                 if (sample.feature[j] != -1) {
-                    if (map.get("featParam" + j) != null) {
-                        float curGradient = map.get("featParam" + j);
-                        curGradient += learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("featParam" + j);
-                        map.put("featParam" + j, curGradient);
+                    if (map.get("f" + j) != null) {
+                        float curGradient = map.get("f" + j);
+                        curGradient += learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("f" + j);
+                        map.put("f" + j, curGradient);
                     } else {
-                        map.put("featParam" + j, learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("featParam" + j));
+                        map.put("f" + j, learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("f" + j));
                     }
                 }
 
@@ -145,12 +151,12 @@ public class LogisticRegression {
 
             for (int j = 0; j < sample.cat.length; j++) {
                 if (sample.cat[j] != -1) {
-                    if (map.get("catParam" + sample.cat[j]) != null) {
-                        float curGradient = map.get("catParam" + sample.cat[j]);
-                        curGradient += learningRate * error[i] - l2Lambda * paramsMap.get("catParam" + sample.cat[j]);
-                        map.put("catParam" + j, curGradient);
+                    if (map.get("p" + sample.cat[j]) != null) {
+                        float curGradient = map.get("p" + sample.cat[j]);
+                        curGradient += learningRate * error[i] - l2Lambda * paramsMap.get("p" + sample.cat[j]);
+                        map.put("p" + j, curGradient);
                     } else {
-                        map.put("catParam" + sample.cat[j], learningRate * error[i] - l2Lambda * paramsMap.get("catParam" + sample.cat[j]));
+                        map.put("p" + sample.cat[j], learningRate * error[i] - l2Lambda * paramsMap.get("p" + sample.cat[j]));
                     }
                 }
 
@@ -180,7 +186,7 @@ public class LogisticRegression {
             // 计算feature的value
             for (int i = 0; i < sample.feature.length; i++) {
                 if (sample.feature[i] != -1) {
-                    value[l] += sample.feature[i] * paramsMap.get("featParam" + i);
+                    value[l] += sample.feature[i] * paramsMap.get("f" + i);
                 }
             }
             for (int i = 0; i < sample.cat.length; i++) {
@@ -189,7 +195,7 @@ public class LogisticRegression {
 //                    if(paramsMap.get("catParam" + sample.cat[i])==null){
 //                        System.out.println("hakong");
 //                    }
-                    value[l] += paramsMap.get("catParam" + sample.cat[i]);
+                    value[l] += paramsMap.get("p" + sample.cat[i]);
                 }
             }
 
@@ -215,12 +221,12 @@ public class LogisticRegression {
 
         for (Sample sample : batch.sampleList) {
             for (Long l : sample.cat) {
-                boolean isContains=false;
+                boolean isContains = false;
                 if (!l.equals(-1l)) {
                     // 判断l是否包含在vSet参数划分里，如果包含在，那么通过vset进行参数路由
                     for (int i = 0; i < vSet.length; i++) {
                         if (vSet[i].contains(l)) {
-                            setArray[i].add("catParam" + l);
+                            setArray[i].add("p" + l);
                             isContains = true;
                             break;
                         }
@@ -228,7 +234,7 @@ public class LogisticRegression {
 
                     // 如果不包含，说明并未进行参数划分，按照正常的取余进行分配
                     if (!isContains) {
-                        setArray[l.intValue() % Context.serverNum].add("catParam" + l);
+                        setArray[l.intValue() % Context.serverNum].add("p" + l);
                     }
 
                 }

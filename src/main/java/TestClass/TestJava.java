@@ -1,5 +1,6 @@
 package TestClass;
 
+import Util.CurrentTimeUtil;
 import dataStructure.parameter.Param;
 import javafx.util.Pair;
 
@@ -45,10 +46,28 @@ public class TestJava {
         Integer intb=1231;
         System.out.println(inta==intb);
 
+        String str11=new String("f120");
+        String[] strArray11=str11.split("f");
+
+        System.out.println("ss");
 
 
+        Map<String,String> map=new HashMap<String, String>();
+        CurrentTimeUtil.setStartTime();
+        for(int i=0;i<100000;i++){
+            map.put(i+"","aa");
+        }
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("map.put Time");
 
 
+        CurrentTimeUtil.setStartTime();
+        for(int i=0;i<1000000;i++){
+            if(map.keySet().contains(i+"")){
 
+            }
+        }
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("map.put Time");
     }
 }

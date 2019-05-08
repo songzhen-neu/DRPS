@@ -1181,6 +1181,9 @@ public class PServer implements net.PSGrpc.PS {
                     }
                 }
                 partitionList=partitionList_temp;
+
+
+                // 这里还需要构建一个划分的反向索引，也就是可以通过参数找到其所在的划分
             }
         }
 
@@ -1208,7 +1211,7 @@ public class PServer implements net.PSGrpc.PS {
          *@date: 上午8:24 18-11-16
          */
         if (singlePartitionSize == 1) {
-            return (Context.diskSeekTime + Context.singleParamOfSetSize_bytes * Context.diskAccessTime);
+            return (Context.diskSeekTime + (Context.setParamBaseSize_bytes+Context.singleParamOfSetSize_bytes) * Context.diskAccessTime);
         } else {
             return (Context.diskSeekTime + (singlePartitionSize * Context.singleParamOfSetSize_bytes + Context.setParamBaseSize_bytes) * Context.diskAccessTime);
         }

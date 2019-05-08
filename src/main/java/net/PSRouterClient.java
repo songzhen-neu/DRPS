@@ -50,11 +50,11 @@ public class PSRouterClient{
             maps[i]=new HashMap<String,Float>();
         }
         for(String index:map.keySet()){
-            if(index.contains("featParam")){
+            if(index.contains("f")){
                 maps[Context.masterId].put(index,map.get(index));
 
             }else {
-                String[] indexSplit=index.split("m");
+                String[] indexSplit=index.split("p");
                 Set<Long>[] VSet=(Set<Long>[]) WorkerContext.kvStoreForLevelDB.getVSet();
                 boolean isInVSet=false;
                 for(int i=0;i<VSet.length;i++){

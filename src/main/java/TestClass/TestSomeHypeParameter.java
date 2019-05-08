@@ -36,6 +36,7 @@ public class TestSomeHypeParameter {
         Set<Param> set_param_5=new HashSet<Param>();
         Set<Param> set_param_10=new HashSet<Param>();
 
+
         for(int i=0;i<5;i++){
             set_param_5.add(new Param("catParam"+i,0.01f));
         }
@@ -45,6 +46,8 @@ public class TestSomeHypeParameter {
         }
         Float f_Float=new Float(1);
         float f_float=1;
+
+        // float
 
         TestSizeUtil.showSizeOfObject("param_catParam",param_catParam);
         TestSizeUtil.showSizeOfObject("param_feat",param_feat);

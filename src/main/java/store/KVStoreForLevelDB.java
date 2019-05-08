@@ -50,8 +50,7 @@ public class KVStoreForLevelDB {
     public static Map<String, String> catToCatSetMap = new HashMap<String, String>();
     public static Logger logger = LoggerFactory.getLogger(KVStoreForLevelDB.class);
 
-
-
+//    public static ConcurrentMap<Long,String> catToCatSetMap;
 
 
     public void init(String path) throws IOException {
@@ -83,7 +82,8 @@ public class KVStoreForLevelDB {
         // 这是按照最初的取余进行分配的
         for (long i = 0; i < sparseDimSize; i++) {
             if (i % Context.serverNum == ServerContext.serverId) {
-                db.put(("catParam" + i).getBytes(), TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f, 0.1f)));
+                Param param = new Param("p" + i, RandomUtil.getRandomValue(-0.1f, 0.1f));
+                db.put(("p" + i).getBytes(), TypeExchangeUtil.toByteArray(param));
 //                System.out.println("params:" + i);
             }
         }
@@ -96,16 +96,17 @@ public class KVStoreForLevelDB {
             if (set.size() == 1) {
                 // 这里的意思是把ls_params中长度为1的set，按照普通不划分的方法存储
                 for (long l : (Set<Long>) set) {
-                    db.put(("catParam" + l).getBytes(), TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f, 0.1f)));
+                    Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
+                    db.put(("p" + l).getBytes(), TypeExchangeUtil.toByteArray(param));
                 }
             } else {
                 Set<Param> paramSet = new HashSet<Param>();
                 for (Object l : set) {
-                    Param param = new Param("catParam" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
+                    Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
 //                logger.info("catParam"+l);
                     paramSet.add(param);
                 }
-                db.put(("catParamSet" + ls_params.indexOf(set)).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
+                db.put(("s" + ls_params.indexOf(set)).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
             }
 
 
@@ -121,8 +122,8 @@ public class KVStoreForLevelDB {
         for (int i = 0; i < vSet.length; i++) {
             if (i != ServerContext.serverId) {
                 for (long l : vSet[i]) {
-                    if (db.get(("catParam" + l).getBytes()) != null) {
-                        db.delete(("catParam" + l).getBytes());
+                    if (db.get(("p" + l).getBytes()) != null) {
+                        db.delete(("p" + l).getBytes());
                     }
                 }
             }
@@ -138,11 +139,13 @@ public class KVStoreForLevelDB {
         localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
         for (Set<Long> set : localParitionVSet) {
             for (Long l : set) {
-                catToCatSetMap.put("catParam" + l, "catParamSet" + localParitionVSet.indexOf(set));
+                catToCatSetMap.put("p" + l, "s" + localParitionVSet.indexOf(set));
             }
         }
 
     }
+
+    static long totleTimeOfgetParams = 0;
 
     @Synchronized
     public SFKVListMessage getNeededParams(Set<String> set) throws ClassNotFoundException, IOException {
@@ -163,36 +166,41 @@ public class KVStoreForLevelDB {
         needParam = getNeedPartitionParam(set);
 
 
-
         // 构建参数map
 
 
         CurrentTimeUtil.setStartTime();
+        long startTime = 0;
+        long endTime = 0;
+        startTime=System.currentTimeMillis();
         for (String str : needParam) {
-            if (str.indexOf("catParamSet") == -1) {
-
+            if (str.indexOf("s") == -1) {
+                // 这里是读取featParamSet的
                 if (db.get(str.getBytes()) == null) {
                     logger.info("nullstr:" + str);
                 }
-                Float f = (Float) TypeExchangeUtil.toObject(db.get(str.getBytes()));
-                paramMap.put(str, f);
+//                System.out.println("asdasasf:"+str);
+                Param p = (Param) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+
+                paramMap.put(p.key, p.value);
             } else {
-                Set<Param> temp_catParamSet = (Set<Param>) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+                Set<Param> temp_catParamSet =  (Set<Param>) TypeExchangeUtil.toObject(db.get(str.getBytes()));
                 for (Param param : temp_catParamSet) {
                     paramMap.put(param.key, param.value);
                 }
             }
         }
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("从kvstore数据库中读取参数的时间");
+        endTime=System.currentTimeMillis();
+        totleTimeOfgetParams += endTime - startTime;
+        System.out.println(totleTimeOfgetParams);
 
-        CurrentTimeUtil.setStartTime();
+
         for (String key : set) {
             map.put(key, paramMap.get(key));
         }
         if (ServerContext.serverId == Context.masterId) {
             for (int i = 0; i < featureParams.length; i++) {
-                map.put("featParam" + i, featureParams[i]);
+                map.put("f" + i, featureParams[i]);
             }
         }
         CurrentTimeUtil.setEndTime();
@@ -230,15 +238,14 @@ public class KVStoreForLevelDB {
         Map<String, Float> updateCatParamMap = new HashMap<String, Float>();
 
 
-        CurrentTimeUtil.setStartTime();
         for (String index : needParam) {
 //                System.out.println(index);
             try {
-                if (index.contains("featParam")) {
-                    String[] split = index.split("m");
+                if (index.contains("f")) {
+                    String[] split = index.split("f");
                     featureParams[Integer.parseInt(split[1])] += map.get(index);
 
-                } else if (index.contains("catParamSet")) {
+                } else if (index.contains("s")) {
                     if (!catParamSetMap.keySet().contains(index)) {
                         Set<Param> paramSetTemp = (Set<Param>) TypeExchangeUtil.toObject(db.get(index.getBytes()));
                         catParamSetMap.put(index, paramSetTemp);
@@ -247,9 +254,9 @@ public class KVStoreForLevelDB {
                         }
                     }
                 } else {
-                    float f = (Float) TypeExchangeUtil.toObject(db.get(index.getBytes()));
-                    catParamMap.put(index, f);
-                    allCatParamMap.put(index, f);
+                    Param param = (Param) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+                    catParamMap.put(index, param.value);
+                    allCatParamMap.put(index, param.value);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -258,8 +265,7 @@ public class KVStoreForLevelDB {
             }
 
         }
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("read map time:");
+
 
 //        // 遍历map对catParamMap和catParamSetMap更新
 //        CurrentTimeUtil.setStartTime();
@@ -292,12 +298,12 @@ public class KVStoreForLevelDB {
 //        CurrentTimeUtil.showExecuteTime("update map time:");
 
 
-        CurrentTimeUtil.setStartTime();
+
 
         // 就完全构建试试速度
         // 更新累加值
         for (String index : map.keySet()) {
-            if (!index.contains("featParam")) {
+            if (!index.contains("f")) {
                 float f = allCatParamMap.get(index) + map.get(index);
                 allCatParamMap.remove(index);
                 allCatParamMap.put(index, f);
@@ -324,15 +330,15 @@ public class KVStoreForLevelDB {
         }
 
 
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("update map time:");
+
 
         // 遍历catParamMap和catParamSetMap写入
-        CurrentTimeUtil.setStartTime();
+
         try {
             for (String str : updateCatParamMap.keySet()) {
                 db.delete(str.getBytes());
-                db.put(str.getBytes(), TypeExchangeUtil.toByteArray(updateCatParamMap.get(str)));
+                Param param = new Param(str, updateCatParamMap.get(str));
+                db.put(str.getBytes(), TypeExchangeUtil.toByteArray(param));
             }
 
             for (String str : updateCatParamSetMap.keySet()) {
@@ -342,8 +348,7 @@ public class KVStoreForLevelDB {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("write to DB time");
+
 
 
     }
@@ -361,20 +366,28 @@ public class KVStoreForLevelDB {
         List<Set> paramKeySetList = ls_partitionedVSet[ServerContext.serverId];
         // 先转化需要取出来哪些参数
         for (String key : set) {
-            long index_forKey = -1;
-            for (Set<Long> paramKeySet : paramKeySetList) {
-                if(paramKeySet.size()>1){
-                    // 这里key是string，而paramKeySet是long
-                    if (paramKeySet.contains((Long.parseLong(key.split("m")[1]))) && !key.contains("featParam")) {
-                        index_forKey = paramKeySetList.indexOf(paramKeySet);
-                    }
-                }
-            }
-            if (index_forKey == -1) {
+//            long index_forKey = -1;
+//            for (Set<Long> paramKeySet : paramKeySetList) {
+//                if (paramKeySet.size() > 1) {
+//                    // 这里key是string，而paramKeySet是long
+//                    if (!key.contains("f")) {
+//                        if (paramKeySet.contains((Long.parseLong(key.split("p")[1])))) {
+//                            index_forKey = paramKeySetList.indexOf(paramKeySet);
+//                        }
+//                    }
+//
+//                }
+//            }
+//            if (index_forKey == -1) {
+//                needParam.add(key);
+//            } else {
+//                needParam.add("s" + index_forKey);
+//                index_forKey = -1;
+//            }
+            if(catToCatSetMap.keySet().contains(key)){
+                needParam.add(catToCatSetMap.get(key));
+            }else {
                 needParam.add(key);
-            } else {
-                needParam.add("catParamSet" + index_forKey);
-                index_forKey = -1;
             }
 
         }
@@ -388,7 +401,7 @@ public class KVStoreForLevelDB {
         long index = -1;
 
         for (Set<Long> paramKeySet : ls_params) {
-            if (paramKeySet.contains(Long.parseLong(key.split("m")[1]))) {
+            if (paramKeySet.contains(Long.parseLong(key.split("p")[1]))) {
                 index = ls_params.indexOf(paramKeySet);
                 break;
             }
@@ -396,16 +409,16 @@ public class KVStoreForLevelDB {
 
 
         if (index == -1) {
-            float f = (Float) TypeExchangeUtil.toObject(db.get(TypeExchangeUtil.toByteArray(key)));
+            Param param = (Param) TypeExchangeUtil.toObject(db.get(TypeExchangeUtil.toByteArray(key)));
             db.delete(TypeExchangeUtil.toByteArray(key));
-            db.put(TypeExchangeUtil.toByteArray(key), TypeExchangeUtil.toByteArray(f + map.get(key)));
+            db.put(TypeExchangeUtil.toByteArray(key), TypeExchangeUtil.toByteArray(param.value + map.get(key)));
         } else {
             Set<Param> paramSet = (Set<Param>) TypeExchangeUtil.toObject(db.get(("catParamSet" + index).getBytes()));
             for (Param param : paramSet) {
                 if (param.key.equals(key)) {
                     param.value += map.get(key);
-                    db.delete(("catParamSet" + index).getBytes());
-                    db.put(("catParamSet" + index).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
+                    db.delete(("s" + index).getBytes());
+                    db.put(("s" + index).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
                     break;
                 }
             }
