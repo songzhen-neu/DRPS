@@ -106,11 +106,11 @@ public class ParamPartition {
             // 分配每个server存储的参数
             for(int i=0;i<bestPartitionList.partitionList.size();i++){
                 Set<Long> set=new HashSet<>();
-                for(int j=0;j<bestPartitionList.partitionList.get(i).partition.size();i++){
+                for(int j=0;j<bestPartitionList.partitionList.get(i).partition.size();j++){
                     set.add(bestPartitionList.partitionList.get(i).partition.get(j));
                     vSet[i%Context.serverNum].add(bestPartitionList.partitionList.get(i).partition.get(j));
                 }
-                ls_partitionVSet[i].add(set);
+                ls_partitionVSet[i%Context.serverNum].add(set);
             }
 
             // 开始发送ls_partitionVSet给master
