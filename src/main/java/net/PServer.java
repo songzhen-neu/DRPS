@@ -1169,18 +1169,19 @@ public class PServer implements net.PSGrpc.PS {
                     }
                 }
 
-                // 这里需要把只有一个参数的划分块删除
-                PartitionList partitionList_temp=new PartitionList();
-                for(int i=0;i<partitionList.partitionList.size();i++){
-                    Partition partition_temp=new Partition();
-                    if(partitionList.partitionList.get(i).partition.size()>1){
-                        for(int j=0;j<partitionList.partitionList.get(i).partition.size();j++){
-                            partition_temp.partition.add(partitionList.partitionList.get(i).partition.get(j));
-                        }
-                        partitionList_temp.partitionList.add(partition_temp);
-                    }
-                }
-                partitionList=partitionList_temp;
+                // 这里需要把只有一个参数的划分块删除（不能删除，因为后面还有对网络通信的优化，这些访问频率高的对网络通信影响也大）
+//                PartitionList partitionList_temp=new PartitionList();
+//                for(int i=0;i<partitionList.partitionList.size();i++){
+//                    Partition partition_temp=new Partition();
+//                    if(partitionList.partitionList.get(i).partition.size()>1){
+//                        for(int j=0;j<partitionList.partitionList.get(i).partition.size();j++){
+//                            partition_temp.partition.add(partitionList.partitionList.get(i).partition.get(j));
+//                        }
+//                        partitionList_temp.partitionList.add(partition_temp);
+//                    }
+//                }
+//                partitionList=partitionList_temp;
+
 
 
                 // 这里还需要构建一个划分的反向索引，也就是可以通过参数找到其所在的划分
@@ -1247,6 +1248,15 @@ public class PServer implements net.PSGrpc.PS {
         float[] commCost_i=MessageDataTransUtil.CommCostMessage_2_CommCost(req);
 
         if(req.getReqHost()==Context.masterId){
+            // 因为要用到diskCost，但是如果不做磁盘优化，这个数据结构是null，这里需要初始化一下
+            if(!Context.isOptimizeDisk){
+                diskCost= new AtomicDouble[commCost_i.length];
+                for(int i=0;i<diskCost.length;i++){
+                    diskCost[i]=new AtomicDouble(0);
+                }
+            }
+
+
             // 第一维表示第i台机器对每个划分块的访问次数，第二维表示划分块的个数
             commCost_temp=new AtomicDouble[Context.workerNum][commCost_i.length];
 
@@ -1396,6 +1406,20 @@ public class PServer implements net.PSGrpc.PS {
         resp.onNext(vSetMessage);
         resp.onCompleted();
 
+    }
+
+    @Override
+    public void setBestPartitionList(PartitionListMessage req,StreamObserver<BMessage> resp){
+        partitionList=MessageDataTransUtil.PartitionListMessage_2_PartitionList(req);
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
+    }
+
+    @Override
+    public void setLSPartitionVSet(LSetListArrayMessage req,StreamObserver<BMessage> resp){
+        ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
     }
 
 

@@ -32,6 +32,8 @@ service PS {
     rpc GetBestPartition(IMessage) returns(PartitionListMessage){};
     rpc SendAFMatrix(AFMatrixMessage) returns(BMessage){};
     rpc SendCommCost(CommCostMessage) returns(VSetMessage){};
+    rpc SetBestPartitionList(PartitionListMessage) returns(BMessage){};
+    rpc SetLSPartitionVSet(LSetListArrayMessage) returns(BMessage){};
 
 }
 

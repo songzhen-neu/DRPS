@@ -73,10 +73,17 @@ public class Context {
     public static AtomicInteger trainRoundNum=new AtomicInteger(0);
 
     public static final float alpha_WSP=0.01f;
-    public static float minGain=0;
+    public static float minGain=0f;
 
     /** 最大磁盘划分的大小*/
-    public static int maxDiskPartitionNum=20;
+    public static int maxDiskPartitionNum=100;
+
+    /** 做对比实验，是否进行磁盘优化*/
+    public static boolean isOptimizeDisk=false;
+
+    /** 做对比实验，是否进行网络*/
+    public static boolean isOptimizeNetTraffic=true;
+    // param用p表示，paramSet用s表示，feature用f表示
 
 
 
@@ -105,8 +112,8 @@ public class Context {
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=3;
-        serverNum=3;
+        workerNum=1;
+        serverNum=1;
         dataPartitionNum=workerNum;
         partitionedDataSize=1000000;
         masterId=0;
@@ -120,15 +127,16 @@ public class Context {
 
         diskSeekTime=0.0029f;
         diskAccessTime=0.0000046f;
-        netTrafficTime=0;
+//        netTrafficTime=0.0000095f;
+        netTrafficTime=0.0000095f;
         floatSize_bytes=79;
 
-        freqThresholdForSingleMachine=10;
+        freqThresholdForSingleMachine=4;
         freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();
-        parallelismControlModel=ParallelismControlModel.BSP;
+        parallelismControlModel=ParallelismControlModel.AP;
         switch (parallelismControlModel){
             case SSP:SSP.init();break;
             case SSP_S:SSP.init();break;

@@ -298,6 +298,16 @@ public class PSWorker {
         return vSet;
     }
 
+    public void setBestPartitionList(PartitionList bestPartitionList){
+        PartitionListMessage message=MessageDataTransUtil.PartitionList_2_PartitionListMessage(bestPartitionList);
+        blockingStub.setBestPartitionList(message);
+    }
+
+    public void setLSPartitionVSet(List<Set>[] lsPartitionVSet){
+        LSetListArrayMessage message=MessageDataTransUtil.SetListArray_2_LSetListArrayMessage(lsPartitionVSet);
+        blockingStub.setLSPartitionVSet(message);
+
+    }
 
 
 }

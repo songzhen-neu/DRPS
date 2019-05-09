@@ -93,13 +93,13 @@ public class KVStoreForLevelDB {
 
         // 这里不能简单的key，value分配了，因为已经进行磁盘划分，那么就有集合的形式了
         for (Set set : ls_params) {
-            if (set.size() == 1) {
-                // 这里的意思是把ls_params中长度为1的set，按照普通不划分的方法存储
-                for (long l : (Set<Long>) set) {
-                    Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
-                    db.put(("p" + l).getBytes(), TypeExchangeUtil.toByteArray(param));
-                }
-            } else {
+//            if (set.size() == 1) {
+//                // 这里的意思是把ls_params中长度为1的set，按照普通不划分的方法存储
+//                for (long l : (Set<Long>) set) {
+//                    Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
+//                    db.put(("p" + l).getBytes(), TypeExchangeUtil.toByteArray(param));
+//                }
+//            } else {
                 Set<Param> paramSet = new HashSet<Param>();
                 for (Object l : set) {
                     Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
@@ -107,7 +107,7 @@ public class KVStoreForLevelDB {
                     paramSet.add(param);
                 }
                 db.put(("s" + ls_params.indexOf(set)).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
-            }
+//            }
 
 
         }
