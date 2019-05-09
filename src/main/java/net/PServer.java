@@ -923,6 +923,13 @@ public class PServer implements net.PSGrpc.PS {
         sMessage.setStr("" + ServerContext.serverId);
         ServerContext.kvStoreForLevelDB.ls_partitionedVSet = MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
         ls_partitionedVSet = ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
+        // 需要构建catToCatSetMap索引
+//        Map<String,String> catToCatSetMap=new HashMap<String, String>();
+//
+//
+//
+//
+//        ServerContext.kvStoreForLevelDB.catToCatSetMap=catToCatSetMap;
         resp.onNext(sMessage.build());
         resp.onCompleted();
     }
@@ -1418,6 +1425,7 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void setLSPartitionVSet(LSetListArrayMessage req,StreamObserver<BMessage> resp){
         ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        ServerContext.kvStoreForLevelDB.ls_partitionedVSet=ls_partitionedVSet;
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }

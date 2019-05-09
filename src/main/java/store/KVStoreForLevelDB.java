@@ -175,7 +175,6 @@ public class KVStoreForLevelDB {
         startTime=System.currentTimeMillis();
         for (String str : needParam) {
             if (str.indexOf("s") == -1) {
-                // 这里是读取featParamSet的
                 if (db.get(str.getBytes()) == null) {
                     logger.info("nullstr:" + str);
                 }

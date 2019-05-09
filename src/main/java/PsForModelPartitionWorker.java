@@ -60,7 +60,7 @@ public class PsForModelPartitionWorker {
 //        Set[] vSet = PartitionUtil.partitionV();
         Set[] vSet=ParamPartition.partitionV();
 //        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
-
+        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         if (WorkerContext.workerId != Context.masterId) {
             LSetListArrayMessage ls_partitionedVSet = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getLsPartitionedVSet();
             WorkerContext.psRouterClient.getPsWorkers().get(WorkerContext.workerId).putLsPartitionedVSet(ls_partitionedVSet);
