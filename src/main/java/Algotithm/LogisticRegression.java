@@ -54,6 +54,16 @@ public class LogisticRegression {
         Map<String, Float> gradientMap;
         float loss = 0;
 
+
+        // 构建paramAssignedToServerMap
+        WorkerContext.kvStoreForLevelDB.paramAssignedToServerMap = new HashMap<Long, Integer>();
+        Set<Long>[] vSet = WorkerContext.kvStoreForLevelDB.getVSet();
+        for (int i = 0; i < vSet.length; i++) {
+            for (Long l : vSet[i]) {
+                WorkerContext.kvStoreForLevelDB.paramAssignedToServerMap.put(l, i);
+            }
+        }
+
         // 先把要执行的次数发给本地的server
         WorkerContext.psRouterClient.getPsWorkers().get(WorkerContext.workerId).getBlockingStub()
                 .sendTrainRoundNum(IMessage.newBuilder().setI(WorkerContext.sampleBatchListSize * echo).build());
@@ -214,7 +224,7 @@ public class LogisticRegression {
 
     public Set<String>[] getNeededParamsKey(SampleList batch) {
         Set[] setArray = new HashSet[Context.serverNum];
-        Set[] vSet = WorkerContext.kvStoreForLevelDB.getVSet();
+        Map<Long, Integer> paramAssignedToServerMap = WorkerContext.kvStoreForLevelDB.paramAssignedToServerMap;
         for (int i = 0; i < setArray.length; i++) {
             setArray[i] = new HashSet<String>();
         }
@@ -224,14 +234,10 @@ public class LogisticRegression {
                 boolean isContains = false;
                 if (!l.equals(-1l)) {
                     // 判断l是否包含在vSet参数划分里，如果包含在，那么通过vset进行参数路由
-                    for (int i = 0; i < vSet.length; i++) {
-                        if (vSet[i].contains(l)) {
-                            setArray[i].add("p" + l);
-                            isContains = true;
-                            break;
-                        }
+                    if (paramAssignedToServerMap.keySet().contains(l)) {
+                        setArray[paramAssignedToServerMap.get(l)].add("p" + l);
+                        isContains = true;
                     }
-
                     // 如果不包含，说明并未进行参数划分，按照正常的取余进行分配
                     if (!isContains) {
                         setArray[l.intValue() % Context.serverNum].add("p" + l);

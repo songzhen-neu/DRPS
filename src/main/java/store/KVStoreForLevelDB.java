@@ -44,6 +44,8 @@ public class KVStoreForLevelDB {
     Map<Integer, Float> timeCostMap = new ConcurrentHashMap<Integer, Float>();
     AtomicInteger minTimeCostI = new AtomicInteger(-1);
     Set[] vSet;
+    // worker在参数向server分流的时候使用的map
+    public static Map<Long,Integer> paramAssignedToServerMap;
     // listSet其实是一个存储各个server中存储了哪些参数（有本地参数划分）的数据结构
     public static List<Set>[] ls_partitionedVSet = new ArrayList[Context.serverNum];
     public static List<Set> localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
