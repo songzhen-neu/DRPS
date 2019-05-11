@@ -11,6 +11,7 @@ import dataStructure.partition.PartitionList;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.NettyServerBuilder;
 import lombok.Data;
 import lombok.Synchronized;
 import org.jblas.FloatMatrix;
@@ -116,7 +117,7 @@ public class PSWorker {
         }
 
 
-        blockingStub.sentSparseDimSizeAndInitParams(message.build());
+        blockingStub.sendSparseDimSizeAndInitParams(message.build());
     }
 
     public void barrier() throws UnknownHostException {
@@ -166,7 +167,7 @@ public class PSWorker {
     public synchronized void setCurIndexNum(long curIndexNum) {
         LMessage.Builder l = LMessage.newBuilder();
         l.setL(curIndexNum);
-        blockingStub.sentCurIndexNum(l.build());
+        blockingStub.sendCurIndexNum(l.build());
 
     }
 
@@ -182,7 +183,7 @@ public class PSWorker {
         IFMessage.Builder sentMessage = IFMessage.newBuilder();
         sentMessage.setF(Time);
         sentMessage.setI(WorkerContext.workerId);
-        IMessage respM = blockingStub.sentInitedT(sentMessage.build());
+        IMessage respM = blockingStub.sendInitedT(sentMessage.build());
         minCostI = respM.getI();
 //        logger.info("get Min time along machines:"+minCostI);
         return minCostI;

@@ -8,13 +8,13 @@ service PS {
     rpc PushAFMatrix (MatrixMessage) returns (MatrixMessage){}
     rpc GetIndexOfSparseDim(SListMessage) returns (SLKVListMessage){}
     rpc GetSparseDimSize(RequestMetaMessage) returns (LMessage){}
-    rpc SentSparseDimSizeAndInitParams(InitVMessage) returns (BMessage){}
+    rpc SendSparseDimSizeAndInitParams(InitVMessage) returns (BMessage){}
     rpc Barrier(RequestMetaMessage) returns (BMessage){}
     rpc GetMaxAndMinValueOfEachFeature(MaxAndMinArrayMessage) returns (MaxAndMinArrayMessage){}
     rpc GetNeededParams(PullRequestMessage) returns (SFKVListMessage){}
     rpc SendSFMap(SFKVListMessage) returns (SMessage){};
-    rpc SentCurIndexNum(LMessage) returns (SMessage){};
-    rpc SentInitedT(IFMessage) returns(IMessage){};
+    rpc SendCurIndexNum(LMessage) returns (SMessage){};
+    rpc SendInitedT(IFMessage) returns(IMessage){};
     rpc PushLocalViAccessNum(FMessage) returns(BMessage){};
     rpc PullOtherWorkerAccessForVi(RequestMetaMessage) returns(FMessage){};
     rpc PushVANumAndGetCatPrunedRecord(LIListMessage) returns(LListMessage){};
@@ -34,6 +34,7 @@ service PS {
     rpc SendCommCost(CommCostMessage) returns(VSetMessage){};
     rpc SetBestPartitionList(PartitionListMessage) returns(BMessage){};
     rpc SetLSPartitionVSet(LSetListArrayMessage) returns(BMessage){};
+    rpc SendIListMessage(IListMessage) returns(BMessage){};
 
 }
 

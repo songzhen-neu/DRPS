@@ -1,5 +1,6 @@
 package TestClass;
 
+import com.google.common.util.concurrent.RateLimiter;
 import context.Context;
 import context.WorkerContext;
 import net.BMessage;
@@ -36,6 +37,10 @@ public class TestGrpc {
             Thread.sleep(1000);
             System.out.println(iMessage.isDone());
         }
+
+
+        RateLimiter rateLimiter=RateLimiter.create(0.5);
+
 
 
 

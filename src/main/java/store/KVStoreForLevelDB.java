@@ -81,6 +81,7 @@ public class KVStoreForLevelDB {
     public void initParams(Long sparseDimSize, Set<Long>[] vSet, List<Set> ls_params) throws IOException {
         System.out.println("sparseDimSize:" + sparseDimSize);
 
+
         // 这是按照最初的取余进行分配的
         for (long i = 0; i < sparseDimSize; i++) {
             if (i % Context.serverNum == ServerContext.serverId) {

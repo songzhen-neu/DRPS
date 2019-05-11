@@ -217,7 +217,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void sentSparseDimSizeAndInitParams(InitVMessage req, StreamObserver<BMessage> responseObject) {
+    public void sendSparseDimSizeAndInitParams(InitVMessage req, StreamObserver<BMessage> responseObject) {
         /**
          *@Description: 初始化各自server服务器的参数到leveldb中
          *@Param: [req, responseObject]
@@ -427,7 +427,7 @@ public class PServer implements net.PSGrpc.PS {
 
     @Override
     @Synchronized
-    public void sentCurIndexNum(LMessage req, StreamObserver<SMessage> resp) {
+    public void sendCurIndexNum(LMessage req, StreamObserver<SMessage> resp) {
         ServerContext.kvStoreForLevelDB.setCurIndexOfSparseDim(new AtomicLong(req.getL()));
         SMessage.Builder sMessage = SMessage.newBuilder();
         sMessage.setStr("success");
@@ -439,7 +439,7 @@ public class PServer implements net.PSGrpc.PS {
     AtomicInteger barrier_sentInitedT = new AtomicInteger(0);
 
     @Override
-    public void sentInitedT(IFMessage req, StreamObserver<IMessage> resp) {
+    public void sendInitedT(IFMessage req, StreamObserver<IMessage> resp) {
         IMessage.Builder intMessage = IMessage.newBuilder();
         // 这里的意思显然是将
         ServerContext.kvStoreForLevelDB.getTimeCostMap().put(req.getI(), req.getF());
@@ -1426,6 +1426,19 @@ public class PServer implements net.PSGrpc.PS {
     public void setLSPartitionVSet(LSetListArrayMessage req,StreamObserver<BMessage> resp){
         ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
         ServerContext.kvStoreForLevelDB.ls_partitionedVSet=ls_partitionedVSet;
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
+    }
+
+    @Override
+    public void sendIListMessage(IListMessage req,StreamObserver<BMessage> resp){
+        /**
+        *@Description: 这个函数用来测试网络通信和本地通信速度For TestClass/TestNetAndLocalTrafficSpeed.java
+        *@Param: [req, resp]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 下午12:46 19-5-10
+        */
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }
