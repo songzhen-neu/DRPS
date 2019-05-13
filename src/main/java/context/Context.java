@@ -93,7 +93,7 @@ public class Context {
             return;
         }
 
-        serverIp.put(0,"202.199.13.120");
+        serverIp.put(0,"172.28.229.109");
         serverIp.put(1,"202.199.13.120");
         serverIp.put(2,"202.199.13.120");
         serverPort.put(0,9010);

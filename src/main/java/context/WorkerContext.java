@@ -44,6 +44,8 @@ public class WorkerContext {
     public static int sampleBatchListSize_LMF; // 训练集包含batch的数目
     public static int sampleBatchSize_LMF;  // 一个batch的大小
     public static int sampleListSize_LMF; // 训练集的样本个数
+    public static int sampleBatchListPrunedSize_LMF;
+    public static  int samplePrunedSize_LMF;
 
 
     /** 剪枝*/
@@ -111,6 +113,8 @@ public class WorkerContext {
 
         sampleListSize_LMF=3000; // 训练集的样本个数
         sampleBatchSize_LMF=3000;  // 一个batch的大小
+        samplePrunedSize_LMF=3000;
+        sampleBatchListPrunedSize_LMF=samplePrunedSize_LMF/sampleBatchSize_LMF;
         sampleBatchListSize_LMF=sampleListSize_LMF/sampleBatchSize_LMF; // 训练集包含batch的数目
 
         levelDBPathForWorker="data/leveldbForWorker/";

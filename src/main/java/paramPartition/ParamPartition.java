@@ -8,6 +8,7 @@ import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
 import context.WorkerContext;
 
+import dataStructure.SparseMatrix.Matrix;
 import dataStructure.partition.AFMatrix;
 import dataStructure.partition.Partition;
 import dataStructure.partition.PartitionList;
@@ -34,6 +35,7 @@ import static context.WorkerContext.samplePrunedSize;
 public class ParamPartition {
     // 这个是放在内存里的vAccessNum
     static Map<Long, Integer> vAccessNum = new HashMap<Long, Integer>();
+    static Map<String,Integer> vAccessNum_LMF=new HashMap<String, Integer>();
     static Set<Integer> batchSampledRecord = new HashSet<Integer>();
     static List<Long> catPrunedRecord = new ArrayList<Long>();
     static PartitionList bestPartitionList;
@@ -252,6 +254,120 @@ public class ParamPartition {
             }
         }
     }
+
+
+
+    public static Set[] partitionV_LMF() throws UnknownHostException,ClassNotFoundException,IOException {
+        Set[] vSet = SetUtil.initSetArray(Context.serverNum);
+        buildVAccessNum_LMF();
+        WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
+        catPrunedRecord = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).pushVANumAndGetCatPrunedRecord_ParamPartition(vAccessNum);
+
+        if(Context.isOptimizeDisk){
+            // 向server获取当前划分，并且不断更新
+            while (!isFinishedPartition){
+                // 获取当前的partition
+                bestPartitionList=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getBestPartition();
+
+                // 根据当前的partitionList，每个worker都去统计AFMatrix，并将AF矩阵push到master中
+                int[][] afMatrix=buildAFMatrix(bestPartitionList,batchSampledRecord,catPrunedRecord);
+
+                // 将afMatrix发送给server(master)，并在server(master)中合并
+                isFinishedPartition=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).sendAFMatrix(afMatrix);
+
+
+            }
+        }else {
+            // 初始化bestPartitionList
+            bestPartitionList=new PartitionList();
+
+            for(int i=0;i<catPrunedRecord.size();i++){
+                Partition partition=new Partition();
+                partition.partition.add(catPrunedRecord.get(i));
+                bestPartitionList.partitionList.add(partition);
+            }
+            if(WorkerContext.workerId==Context.masterId){
+                Context.psRouterClient.getPsWorkers().get(Context.masterId).setBestPartitionList(bestPartitionList);
+            }
+        }
+
+
+//        // 因为getBestPartition已经去掉了仅访问一次的partition，那么这里需要重新构建catPrunedRecord
+//        List<Long> catPrunedRecord_temp=new ArrayList<Long>();
+//        for(int i=0;i<bestPartitionList.partitionList.size();i++){
+//            for(int j=0;j<bestPartitionList.partitionList.get(i).partition.size();j++){
+//                catPrunedRecord_temp.add(bestPartitionList.partitionList.get(i).partition.get(j));
+//            }
+//        }
+//        catPrunedRecord=catPrunedRecord_temp;
+
+
+        // 现在master已经计算完成最佳参数划分bestPartitionLIst，这里表示为参数建立索引的划分
+        // 接下来需要考虑，这些划分块分配到哪些server中
+        // 应该为其建立一个长度为ServerNum的数组，用来存储划分到各个server中的网络通信时间
+        // 需要先统计每台机器对每个batch的访问次数
+        if(Context.isOptimizeNetTraffic){
+            commCost=buildCommCost(bestPartitionList,batchSampledRecord,catPrunedRecord);
+            // 将本地的commCost发送给master，然后master进行整合，计算出完整的commCost[partitionSize][serverNum]
+            // 这里给每个worker返回vSet[]，也就是每个server存储的参数的维度
+            vSet=WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).sendCommCost(commCost);
+        }else {
+            // 这里需要随机分配vSet，然后返回，但是同时要去设置一下server（master）的ls_partitionVSet
+            List<Set>[] ls_partitionVSet=new ArrayList[Context.serverNum];
+            for(int i=0;i<ls_partitionVSet.length;i++){
+                ls_partitionVSet[i]=new ArrayList<Set>();
+            }
+
+            // 分配每个server存储的参数
+            for(int i=0;i<bestPartitionList.partitionList.size();i++){
+                Set<Long> set=new HashSet<>();
+                for(int j=0;j<bestPartitionList.partitionList.get(i).partition.size();j++){
+                    set.add(bestPartitionList.partitionList.get(i).partition.get(j));
+                    vSet[i%Context.serverNum].add(bestPartitionList.partitionList.get(i).partition.get(j));
+                }
+                ls_partitionVSet[i%Context.serverNum].add(set);
+            }
+
+            // 开始发送ls_partitionVSet给master
+            if(WorkerContext.workerId==Context.masterId){
+                WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).setLSPartitionVSet(ls_partitionVSet);
+            }
+        }
+        System.out.println("111");
+
+        return vSet;
+    }
+
+
+    // batchLMF0这是batch的key
+    public static void buildVAccessNum_LMF(){
+        DB db = WorkerContext.kvStoreForLevelDB.getDb();
+        Set<String> set = new HashSet<String>();
+        int num_ContainsBatchPruned = WorkerContext.sampleBatchListSize_LMF / WorkerContext.sampleBatchListPrunedSize_LMF;
+
+        // 遍历数据并统计Ui访问的参数v的个数
+        for (int i = 0; i < WorkerContext.sampleBatchListPrunedSize; i++) {
+            try {
+                int m = RandomUtil.getIntRandomFromZeroToN(num_ContainsBatchPruned);
+                int index = i * (num_ContainsBatchPruned) + m;
+                Matrix matrix = (Matrix) TypeExchangeUtil.toObject(db.get(("batchLMF" + index).getBytes()));
+                batchSampledRecord.add(i * (num_ContainsBatchPruned) + m);
+
+                // 这里的set是采样后的每个sampleBatch
+                PartitionUtil.buildBatchVSet_LMF(set, matrix);
+
+                // 遍历set，然后更新db里的对V的访问次数，db里没有出现的维度，说明本地数据集对这个维度没有访问
+                // 由于经过了采样和剪枝，那么其实可以基于内存做
+                PartitionUtil.buildParamAccessNum_LMF(set, vAccessNum_LMF);
+                set.clear();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
 
 

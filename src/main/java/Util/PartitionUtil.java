@@ -2,6 +2,8 @@ package Util;
 
 import context.Context;
 import context.WorkerContext;
+import dataStructure.SparseMatrix.Matrix;
+import dataStructure.SparseMatrix.MatrixElement;
 import dataStructure.partition.Partition;
 import dataStructure.partition.PartitionList;
 import dataStructure.sample.Sample;
@@ -434,6 +436,8 @@ public class PartitionUtil {
 
 
 
+
+
     public static void buildParamAccessNum(Set<Long> set, Map<Long, Integer> vAccessNum) {
         for (long i : set) {
             if (vAccessNum.get(i) != null) {
@@ -467,5 +471,29 @@ public class PartitionUtil {
         return partitionList;
     }
 
+
+
+    public static void buildBatchVSet_LMF(Set<String> set, Matrix matrix) {
+        // set是一个string的集合，ui表示u的第i行参数，vj表示v的第j行参数
+        for (MatrixElement matrixElement : matrix.matrix) {
+            // 现在开始统计matrix中包含第几行第几列，也就是ui和vj
+            // u2表示矩阵u的第2行数据
+            set.add("u"+matrixElement.row);
+            set.add("v"+matrixElement.col);
+        }
+    }
+
+    public static void buildParamAccessNum_LMF(Set<String> set, Map<String, Integer> vAccessNum) {
+        // 计算每个参数的访问次数
+        for (String str : set) {
+            if (vAccessNum.get(str) != null) {
+                int num = vAccessNum.get(str);
+                num++;
+                vAccessNum.put(str, num);
+            } else {
+                vAccessNum.put(str, 1);
+            }
+        }
+    }
 
 }
