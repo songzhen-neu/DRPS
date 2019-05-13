@@ -1,5 +1,6 @@
 package Algotithm;
 
+import Util.CurrentTimeUtil;
 import Util.DataProcessUtil;
 import Util.MessageDataTransUtil;
 import Util.TypeExchangeUtil;
@@ -80,13 +81,18 @@ public class LogisticRegression {
                 logger.info("echo " + i + ":Sent request of Params to servers");
                 Future<SFKVListMessage> sfkvListMessageFuture[] = new Future[Context.workerNum];
 
-                long startTime = System.currentTimeMillis();
+//                long startTime = System.currentTimeMillis();
+
+
                 for (int l = 0; l < Context.serverNum; l++) {
 //                    if (setArray[l].size() != 0) {
                     logger.info("getNeededParams start");
+//                    CurrentTimeUtil.setStartTime();
                     sfkvListMessageFuture[l] = psRouterClient.get(l).getNeededParams(setArray[l],
                             WorkerContext.workerId,
                             WorkerContext.sampleBatchListSize * (i) + j + 1);
+//                    CurrentTimeUtil.setEndTime();
+//                    CurrentTimeUtil.showExecuteTime("获取一次参数的时间");
                     logger.info("getNeededParams end");
 //                    }
                 }
@@ -111,8 +117,8 @@ public class LogisticRegression {
                         paramsMap.put(key, paramsMapsTemp[l].get(key));
                     }
                 }
-                long endTime = System.currentTimeMillis();
-                totalTime += (endTime - startTime);
+//                long endTime = System.currentTimeMillis();
+//                totalTime += (endTime - startTime);
 
 
                 outputValueOfBatch = getActivateValue(batch, paramsMap);

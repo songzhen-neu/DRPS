@@ -79,10 +79,10 @@ public class Context {
     public static int maxDiskPartitionNum=100;
 
     /** 做对比实验，是否进行磁盘优化*/
-    public static boolean isOptimizeDisk=false;
+    public static boolean isOptimizeDisk=true;
 
     /** 做对比实验，是否进行网络*/
-    public static boolean isOptimizeNetTraffic=true;
+    public static boolean isOptimizeNetTraffic=false;
     // param用p表示，paramSet用s表示，feature用f表示
 
 
@@ -105,7 +105,8 @@ public class Context {
         setParamBaseSize_bytes=128;
         singleParamOfSetSize_bytes=22;
 
-        featureSize=10;
+//        featureSize=10;
+        featureSize=2;
 
 
         isDist=true;
@@ -128,11 +129,12 @@ public class Context {
         diskSeekTime=0.0029f;
         diskAccessTime=0.0000046f;
 //        netTrafficTime=0.0000095f;
-        netTrafficTime=0.0000095f;
+        netTrafficTime=0.00000095f;
         floatSize_bytes=79;
 
-        freqThresholdForSingleMachine=4;
-        freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
+//        freqThresholdForSingleMachine=0;
+//        freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
+	    freqThreshold=200;
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();

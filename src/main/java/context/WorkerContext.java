@@ -41,6 +41,11 @@ public class WorkerContext {
     public static int inMemSampleBatchNum;  // 内存中可以存下batch的最大数量
 
 
+    public static int sampleBatchListSize_LMF; // 训练集包含batch的数目
+    public static int sampleBatchSize_LMF;  // 一个batch的大小
+    public static int sampleListSize_LMF; // 训练集的样本个数
+
+
     /** 剪枝*/
 
     public static float pruneRate;
@@ -57,37 +62,56 @@ public class WorkerContext {
     public static KVStoreForLevelDB kvStoreForLevelDB=new KVStoreForLevelDB();
     public static String levelDBPathForWorker;
 
+    /** 用户数*/
+    public static int userNum_LMF;
+    /** 电影数*/
+    public static int movieNum_LMF;
+
 
 
 
 
     public static void init()throws IOException {
 
-        workerId=1;
+        workerId=0;
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
-        sampleListSize=1000;
+//        sampleListSize=50000;
+        sampleListSize=30;
 
 
 
-        samplePrunedSize=1000;
+//        samplePrunedSize=50000;
+        samplePrunedSize=30;
 
         pruneRate=0.001f;
 
+        // 下面是逻辑回归任务的数据集
+//        myDataPath="data/train"+workerId+".csv";
+        // 下面是线性回归任务
+//        myDataPath="data/linearRegressionData/Salary_Data"+workerId+".csv";
+        // 下面是低秩矩阵分解任务
+        myDataPath="data/LMFData/LMFData"+workerId+".csv";
 
-        myDataPath="data/train"+workerId+".csv";
 
-
-
-        catSize=12;
-
-        sampleBatchSize=100;
+//        catSize=12;
+        catSize=2;
+//        sampleBatchSize=50000;
+        sampleBatchSize=30;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;
+        userNum_LMF=943;
+        movieNum_LMF=2000;
+
+
 
         sampleBatchListSize=sampleListSize/sampleBatchSize;
         sampleBatchListPrunedSize=samplePrunedSize/sampleBatchSize;
+
+        sampleListSize_LMF=3000; // 训练集的样本个数
+        sampleBatchSize_LMF=3000;  // 一个batch的大小
+        sampleBatchListSize_LMF=sampleListSize_LMF/sampleBatchSize_LMF; // 训练集包含batch的数目
 
         levelDBPathForWorker="data/leveldbForWorker/";
         kvStoreForLevelDB.init(levelDBPathForWorker);
@@ -95,5 +119,6 @@ public class WorkerContext {
 
 //        psWorker=new PSWorker(Context.serverIp.get(Context.masterId),Context.serverPort.get(Context.masterId));
         psRouterClient=new PSRouterClient();
+
     }
 }

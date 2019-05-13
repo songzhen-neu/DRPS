@@ -4,6 +4,8 @@ package Util;
 import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
 import context.WorkerContext;
+import dataStructure.SparseMatrix.Matrix;
+import dataStructure.SparseMatrix.MatrixElement;
 import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
 import lombok.Synchronized;
@@ -13,10 +15,7 @@ import org.iq80.leveldb.util.SizeOf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.util.*;
 import java.util.concurrent.Future;
@@ -36,6 +35,7 @@ public class DataProcessUtil {
     public static void metaToDB(String fileName, int featureSize, int catSize) throws IOException,ClassNotFoundException {
         /**
          *@Description: 读取数据
+         * 针对第一维是ID，第二维是标签，之后先是cat，然后是feature
          *@Param: [fileName, featureSize, catSize]
          *@return: ParaStructure.Sample.SampleList
          *@Author: SongZhen
@@ -509,7 +509,7 @@ public class DataProcessUtil {
         }
 
         if (sampleBatch.sampleList != null) {
-            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + (countSampleListSize / WorkerContext.sampleBatchSize)).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
+            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + (countSampleListSize / WorkerContext.sampleBatchSize-1)).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
         }
 
 
@@ -582,5 +582,49 @@ public class DataProcessUtil {
             logger.info("l:"+l+",num:"+map.get(l));
         }
     }
+
+
+    public static void metaToDB_LMF(){
+        // 这里需要对矩阵分batch，然后存入到数据库中
+        DB db=WorkerContext.kvStoreForLevelDB.getDb();
+        int userNum=WorkerContext.userNum_LMF;
+        int movieNum=WorkerContext.movieNum_LMF;
+        int count=0;
+        int batchCount=0;
+        // 先读数据
+        try {
+            BufferedReader br=new BufferedReader(new FileReader(WorkerContext.myDataPath));
+            String row;
+            Matrix matrix=new Matrix();
+            while(( row=br.readLine()) !=null){
+                String[] data=row.split(",");
+                // 0 存储的是user，1存储的是movie，2存储的是电影评分
+                // 这里是要构建batch，可以直接构建成稀疏矩阵的形式（key-value）
+                MatrixElement matrixElement=new MatrixElement();
+                matrixElement.set(Integer.parseInt(data[0]),Integer.parseInt(data[1]),Float.parseFloat(data[3]));
+                matrix.matrix.add(matrixElement);
+                count++;
+                if(count%WorkerContext.sampleBatchSize_LMF==0){
+                    db.put(("batchLMF"+batchCount).getBytes(),TypeExchangeUtil.toByteArray(matrix));
+                    batchCount++;
+                    matrix.matrix.clear();
+                }
+            }
+
+            // 样本不刚好是batchsize的整数倍
+            if(matrix.matrix.size()!=0){
+                db.put(("batchLMF"+batchCount).getBytes(),TypeExchangeUtil.toByteArray(matrix));
+            }
+
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+
+
+
+    }
+
 
 }
