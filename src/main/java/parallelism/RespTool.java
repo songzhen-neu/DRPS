@@ -3,6 +3,7 @@ package parallelism;
 import context.ServerContext;
 import io.grpc.stub.StreamObserver;
 import net.SFKVListMessage;
+import net.SRListMessage;
 
 import java.io.IOException;
 import java.util.Set;
@@ -19,6 +20,15 @@ public class RespTool {
         try {
             SFKVListMessage sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
             resp.onNext(sfkvListMessage);
+            resp.onCompleted();
+        } catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void respParam_LMF(StreamObserver<SRListMessage> resp, Set<String> neededParamIndices) {
+        try {
+            SRListMessage srListMessage = ServerContext.kvStoreForLevelDB.getNeededParams_LMF(neededParamIndices);
+            resp.onNext(srListMessage);
             resp.onCompleted();
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();

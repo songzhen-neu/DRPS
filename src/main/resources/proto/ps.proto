@@ -35,7 +35,29 @@ service PS {
     rpc SetBestPartitionList(PartitionListMessage) returns(BMessage){};
     rpc SetLSPartitionVSet(LSetListArrayMessage) returns(BMessage){};
     rpc SendIListMessage(IListMessage) returns(BMessage){};
+    rpc SendSparseDimSizeAndInitParamsLMF(InitVMessageLMF) returns(BMessage){};
+    rpc GetNeededParamsLMF(PullRequestMessage) returns(SRListMessage){};
+    rpc SendGradMapLMF(SRListMessage) returns(SMessage){};
 
+}
+
+
+message SRListMessage{
+    // 这里sr是string和RowOrColParam
+    repeated SRMessage sr=1;
+}
+
+message SRMessage{
+    string index=1;
+    repeated float element=2;
+}
+
+
+message InitVMessageLMF{
+    int64 userNum=1;
+    int64 movieNum=2;
+    int32 r=3;
+    repeated ILListKVMessage vSet=4;
 }
 
 message CommCostMessage{
@@ -102,6 +124,7 @@ message InitVMessage{
     int64 l=1;
     repeated ILListKVMessage list=2;
 }
+
 
 message ILListKVMessage{
     int32 key=1;

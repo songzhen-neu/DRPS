@@ -473,25 +473,25 @@ public class PartitionUtil {
 
 
 
-    public static void buildBatchVSet_LMF(Set<String> set, Matrix matrix) {
-        // set是一个string的集合，ui表示u的第i行参数，vj表示v的第j行参数
+    public static void buildBatchVSet_LMF(Set<Long> set, Matrix matrix) {
+        // set是一个long型的集合，从0到n1+n2
         for (MatrixElement matrixElement : matrix.matrix) {
-            // 现在开始统计matrix中包含第几行第几列，也就是ui和vj
-            // u2表示矩阵u的第2行数据
-            set.add("u"+matrixElement.row);
-            set.add("v"+matrixElement.col);
+            // 行从0到userNum-1
+            set.add((long)matrixElement.row);
+            // 列从userNum到userNum+movieNum-1
+            set.add((long) WorkerContext.userNum_LMF+matrixElement.col);
         }
     }
 
-    public static void buildParamAccessNum_LMF(Set<String> set, Map<String, Integer> vAccessNum) {
+    public static void buildParamAccessNum_LMF(Set<Long> set, Map<Long, Integer> vAccessNum) {
         // 计算每个参数的访问次数
-        for (String str : set) {
-            if (vAccessNum.get(str) != null) {
-                int num = vAccessNum.get(str);
+        for (Long l : set) {
+            if (vAccessNum.get(l) != null) {
+                int num = vAccessNum.get(l);
                 num++;
-                vAccessNum.put(str, num);
+                vAccessNum.put(l, num);
             } else {
-                vAccessNum.put(str, 1);
+                vAccessNum.put(l, 1);
             }
         }
     }

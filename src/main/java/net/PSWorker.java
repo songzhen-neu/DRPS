@@ -157,9 +157,22 @@ public class PSWorker {
 
     }
 
+    public Future<SRListMessage> getNeededParamsLMF(Set<String> set,int workerId,int curIteration) {
+        PullRequestMessage pullRequestMessage = MessageDataTransUtil.Set_2_PullRequestMessage(set,workerId,curIteration);
+        Future<SRListMessage> sMatrixListMessageFuture = futureStub.getNeededParamsLMF(pullRequestMessage);
+        return sMatrixListMessageFuture;
+
+    }
+
     public void sendGradientMap(Map<String, Float> map) {
         SFKVListMessage sentMessage = MessageDataTransUtil.Map_2_SFKVListMessage(map);
         SMessage sMessage = blockingStub.sendSFMap(sentMessage);
+
+    }
+
+    public void sendGradientMapLMF(Map<String, Float[]> map) {
+        SRListMessage sentMessage = MessageDataTransUtil.Map_2_SRListMessage(map);
+        SMessage sMessage = blockingStub.sendGradMapLMF(sentMessage);
 
     }
 
@@ -309,6 +322,26 @@ public class PSWorker {
         blockingStub.setLSPartitionVSet(message);
 
     }
+
+
+    public void sentSparseDimSizeAndInitParams_LMF(long userNum_LMF,long movieNum_LMF,int r, Set<Long>[] vSet) {
+        InitVMessageLMF.Builder message = InitVMessageLMF.newBuilder();
+        message.setUserNum(userNum_LMF);
+        message.setMovieNum(movieNum_LMF);
+        message.setR(WorkerContext.r_LMF);
+        for (int i = 0; i < vSet.length; i++) {
+            ILListKVMessage.Builder kvMessage = ILListKVMessage.newBuilder();
+            kvMessage.setKey(i);
+            for (Long l : vSet[i]) {
+                kvMessage.addLlist(l);
+            }
+            message.addVSet(kvMessage.build());
+        }
+
+
+        blockingStub.sendSparseDimSizeAndInitParamsLMF(message.build());
+    }
+
 
 
 }

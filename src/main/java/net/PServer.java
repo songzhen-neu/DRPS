@@ -426,6 +426,20 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
+    public void sendGradMapLMF(SRListMessage req, StreamObserver<SMessage> resp) {
+        Map<String, Float[]> map = MessageDataTransUtil.SRListMessage_2_Map(req);
+        SMessage.Builder smessage = SMessage.newBuilder();
+
+        ServerContext.kvStoreForLevelDB.updateParamsLMF(map);
+        smessage.setStr("success");
+        // 同步异步不要写在push操作里，要写在pull操作里
+//        waitBarrier();
+
+        resp.onNext(smessage.build());
+        resp.onCompleted();
+    }
+
+    @Override
     @Synchronized
     public void sendCurIndexNum(LMessage req, StreamObserver<SMessage> resp) {
         ServerContext.kvStoreForLevelDB.setCurIndexOfSparseDim(new AtomicLong(req.getL()));
@@ -1441,6 +1455,98 @@ public class PServer implements net.PSGrpc.PS {
         */
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
+    }
+
+    @Override
+    public void sendSparseDimSizeAndInitParamsLMF(InitVMessageLMF req, StreamObserver<BMessage> resp) {
+        /**
+        *@Description: 为低秩矩阵分解专门设计的初始化参数的函数
+        *@Param: [req, resp]
+        *@return: void
+        *@Author: SongZhen
+        *@date: 下午2:25 19-5-14
+        */
+
+        // 这里面就包含了这个server要存的所有参数
+        List<Set> ls_params = ls_partitionedVSet[ServerContext.serverId];
+        // 把ls_partitionVset中元素数量是1的删除
+
+
+        // 显示ls_partitionVSet
+        DataProcessUtil.printLs_partitionedVset(ls_partitionedVSet);
+
+        // 开始利用sparseDimSize，采用取余的方式进行数据分配
+        // 把LList转换成Set
+        Set[] vSet = new Set[Context.serverNum];
+        for (int i = 0; i < vSet.length; i++) {
+            vSet[i] = new HashSet<Long>();
+        }
+
+        // 把list转换成Set[]
+        for (int i = 0; i < vSet.length; i++) {
+            for (long l : req.getVSet(i).getLlistList()) {
+                vSet[i].add(l);
+            }
+        }
+
+
+        try {
+            ServerContext.kvStoreForLevelDB.initParamsLMF(req.getUserNum(),req.getMovieNum(),req.getR(), vSet, ls_params);
+            BMessage.Builder booleanMessage = BMessage.newBuilder();
+            booleanMessage.setB(true);
+            resp.onNext(booleanMessage.build());
+            resp.onCompleted();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    @Override
+    public void getNeededParamsLMF(PullRequestMessage req, StreamObserver<SRListMessage> resp) {
+        // 获取需要访问的参数的key
+        Set<String> neededParamIndices = MessageDataTransUtil.ProtoStringList_2_Set(req.getNeededGradDimList());
+        int workerId = req.getWorkerId();
+        int iterationOfWi = req.getIteration();
+        SRListMessage sMatrixListMessage;
+        try {
+            switch (Context.parallelismControlModel) {
+                case BSP:
+                    waitBarrier();
+                    sMatrixListMessage = ServerContext.kvStoreForLevelDB.getNeededParams_LMF(neededParamIndices);
+                    resp.onNext(sMatrixListMessage);
+                    resp.onCompleted();
+                    break;
+                case AP:
+                    sMatrixListMessage = ServerContext.kvStoreForLevelDB.getNeededParams_LMF(neededParamIndices);
+                    resp.onNext(sMatrixListMessage);
+                    resp.onCompleted();
+                    break;
+                case SSP:
+                    SSP.init();
+                    SSP.isRespOrWaited_LMF(workerId, resp, neededParamIndices, iterationOfWi);
+                    break;
+                case SSP_S:
+                    SSP.init();
+                    SSP.isRespOrWaited_LMF(workerId, resp, neededParamIndices, iterationOfWi);
+                    break;
+                case WSP:
+                    // Worker-Selection Parallelism Control Model
+                    WSP.init();
+                    WSP.isRespOrWaited_LMF(workerId, resp, neededParamIndices, iterationOfWi);
+                    break;
+                default:
+                    System.out.println("run to default");
+                    break;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 

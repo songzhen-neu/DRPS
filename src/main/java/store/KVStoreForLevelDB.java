@@ -4,9 +4,11 @@ import Util.*;
 import context.Context;
 import context.ServerContext;
 import context.WorkerContext;
+import dataStructure.SparseMatrix.Matrix;
 import dataStructure.parallelismControlModel.IterationTimeTable;
 import dataStructure.parallelismControlModel.StrategyChoiceTable;
 import dataStructure.parameter.Param;
+import dataStructure.parameter.ParamLMF.RowOrColParam;
 import io.netty.util.internal.ConcurrentSet;
 import lombok.Data;
 import lombok.Synchronized;
@@ -427,6 +429,217 @@ public class KVStoreForLevelDB {
 
 
         }
+
+
+    }
+
+
+    public void initParamsLMF(Long userNum,Long movieNum,int r, Set<Long>[] vSet, List<Set> ls_params) throws IOException {
+
+        // 这是按照最初的取余进行分配的
+        // 对所有参数进行取余的分配，之后还会删掉存在别人server中的v
+        for (long i = 0; i < userNum+movieNum; i++) {
+            if (i % Context.serverNum == ServerContext.serverId) {
+                RowOrColParam rowOrColParam=new RowOrColParam(r);
+                for(int j=0;j<rowOrColParam.param.length;j++){
+                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
+                    rowOrColParam.index="p"+i;
+                }
+                db.put(("p" + i).getBytes(), TypeExchangeUtil.toByteArray(rowOrColParam));
+//                System.out.println("params:" + i);
+            }
+        }
+
+        // 还有一部分数据是划分到这台服务器上，但是既不在catParamSet，又不在取余的参数中，而在Vset中
+
+
+        // 这里不能简单的key，value分配了，因为已经进行磁盘划分，那么就有集合的形式了
+        for (Set set : ls_params) {
+            Set<RowOrColParam> paramSet = new HashSet<RowOrColParam>();
+            for (Object l : set) {
+                RowOrColParam rowOrColParam=new RowOrColParam(r);
+                for(int j=0;j<rowOrColParam.param.length;j++){
+                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
+                    rowOrColParam.index="p"+l;
+                }
+
+                paramSet.add(rowOrColParam);
+            }
+            db.put(("s" + ls_params.indexOf(set)).getBytes(), TypeExchangeUtil.toByteArray(paramSet));
+        }
+
+
+//        for(long i:vSet[ServerContext.serverId]){
+//            db.put(("catParam"+i).getBytes(),TypeExchangeUtil.toByteArray(RandomUtil.getRandomValue(-0.1f,0.1f)));
+//            System.out.println("params:"+i);
+//        }
+
+        // 再把放在别的server里vset删除
+        for (int i = 0; i < vSet.length; i++) {
+            if (i != ServerContext.serverId) {
+                for (long l : vSet[i]) {
+                    if (db.get(("p" + l).getBytes()) != null) {
+                        db.delete(("p" + l).getBytes());
+                    }
+                }
+            }
+        }
+
+
+
+
+        localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
+        for (Set<Long> set : localParitionVSet) {
+            for (Long l : set) {
+                catToCatSetMap.put("p" + l, "s" + localParitionVSet.indexOf(set));
+            }
+        }
+    }
+
+
+    @Synchronized
+    public SRListMessage getNeededParams_LMF(Set<String> set) throws ClassNotFoundException, IOException {
+        CurrentTimeUtil.setStartTime();
+        DB db = ServerContext.kvStoreForLevelDB.getDb();
+
+        // map仅存储需要的，而paramMap可能会包括一些catParamSet多余的参数
+        Map<String, Float[]> map = new HashMap<String, Float[]>();
+        List<Set> paramKeySetList = ls_partitionedVSet[ServerContext.serverId];
+        long index = -1;
+        // 存储需要访问的参数，也就是包含划分块的参数。catParamSet和catParam
+        Set<String> needParam = new HashSet<String>();
+        // 将需要用到的参数取出来，形成一个map
+        Map<String, Float[]> paramMap = new HashMap<String, Float[]>();
+
+        // 先转化需要取出来哪些参数
+        needParam = getNeedPartitionParam(set);
+
+
+        // 构建参数map
+
+
+        CurrentTimeUtil.setStartTime();
+        long startTime = 0;
+        long endTime = 0;
+        startTime=System.currentTimeMillis();
+        for (String str : needParam) {
+            if (str.indexOf("s") == -1) {
+                if (db.get(str.getBytes()) == null) {
+                    logger.info("nullstr:" + str);
+                }
+                RowOrColParam p = (RowOrColParam) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+
+                paramMap.put(p.index,p.param);
+            } else {
+                Set<RowOrColParam> temp_catParamSet =  (Set<RowOrColParam>) TypeExchangeUtil.toObject(db.get(str.getBytes()));
+                for (RowOrColParam param : temp_catParamSet) {
+                    paramMap.put(param.index, param.param);
+                }
+            }
+        }
+        endTime=System.currentTimeMillis();
+        totleTimeOfgetParams += endTime - startTime;
+        System.out.println(totleTimeOfgetParams);
+
+
+        for (String key : set) {
+            map.put(key, paramMap.get(key));
+        }
+
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("从map中获取维度的时间");
+        return MessageDataTransUtil.Map_2_SRListMessage(map);
+    }
+
+
+
+    @Synchronized
+    public void updateParamsLMF(Map<String, Float[]> map) {
+
+        // 需要在内存中建一个map是从catParam到catSetParam的映射
+
+        Set<String> needParam = getNeedPartitionParam(map.keySet());
+
+
+        List<Set> localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
+        // 先将需要用到的参数读取到内存中,然后更新
+        // 要更新的就三种参数，featParam在内存中好更新
+        // 还剩catParam和catParamSet，那就建两个数据结构
+
+        // 存储catParam
+        Map<String, Float[]> catParamMap = new HashMap<String, Float[]>();
+        Map<String, Set<RowOrColParam>> catParamSetMap = new HashMap<String, Set<RowOrColParam>>();
+        Map<String, Float[]> allCatParamMap = new HashMap<String, Float[]>();
+        Map<String, Set<RowOrColParam>> updateCatParamSetMap = new HashMap<String, Set<RowOrColParam>>();
+        Map<String, Float[]> updateCatParamMap = new HashMap<String, Float[]>();
+
+
+        // allCatParamMap是将set分开后，包含所有参数的（需要更新的）
+        for (String index : needParam) {
+//                System.out.println(index);
+            try {
+                 if (index.contains("s")) {
+                    if (!catParamSetMap.keySet().contains(index)) {
+                        Set<RowOrColParam> paramSetTemp = (Set<RowOrColParam>) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+                        catParamSetMap.put(index, paramSetTemp);
+                        for (RowOrColParam param : paramSetTemp) {
+                            allCatParamMap.put(param.index, param.param);
+                        }
+                    }
+                } else {
+                     RowOrColParam param = (RowOrColParam) TypeExchangeUtil.toObject(db.get(index.getBytes()));
+                     catParamMap.put(index, param.param);
+                     allCatParamMap.put(index, param.param);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+
+
+        // 构造新的catParamSet以及catParam
+        for (String index : allCatParamMap.keySet()) {
+            if (catToCatSetMap.containsKey(index)) {
+                String index_catParamSet = catToCatSetMap.get(index);
+                Set<RowOrColParam> paramSet = updateCatParamSetMap.get(index_catParamSet);
+                RowOrColParam param = new RowOrColParam(index, allCatParamMap.get(index));
+                if (paramSet != null) {
+                    paramSet.add(param);
+                } else {
+                    paramSet = new HashSet<RowOrColParam>();
+                    paramSet.add(param);
+                    updateCatParamSetMap.put(index_catParamSet, paramSet);
+                }
+            } else {
+                updateCatParamMap.put(index, allCatParamMap.get(index));
+            }
+        }
+
+
+
+
+        // 是把更新后的数据放到updateCatParamMap
+
+        try {
+            for (String str : updateCatParamMap.keySet()) {
+                db.delete(str.getBytes());
+                RowOrColParam param = new RowOrColParam(str, updateCatParamMap.get(str));
+                db.put(str.getBytes(), TypeExchangeUtil.toByteArray(param));
+            }
+
+            for (String str : updateCatParamSetMap.keySet()) {
+                db.delete(str.getBytes());
+                db.put(str.getBytes(), TypeExchangeUtil.toByteArray(updateCatParamSetMap.get(str)));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
 
     }

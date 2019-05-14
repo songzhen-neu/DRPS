@@ -3,6 +3,8 @@ package Util;
 import com.google.protobuf.ProtocolStringList;
 import context.Context;
 import context.WorkerContext;
+import dataStructure.SparseMatrix.MatrixElement;
+import dataStructure.parameter.ParamLMF.RowOrColParam;
 import dataStructure.partition.Partition;
 import dataStructure.partition.PartitionList;
 import net.*;
@@ -116,6 +118,29 @@ public class MessageDataTransUtil {
         }
 
         return listMessage.build();
+    }
+
+    public static SRListMessage Map_2_SRListMessage(Map<String,Float[]> map){
+        /**
+         *@Description: <string,long>类型的messageList转化为map
+         *@Param: [slkvListMessage]
+         *@return: java.util.Map<java.lang.String,java.lang.Long>
+         *@Author: SongZhen
+         *@date: 下午9:45 18-12-19
+         */
+        // 其实不是matrix，应该是rowOrColMessage
+        SRListMessage.Builder message=SRListMessage.newBuilder();
+        for(String i:map.keySet()){
+            SRMessage.Builder sr=SRMessage.newBuilder();
+            sr.setIndex(i);
+            for(int j=0;j<map.get(i).length;j++){
+                sr.addElement(map.get(i)[j]);
+            }
+
+            message.addSr(sr);
+        }
+
+        return message.build();
     }
 
 //    public static Set<String> SListMessage_2_Set(SListMessage req){
@@ -407,4 +432,24 @@ public class MessageDataTransUtil {
 
         return message.build();
     }
+
+    public static Map<String,Float[]> SRListMessage_2_Map(SRListMessage message){
+        /**
+         *@Description: <string,long>类型的messageList转化为map
+         *@Param: [slkvListMessage]
+         *@return: java.util.Map<java.lang.String,java.lang.Long>
+         *@Author: SongZhen
+         *@date: 下午9:45 18-12-19
+         */
+        Map<String,Float[]> map=new HashMap<String, Float[]>();
+        for(int i=0;i<message.getSrCount();i++){
+            Float[] row=new Float[message.getSr(i).getElementCount()];
+            for(int j=0;j<row.length;j++){
+                row[j]=message.getSr(i).getElement(j);
+            }
+            map.put(message.getSr(i).getIndex(),row);
+        }
+        return map;
+    }
+
 }

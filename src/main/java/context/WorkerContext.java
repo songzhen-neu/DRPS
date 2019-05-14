@@ -65,9 +65,11 @@ public class WorkerContext {
     public static String levelDBPathForWorker;
 
     /** 用户数*/
-    public static int userNum_LMF;
+    public static long userNum_LMF;
     /** 电影数*/
-    public static int movieNum_LMF;
+    public static long movieNum_LMF;
+    /** 矩阵分解的隐含量*/
+    public static int r_LMF;
 
 
 
@@ -84,7 +86,7 @@ public class WorkerContext {
 
 
 //        samplePrunedSize=50000;
-        samplePrunedSize=30;
+        samplePrunedSize=5;
 
         pruneRate=0.001f;
 
@@ -111,9 +113,10 @@ public class WorkerContext {
         sampleBatchListSize=sampleListSize/sampleBatchSize;
         sampleBatchListPrunedSize=samplePrunedSize/sampleBatchSize;
 
-        sampleListSize_LMF=3000; // 训练集的样本个数
+        sampleListSize_LMF=30000; // 训练集的样本个数
+        samplePrunedSize_LMF=30000;
         sampleBatchSize_LMF=3000;  // 一个batch的大小
-        samplePrunedSize_LMF=3000;
+        r_LMF=10;
         sampleBatchListPrunedSize_LMF=samplePrunedSize_LMF/sampleBatchSize_LMF;
         sampleBatchListSize_LMF=sampleListSize_LMF/sampleBatchSize_LMF; // 训练集包含batch的数目
 

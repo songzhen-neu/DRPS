@@ -82,7 +82,7 @@ public class Context {
     public static boolean isOptimizeDisk=true;
 
     /** 做对比实验，是否进行网络*/
-    public static boolean isOptimizeNetTraffic=false;
+    public static boolean isOptimizeNetTraffic=true;
     // param用p表示，paramSet用s表示，feature用f表示
 
 
@@ -93,7 +93,7 @@ public class Context {
             return;
         }
 
-        serverIp.put(0,"172.28.229.109");
+        serverIp.put(0,"202.199.13.120");
         serverIp.put(1,"202.199.13.120");
         serverIp.put(2,"202.199.13.120");
         serverPort.put(0,9010);
@@ -134,7 +134,7 @@ public class Context {
 
 //        freqThresholdForSingleMachine=0;
 //        freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
-	    freqThreshold=200;
+	    freqThreshold=8;
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();

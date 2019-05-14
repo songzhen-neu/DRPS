@@ -587,8 +587,6 @@ public class DataProcessUtil {
     public static void metaToDB_LMF(){
         // 这里需要对矩阵分batch，然后存入到数据库中
         DB db=WorkerContext.kvStoreForLevelDB.getDb();
-        int userNum=WorkerContext.userNum_LMF;
-        int movieNum=WorkerContext.movieNum_LMF;
         int count=0;
         int batchCount=0;
         // 先读数据
@@ -601,7 +599,7 @@ public class DataProcessUtil {
                 // 0 存储的是user，1存储的是movie，2存储的是电影评分
                 // 这里是要构建batch，可以直接构建成稀疏矩阵的形式（key-value）
                 MatrixElement matrixElement=new MatrixElement();
-                matrixElement.set(Integer.parseInt(data[0]),Integer.parseInt(data[1]),Float.parseFloat(data[3]));
+                matrixElement.set(Integer.parseInt(data[0]),Integer.parseInt(data[1]),Float.parseFloat(data[2]));
                 matrix.matrix.add(matrixElement);
                 count++;
                 if(count%WorkerContext.sampleBatchSize_LMF==0){
