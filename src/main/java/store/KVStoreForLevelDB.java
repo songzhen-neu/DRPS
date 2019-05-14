@@ -596,14 +596,21 @@ public class KVStoreForLevelDB {
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-
         }
 
 
-
+        for (String index : map.keySet()) {
+            Float[] f=new Float[map.get(index).length];
+                for(int i=0;i<map.get(index).length;i++){
+                     f[i] = allCatParamMap.get(index)[i] - map.get(index)[i];
+                }
+                allCatParamMap.remove(index);
+                allCatParamMap.put(index, f);
+        }
 
         // 构造新的catParamSet以及catParam
         for (String index : allCatParamMap.keySet()) {
+            //
             if (catToCatSetMap.containsKey(index)) {
                 String index_catParamSet = catToCatSetMap.get(index);
                 Set<RowOrColParam> paramSet = updateCatParamSetMap.get(index_catParamSet);

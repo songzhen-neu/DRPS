@@ -140,7 +140,7 @@ public class LMF {
 //                // 将gradient发送给server，然后得到新的params
                 WorkerContext.psRouterClient.sendGradientMapLMF(gradientMap);
 //
-                loss = calculateLoss(errorOfBatch) / WorkerContext.sampleBatchSize_LMF;
+                loss = calculateLoss(errorOfBatch) ;
 //
                 System.out.println("error echo:" + i + ",batch:" + j + ",loss:" + loss);
 //
@@ -224,7 +224,7 @@ public class LMF {
 
         for(String str:map.keySet()){
             for(int i=0;i<rank;i++){
-                map.get(str)[i]=(1f-learningRate*lambda)*paramsMap.get(str)[i]+learningRate*map.get(str)[i];
+                map.get(str)[i]=(learningRate*lambda)*paramsMap.get(str)[i]-learningRate*map.get(str)[i];
             }
         }
 
