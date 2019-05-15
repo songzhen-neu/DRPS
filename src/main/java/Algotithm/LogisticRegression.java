@@ -1,9 +1,6 @@
 package Algotithm;
 
-import Util.CurrentTimeUtil;
-import Util.DataProcessUtil;
-import Util.MessageDataTransUtil;
-import Util.TypeExchangeUtil;
+import Util.*;
 import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
 import context.WorkerContext;
@@ -96,27 +93,7 @@ public class LogisticRegression {
                     logger.info("getNeededParams end");
 //                    }
                 }
-                for (int l = 0; l < Context.serverNum; l++) {
-                    logger.info(l + "barrier start");
-                    while (!sfkvListMessageFuture[l].isDone()) {
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    logger.info(l + "barrier end");
-                    try {
-                        paramsMapsTemp[l] = MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessageFuture[l].get());
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
-
-                    for (String key : paramsMapsTemp[l].keySet()) {
-                        // 把远程请求到的参数放到paramsMap里，这里内存是可以存得下一个batch的参数的
-                        paramsMap.put(key, paramsMapsTemp[l].get(key));
-                    }
-                }
+                AlgorithmUtil.getParamsMap(paramsMapsTemp, paramsMap, sfkvListMessageFuture, logger);
 //                long endTime = System.currentTimeMillis();
 //                totalTime += (endTime - startTime);
 

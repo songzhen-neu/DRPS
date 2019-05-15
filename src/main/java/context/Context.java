@@ -106,8 +106,9 @@ public class Context {
         singleParamOfSetSize_bytes=22;
 
 //        featureSize=10;
+//        featureSize=2;
+        // svm的数值属性个数
         featureSize=2;
-
 
         isDist=true;
 
@@ -134,7 +135,7 @@ public class Context {
 
 //        freqThresholdForSingleMachine=0;
 //        freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
-	    freqThreshold=8;
+	    freqThreshold=5;
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();

@@ -1,5 +1,6 @@
 package Algotithm;
 
+import Util.AlgorithmUtil;
 import Util.MessageDataTransUtil;
 import Util.TypeExchangeUtil;
 import context.Context;
@@ -89,28 +90,7 @@ public class LinearRegression {
                     logger.info("getNeededParams end");
 //                    }
                 }
-                for (int l = 0; l < Context.serverNum; l++) {
-                    logger.info(l + "barrier start");
-                    while (!sfkvListMessageFuture[l].isDone()) {
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    logger.info(l + "barrier end");
-                    try {
-                        paramsMapsTemp[l] = MessageDataTransUtil.SFKVListMessage_2_Map(sfkvListMessageFuture[l].get());
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
-
-                    for (String key : paramsMapsTemp[l].keySet()) {
-                        // 把远程请求到的参数放到paramsMap里，这里内存是可以存得下一个batch的参数的
-                        paramsMap.put(key, paramsMapsTemp[l].get(key));
-                    }
-                }
-
+                AlgorithmUtil.getParamsMap(paramsMapsTemp, paramsMap, sfkvListMessageFuture, logger);
 
 
                 outputValueOfBatch = getOutputValue(batch, paramsMap);
@@ -188,26 +168,7 @@ public class LinearRegression {
 
     public float[] getOutputValue(SampleList batch, Map<String, Float> paramsMap) {
         float value[] = new float[batch.sampleList.size()];
-        for (int l = 0; l < value.length; l++) {
-            Sample sample = batch.sampleList.get(l);
-            // 计算feature的value
-            for (int i = 0; i < sample.feature.length; i++) {
-                if (sample.feature[i] != -1) {
-                    value[l] += sample.feature[i] * paramsMap.get("f" + i);
-                }
-            }
-            for (int i = 0; i < sample.cat.length; i++) {
-                if (sample.cat[i] != -1) {
-//                    System.out.println(sample.cat[i]);
-//                    if(paramsMap.get("catParam" + sample.cat[i])==null){
-//                        System.out.println("hakong");
-//                    }
-                    value[l] += paramsMap.get("p" + sample.cat[i]);
-                }
-            }
-
-
-        }
+        AlgorithmUtil.getActivateValue(batch, paramsMap, value);
         return value;
 
     }

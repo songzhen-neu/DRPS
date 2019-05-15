@@ -81,12 +81,12 @@ public class WorkerContext {
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
 //        sampleListSize=50000;
-        sampleListSize=30;
+        sampleListSize=450;
 
 
 
 //        samplePrunedSize=50000;
-        samplePrunedSize=5;
+        samplePrunedSize=450;
 
         pruneRate=0.001f;
 
@@ -95,13 +95,17 @@ public class WorkerContext {
         // 下面是线性回归任务
 //        myDataPath="data/linearRegressionData/Salary_Data"+workerId+".csv";
         // 下面是低秩矩阵分解任务
-        myDataPath="data/LMFData/LMFData"+workerId+".csv";
-
+//        myDataPath="data/LMFData/LMFData"+workerId+".csv";
+        // 下面是SVM的数据集
+        myDataPath="data/SVMData/Salary_Data"+workerId+".csv";
 
 //        catSize=12;
-        catSize=2;
+//        catSize=2;
+        // 下面是SVM的catSize
+        catSize=3;
+
 //        sampleBatchSize=50000;
-        sampleBatchSize=30;
+        sampleBatchSize=450;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;
