@@ -6,6 +6,7 @@ import context.ServerContext;
 import context.WorkerContext;
 
 import javafx.concurrent.Worker;
+import net.BMessage;
 import net.LSetListArrayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,7 @@ public class PsForModelPartitionWorker {
             Context.sparseDimSize = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getSparseDimSize();
         }
 
-        logger.info("sparseDimSize:" + Context.sparseDimSize);
+        logger.info("稀疏数据维度:" + Context.sparseDimSize);
 
 
         // 规范化连续feature属性
@@ -57,9 +58,12 @@ public class PsForModelPartitionWorker {
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
-//        Set[] vSet = PartitionUtil.partitionV();
+        CurrentTimeUtil.setStartTime();
         Set[] vSet=ParamPartition.partitionV();
-//        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("建立索引的时间");
+
+
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         if (WorkerContext.workerId != Context.masterId) {
             LSetListArrayMessage ls_partitionedVSet = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getLsPartitionedVSet();
@@ -88,7 +92,9 @@ public class PsForModelPartitionWorker {
         CurrentTimeUtil.setStartTime();
         logisticRegression.train();
         CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("train_Time");
+        CurrentTimeUtil.showExecuteTime("训练时间为");
+
+        WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());
 
 
         WorkerContext.psRouterClient.shutdownAll();

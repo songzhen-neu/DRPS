@@ -123,8 +123,13 @@ public class ParamPartition {
 
         }
 
+        int prunedNum=0;
+        for(int i=0;i<vSet.length;i++){
+            prunedNum+=vSet[i].size();
+        }
+        System.out.println("剪枝的维度个数为："+prunedNum);
 
-        System.out.println("111");
+
 
         return vSet;
     }

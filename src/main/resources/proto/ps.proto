@@ -38,6 +38,7 @@ service PS {
     rpc SendSparseDimSizeAndInitParamsLMF(InitVMessageLMF) returns(BMessage){};
     rpc GetNeededParamsLMF(PullRequestMessage) returns(SRListMessage){};
     rpc SendGradMapLMF(SRListMessage) returns(SMessage){};
+    rpc ShowSomeStatisticAfterTrain(BMessage) returns(BMessage){};
 
 }
 

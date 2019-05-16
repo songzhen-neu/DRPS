@@ -53,6 +53,7 @@ public class KVStoreForLevelDB {
     public static List<Set> localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
     public static Map<String, String> catToCatSetMap = new HashMap<String, String>();
     public static Logger logger = LoggerFactory.getLogger(KVStoreForLevelDB.class);
+    public static AtomicInteger diskIOCount=new AtomicInteger(0);
 
 //    public static ConcurrentMap<Long,String> catToCatSetMap;
 
@@ -167,8 +168,10 @@ public class KVStoreForLevelDB {
         // 将需要用到的参数取出来，形成一个map
         Map<String, Float> paramMap = new HashMap<String, Float>();
 
+
         // 先转化需要取出来哪些参数
         needParam = getNeedPartitionParam(set);
+        diskIOCount.set(diskIOCount.intValue()+needParam.size());
 
 
         // 构建参数map

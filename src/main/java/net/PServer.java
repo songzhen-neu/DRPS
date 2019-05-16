@@ -1505,6 +1505,7 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
+    public static AtomicInteger networkCount=new AtomicInteger(0);
     @Override
     public void getNeededParamsLMF(PullRequestMessage req, StreamObserver<SRListMessage> resp) {
         // 获取需要访问的参数的key
@@ -1521,6 +1522,9 @@ public class PServer implements net.PSGrpc.PS {
                     resp.onCompleted();
                     break;
                 case AP:
+                    if(req.getWorkerId()!=ServerContext.serverId){
+                        networkCount.set(networkCount.intValue()+neededParamIndices.size());
+                    }
                     sMatrixListMessage = ServerContext.kvStoreForLevelDB.getNeededParams_LMF(neededParamIndices);
                     resp.onNext(sMatrixListMessage);
                     resp.onCompleted();
@@ -1547,6 +1551,13 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public void showSomeStatisticAfterTrain(BMessage req,StreamObserver<BMessage> resp){
+        logger.info("磁盘IO次数："+ServerContext.kvStoreForLevelDB.diskIOCount);
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
     }
 
 
