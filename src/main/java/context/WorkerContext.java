@@ -1,5 +1,7 @@
 package context;
 
+import dataStructure.Algorithm.GeneralAlgorithmSetting;
+import dataStructure.Algorithm.LMFSetting;
 import net.PSRouterClient;
 import net.PSWorker;
 import store.KVStoreForLevelDB;
@@ -71,6 +73,12 @@ public class WorkerContext {
     /** 矩阵分解的隐含量*/
     public static int r_LMF;
 
+    public static GeneralAlgorithmSetting LiR;
+    public static GeneralAlgorithmSetting LoR;
+    public static GeneralAlgorithmSetting SVM;
+    public static LMFSetting LMF;
+    public static GeneralAlgorithmSetting generalSetting;
+
 
 
 
@@ -80,13 +88,24 @@ public class WorkerContext {
         workerId=0;
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
+        LiR=new GeneralAlgorithmSetting(450,450,50,
+                "data/LiRData/housing"+workerId+".csv",3,4);
+        LoR=new GeneralAlgorithmSetting(450,450,50,
+                "data/LoRData/train"+workerId+".csv",3,4);
+        SVM=new GeneralAlgorithmSetting(450,450,50,
+                "data/SVMData/dataset"+workerId+".csv",3,4);
+        LMF=new LMFSetting(450,450,50,10,"data/LMFData/Goodbooks"+workerId+".csv");
+
+        generalSetting=SVM;
+        // 其实有了上面的数据结构，下述的参数都可以省略，但是为了尽量少的改后面的程序，这里不去掉这些冗余了
+
 //        sampleListSize=50000;
-        sampleListSize=450;
+        sampleListSize=generalSetting.sampleListSize;
 
 
 
 //        samplePrunedSize=50000;
-        samplePrunedSize=450;
+        samplePrunedSize=generalSetting.samplePrunedSize;
 
         pruneRate=0.001f;
 
@@ -97,15 +116,15 @@ public class WorkerContext {
         // 下面是低秩矩阵分解任务
 //        myDataPath="data/LMFData/LMFData"+workerId+".csv";
         // 下面是SVM的数据集
-        myDataPath="data/SVMData/Salary_Data"+workerId+".csv";
+        myDataPath=generalSetting.myDataPath;
 
 //        catSize=12;
 //        catSize=2;
         // 下面是SVM的catSize
-        catSize=3;
+        catSize=generalSetting.catSize;
 
 //        sampleBatchSize=50000;
-        sampleBatchSize=450;
+        sampleBatchSize=generalSetting.sampleBatchSize;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;
@@ -114,15 +133,15 @@ public class WorkerContext {
 
 
 
-        sampleBatchListSize=sampleListSize/sampleBatchSize;
-        sampleBatchListPrunedSize=samplePrunedSize/sampleBatchSize;
+        sampleBatchListSize=generalSetting.sampleBatchListSize;
+        sampleBatchListPrunedSize=generalSetting.sampleBatchListPrunedSize;
 
-        sampleListSize_LMF=30000; // 训练集的样本个数
-        samplePrunedSize_LMF=30000;
-        sampleBatchSize_LMF=3000;  // 一个batch的大小
+        sampleListSize_LMF=LMF.sampleListSize; // 训练集的样本个数
+        samplePrunedSize_LMF=LMF.samplePrunedSize;
+        sampleBatchSize_LMF=LMF.sampleBatchSize;  // 一个batch的大小
         r_LMF=10;
-        sampleBatchListPrunedSize_LMF=samplePrunedSize_LMF/sampleBatchSize_LMF;
-        sampleBatchListSize_LMF=sampleListSize_LMF/sampleBatchSize_LMF; // 训练集包含batch的数目
+        sampleBatchListPrunedSize_LMF=LMF.sampleBatchListPrunedSize;
+        sampleBatchListSize_LMF=LMF.sampleBatchListSize; // 训练集包含batch的数目
 
         levelDBPathForWorker="data/leveldbForWorker/";
         kvStoreForLevelDB.init(levelDBPathForWorker);
