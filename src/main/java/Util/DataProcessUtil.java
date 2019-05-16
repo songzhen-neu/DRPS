@@ -591,15 +591,18 @@ public class DataProcessUtil {
         int batchCount=0;
         // 先读数据
         try {
-            BufferedReader br=new BufferedReader(new FileReader(WorkerContext.myDataPath));
+            BufferedReader br=new BufferedReader(new FileReader(WorkerContext.myDataPath_LMF));
             String row;
             Matrix matrix=new Matrix();
             while(( row=br.readLine()) !=null){
                 String[] data=row.split(",");
                 // 0 存储的是user，1存储的是movie，2存储的是电影评分
                 // 这里是要构建batch，可以直接构建成稀疏矩阵的形式（key-value）
+                if(data[0].equals("id")||data[2].length()>1){
+                    continue;
+                }
                 MatrixElement matrixElement=new MatrixElement();
-                matrixElement.set(Integer.parseInt(data[0]),Integer.parseInt(data[1]),Float.parseFloat(data[2]));
+                matrixElement.set((Integer.parseInt(data[0])-1),(Integer.parseInt(data[1])-1),Float.parseFloat(data[2]));
                 matrix.matrix.add(matrixElement);
                 count++;
                 if(count%WorkerContext.sampleBatchSize_LMF==0){

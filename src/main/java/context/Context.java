@@ -1,5 +1,6 @@
 package context;
 
+import dataStructure.Algorithm.GeneralContextSetting;
 import net.PSRouterClient;
 import parallelism.SSP;
 import parallelism.WSP;
@@ -85,14 +86,17 @@ public class Context {
     public static boolean isOptimizeNetTraffic=true;
     // param用p表示，paramSet用s表示，feature用f表示
 
-
-
+    public static GeneralContextSetting svm=new GeneralContextSetting(10,3,3,10, ParallelismControlModel.AP);
+    public static GeneralContextSetting LoR=new GeneralContextSetting(10,3,3,10, ParallelismControlModel.AP);
+    public static GeneralContextSetting LiR=new GeneralContextSetting(0,3,3,10, ParallelismControlModel.AP);
+    public static GeneralContextSetting LMF=new GeneralContextSetting(1,1,1,300, ParallelismControlModel.AP);
 
     public static void init() throws IOException {
         if(inited==true){
             return;
         }
 
+        GeneralContextSetting generalContextSetting=LMF;
         serverIp.put(0,"202.199.13.120");
         serverIp.put(1,"202.199.13.120");
         serverIp.put(2,"202.199.13.120");
@@ -107,20 +111,17 @@ public class Context {
 
 //        featureSize=10;
 //        featureSize=2;
-        // svm的数值属性个数
-        featureSize=2;
+        featureSize=generalContextSetting.featureSize;
 
         isDist=true;
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=1;
-        serverNum=1;
+        workerNum=generalContextSetting.workerNum;
+        serverNum=generalContextSetting.serverNum;
         dataPartitionNum=workerNum;
-        partitionedDataSize=1000000;
         masterId=0;
 
-        dataPath="data/train.csv/";
 
 
         maxMessageSize=Integer.MAX_VALUE;
@@ -135,11 +136,11 @@ public class Context {
 
 //        freqThresholdForSingleMachine=0;
 //        freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
-	    freqThreshold=5;
+	    freqThreshold=generalContextSetting.freqThreshold;
         usePruneRate=true;
 
         psRouterClient=new PSRouterClient();
-        parallelismControlModel=ParallelismControlModel.AP;
+        parallelismControlModel=generalContextSetting.parallelismControlModel;
         switch (parallelismControlModel){
             case SSP:SSP.init();break;
             case SSP_S:SSP.init();break;

@@ -47,7 +47,7 @@ public class WorkerForLMF {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LMF lmf = new LMF(0.1f,0.1f,10,WorkerContext.r_LMF,WorkerContext.userNum_LMF,WorkerContext.movieNum_LMF);
+        LMF lmf = new LMF(0.1f,0.005f,100,WorkerContext.r_LMF,WorkerContext.userNum_LMF,WorkerContext.movieNum_LMF);
         MemoryUtil.releaseMemory();
 
         CurrentTimeUtil.setStartTime();

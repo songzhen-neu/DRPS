@@ -349,6 +349,7 @@ public class ParamPartition {
             try {
                 int m = RandomUtil.getIntRandomFromZeroToN(num_ContainsBatchPruned);
                 int index = i * (num_ContainsBatchPruned) + m;
+                System.out.println(index);
                 Matrix matrix = (Matrix) TypeExchangeUtil.toObject(db.get(("batchLMF" + index).getBytes()));
                 batchSampledRecord.add(i * (num_ContainsBatchPruned) + m);
 

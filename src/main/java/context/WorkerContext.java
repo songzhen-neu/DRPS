@@ -30,6 +30,7 @@ public class WorkerContext {
 
     /** 路径*/
     public static String myDataPath; // 本地训练用到的数据集（划分后）
+    public static String myDataPath_LMF;
 
     /** cat是否在feature前面*/
     public static boolean isCatForwardFeature;
@@ -89,14 +90,17 @@ public class WorkerContext {
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
         LiR=new GeneralAlgorithmSetting(450,450,50,
-                "data/LiRData/housing"+workerId+".csv",3,4);
+                "data/LiRData/housing"+workerId+".csv",9,0);
         LoR=new GeneralAlgorithmSetting(450,450,50,
                 "data/LoRData/train"+workerId+".csv",3,4);
         SVM=new GeneralAlgorithmSetting(450,450,50,
                 "data/SVMData/dataset"+workerId+".csv",3,4);
-        LMF=new LMFSetting(450,450,50,10,"data/LMFData/Goodbooks"+workerId+".csv");
 
-        generalSetting=SVM;
+        // 用户1～53424，电影1~10000，样本数量5976479
+        LMF=new LMFSetting(19000,19000,19000,10,
+                53424,10000,"data/LMFData/Goodbooks"+workerId+".csv");
+
+        generalSetting=LoR;
         // 其实有了上面的数据结构，下述的参数都可以省略，但是为了尽量少的改后面的程序，这里不去掉这些冗余了
 
 //        sampleListSize=50000;
@@ -106,7 +110,7 @@ public class WorkerContext {
 
 //        samplePrunedSize=50000;
         samplePrunedSize=generalSetting.samplePrunedSize;
-
+        samplePrunedSize_LMF=LMF.samplePrunedSize;
         pruneRate=0.001f;
 
         // 下面是逻辑回归任务的数据集
@@ -117,6 +121,7 @@ public class WorkerContext {
 //        myDataPath="data/LMFData/LMFData"+workerId+".csv";
         // 下面是SVM的数据集
         myDataPath=generalSetting.myDataPath;
+        myDataPath_LMF=LMF.dataPath;
 
 //        catSize=12;
 //        catSize=2;
@@ -128,8 +133,8 @@ public class WorkerContext {
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;
-        userNum_LMF=943;
-        movieNum_LMF=2000;
+        userNum_LMF=LMF.userNum;
+        movieNum_LMF=LMF.movieNum;
 
 
 
