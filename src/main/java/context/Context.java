@@ -86,8 +86,8 @@ public class Context {
     public static boolean isOptimizeNetTraffic=true;
     // param用p表示，paramSet用s表示，feature用f表示
 
-    public static GeneralContextSetting svm=new GeneralContextSetting(10,3,3,10, ParallelismControlModel.AP);
-    public static GeneralContextSetting LoR=new GeneralContextSetting(10,3,3,10, ParallelismControlModel.AP);
+    public static GeneralContextSetting svm=new GeneralContextSetting(10,1,1,10, ParallelismControlModel.AP);
+    public static GeneralContextSetting LoR=new GeneralContextSetting(10,3,3,5, ParallelismControlModel.AP);
     public static GeneralContextSetting LiR=new GeneralContextSetting(0,3,3,10, ParallelismControlModel.AP);
     public static GeneralContextSetting LMF=new GeneralContextSetting(1,1,1,300, ParallelismControlModel.AP);
 
@@ -96,7 +96,7 @@ public class Context {
             return;
         }
 
-        GeneralContextSetting generalContextSetting=LMF;
+        GeneralContextSetting generalContextSetting=LoR;
         serverIp.put(0,"202.199.13.120");
         serverIp.put(1,"202.199.13.120");
         serverIp.put(2,"202.199.13.120");

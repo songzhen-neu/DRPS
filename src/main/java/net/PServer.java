@@ -1556,6 +1556,7 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void showSomeStatisticAfterTrain(BMessage req,StreamObserver<BMessage> resp){
         logger.info("磁盘IO次数："+ServerContext.kvStoreForLevelDB.diskIOCount);
+        logger.info("通信个数："+networkCount);
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }

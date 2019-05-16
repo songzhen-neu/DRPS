@@ -91,8 +91,8 @@ public class WorkerContext {
         isCatForwardFeature=true;
         LiR=new GeneralAlgorithmSetting(450,450,50,
                 "data/LiRData/housing"+workerId+".csv",9,0);
-        LoR=new GeneralAlgorithmSetting(450,450,50,
-                "data/LoRData/train"+workerId+".csv",3,4);
+        LoR=new GeneralAlgorithmSetting(1000,1000,100,
+                "data/LoRData/train"+workerId+".csv",12,10);
         SVM=new GeneralAlgorithmSetting(450,450,50,
                 "data/SVMData/dataset"+workerId+".csv",3,4);
 
