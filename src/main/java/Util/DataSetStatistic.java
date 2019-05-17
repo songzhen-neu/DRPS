@@ -13,18 +13,19 @@ import java.io.InputStreamReader;
  */
 public class DataSetStatistic {
     public static void main(String[] args) throws IOException {
-        statisticForSVM();
+        statisticForLMF();
 
     }
 
 
 
     public static void statisticForLMF() throws IOException{
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("data/LMFData/Goodbooks.csv")));
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("data/LMFData/ratings.csv")));
         String readline;
         int max1=Integer.MIN_VALUE,min1=Integer.MAX_VALUE;
         int max2=Integer.MIN_VALUE,min2=Integer.MAX_VALUE;
         int count=0;
+        br.readLine();
         while((readline=br.readLine())!=null){
             String[] rl_split=readline.split(",");
             if(Integer.parseInt(rl_split[0])>max1){
@@ -71,7 +72,7 @@ public class DataSetStatistic {
     }
 
     public static void statisticForSVM() throws IOException{
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("data/SVMData/dataset.csv")));
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("data/SVMData/data.csv")));
         String readline;
         br.readLine();
         int count=0;

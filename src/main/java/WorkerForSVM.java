@@ -5,6 +5,7 @@ import Util.DataProcessUtil;
 import Util.MemoryUtil;
 import context.Context;
 import context.WorkerContext;
+import net.BMessage;
 import net.LSetListArrayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,10 @@ public class WorkerForSVM {
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
 //        Set[] vSet = PartitionUtil.partitionV();
+        CurrentTimeUtil.setStartTime();
         Set[] vSet=ParamPartition.partitionV();
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("建立索引时间为");
 //        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         if (WorkerContext.workerId != Context.masterId) {
@@ -71,9 +75,9 @@ public class WorkerForSVM {
         CurrentTimeUtil.setStartTime();
         svm.train();
         CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("train_Time");
+        CurrentTimeUtil.showExecuteTime("训练时间为");
 
-
+        WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());
         WorkerContext.psRouterClient.shutdownAll();
         WorkerContext.kvStoreForLevelDB.getDb().close();
     }

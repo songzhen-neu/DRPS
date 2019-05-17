@@ -14,14 +14,21 @@ import static Partitioning.DataPartitioning.dataPartitioning;
 public class DataOfflinePartition {
     public static void main(String[] args) throws IOException {
         PartitionSetting SVM = new PartitionSetting(3, 100000, "data/SVMData/dataset");
-        PartitionSetting LiR = new PartitionSetting(3, 100000, "data/LiRData/housing");
-        PartitionSetting LMF = new PartitionSetting(3, 1900000, "data/LMFData/Goodbooks");
-        PartitionSetting LoR = new PartitionSetting(3, 100000, "data/LoRData/train");
+        PartitionSetting LiR = new PartitionSetting(5, 200000, "data/LiRData/data");
+        PartitionSetting LMF = new PartitionSetting(5, 1100000, "data/LMFData/Goodbooks");
+        PartitionSetting LoR = new PartitionSetting(5, 140000, "data/LoRData/dataset");
+
+
+        // rating每个数据集4800000
+        // Goodbooks 1100000
+        // train 8000000
+        // dataset 140000
+        // housing 4400000
 
 
 //        DataPartitioning.dataPartitioning(SVM);
-//        DataPartitioning.dataPartitioning(LiR);
-        DataPartitioning.dataPartitioning(LMF);
+        DataPartitioning.dataPartitioning(LiR);
+//        DataPartitioning.dataPartitioning(LMF);
 //        DataPartitioning.dataPartitioning(LoR);
     }
 }

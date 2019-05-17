@@ -598,7 +598,7 @@ public class DataProcessUtil {
                 String[] data=row.split(",");
                 // 0 存储的是user，1存储的是movie，2存储的是电影评分
                 // 这里是要构建batch，可以直接构建成稀疏矩阵的形式（key-value）
-                if(data[0].equals("id")||data[2].length()>1){
+                if(data[0].equals("id")){
                     continue;
                 }
                 MatrixElement matrixElement=new MatrixElement();

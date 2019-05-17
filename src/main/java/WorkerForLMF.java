@@ -5,6 +5,7 @@ import Util.DataProcessUtil;
 import Util.MemoryUtil;
 import context.Context;
 import context.WorkerContext;
+import net.BMessage;
 import net.LSetListArrayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,10 @@ public class WorkerForLMF {
         DataProcessUtil.metaToDB_LMF();
 
         // 需要先对参数维度进行划分
+        CurrentTimeUtil.setStartTime();
         Set[] vSet= ParamPartition.partitionV_LMF();
+        CurrentTimeUtil.setEndTime();
+        CurrentTimeUtil.showExecuteTime("建立索引时间为");
 
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         if (WorkerContext.workerId != Context.masterId) {
@@ -53,9 +57,9 @@ public class WorkerForLMF {
         CurrentTimeUtil.setStartTime();
         lmf.train();
         CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("train_Time");
+        CurrentTimeUtil.showExecuteTime("训练时间为");
 
-
+        WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());
         WorkerContext.psRouterClient.shutdownAll();
         WorkerContext.kvStoreForLevelDB.getDb().close();
 

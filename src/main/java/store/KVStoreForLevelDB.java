@@ -513,10 +513,10 @@ public class KVStoreForLevelDB {
         // 构建参数map
 
 
-        CurrentTimeUtil.setStartTime();
-        long startTime = 0;
-        long endTime = 0;
-        startTime=System.currentTimeMillis();
+//        CurrentTimeUtil.setStartTime();
+//        long startTime = 0;
+//        long endTime = 0;
+//        startTime=System.currentTimeMillis();
         for (String str : needParam) {
             if (str.indexOf("s") == -1) {
                 if (db.get(str.getBytes()) == null) {
@@ -532,17 +532,17 @@ public class KVStoreForLevelDB {
                 }
             }
         }
-        endTime=System.currentTimeMillis();
-        totleTimeOfgetParams += endTime - startTime;
-        System.out.println(totleTimeOfgetParams);
+//        endTime=System.currentTimeMillis();
+//        totleTimeOfgetParams += endTime - startTime;
+//        System.out.println(totleTimeOfgetParams);
 
 
         for (String key : set) {
             map.put(key, paramMap.get(key));
         }
 
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("从map中获取维度的时间");
+//        CurrentTimeUtil.setEndTime();
+//        CurrentTimeUtil.showExecuteTime("从map中获取维度的时间");
         return MessageDataTransUtil.Map_2_SRListMessage(map);
     }
 

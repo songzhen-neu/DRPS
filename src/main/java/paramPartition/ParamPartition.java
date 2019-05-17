@@ -336,7 +336,7 @@ public class ParamPartition {
                 WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).setLSPartitionVSet(ls_partitionVSet);
             }
         }
-        System.out.println("111");
+//        System.out.println("111");
 
         return vSet;
     }
@@ -354,7 +354,7 @@ public class ParamPartition {
             try {
                 int m = RandomUtil.getIntRandomFromZeroToN(num_ContainsBatchPruned);
                 int index = i * (num_ContainsBatchPruned) + m;
-                System.out.println(index);
+//                System.out.println(index);
                 Matrix matrix = (Matrix) TypeExchangeUtil.toObject(db.get(("batchLMF" + index).getBytes()));
                 batchSampledRecord.add(i * (num_ContainsBatchPruned) + m);
 
