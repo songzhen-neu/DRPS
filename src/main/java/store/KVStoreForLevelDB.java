@@ -176,11 +176,6 @@ public class KVStoreForLevelDB {
 
         // 构建参数map
 
-
-        CurrentTimeUtil.setStartTime();
-        long startTime = 0;
-        long endTime = 0;
-        startTime=System.currentTimeMillis();
         for (String str : needParam) {
             if (str.indexOf("s") == -1) {
                 if (db.get(str.getBytes()) == null) {
@@ -197,9 +192,7 @@ public class KVStoreForLevelDB {
                 }
             }
         }
-        endTime=System.currentTimeMillis();
-        totleTimeOfgetParams += endTime - startTime;
-        System.out.println(totleTimeOfgetParams);
+
 
 
         for (String key : set) {
@@ -210,8 +203,7 @@ public class KVStoreForLevelDB {
                 map.put("f" + i, featureParams[i]);
             }
         }
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("从map中获取维度的时间");
+
         return MessageDataTransUtil.Map_2_SFKVListMessage(map);
     }
 
@@ -227,10 +219,10 @@ public class KVStoreForLevelDB {
         // 需要在内存中建一个map是从catParam到catSetParam的映射
 
 
-        CurrentTimeUtil.setStartTime();
+//        CurrentTimeUtil.setStartTime();
         Set<String> needParam = getNeedPartitionParam(map.keySet());
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("getNeedPartitionParam time:");
+//        CurrentTimeUtil.setEndTime();
+//        CurrentTimeUtil.showExecuteTime("getNeedPartitionParam time:");
 
         List<Set> localParitionVSet = ls_partitionedVSet[ServerContext.serverId];
         // 先将需要用到的参数读取到内存中,然后更新

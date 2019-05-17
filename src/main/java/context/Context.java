@@ -80,10 +80,10 @@ public class Context {
     public static int maxDiskPartitionNum=100;
 
     /** 做对比实验，是否进行磁盘优化*/
-    public static boolean isOptimizeDisk=true;
+    public static boolean isOptimizeDisk=false;
 
     /** 做对比实验，是否进行网络*/
-    public static boolean isOptimizeNetTraffic=true;
+    public static boolean isOptimizeNetTraffic=false;
     // param用p表示，paramSet用s表示，feature用f表示
 
     public static GeneralContextSetting svm=new GeneralContextSetting(10,1,1,10, ParallelismControlModel.AP);

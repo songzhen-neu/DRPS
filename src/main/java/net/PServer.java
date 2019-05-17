@@ -382,6 +382,9 @@ public class PServer implements net.PSGrpc.PS {
                     resp.onCompleted();
                     break;
                 case AP:
+                    if(req.getWorkerId()!=ServerContext.serverId){
+                        networkCount.set(networkCount.intValue()+neededParamIndices.size());
+                    }
                     sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
                     resp.onNext(sfkvListMessage);
                     resp.onCompleted();
