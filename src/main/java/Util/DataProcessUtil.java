@@ -594,7 +594,7 @@ public class DataProcessUtil {
             BufferedReader br=new BufferedReader(new FileReader(WorkerContext.myDataPath_LMF));
             String row;
             Matrix matrix=new Matrix();
-            while(( row=br.readLine()) !=null){
+            while(( row=br.readLine()) !=null&&count<=WorkerContext.sampleListSize_LMF){
                 String[] data=row.split(",");
                 // 0 存储的是user，1存储的是movie，2存储的是电影评分
                 // 这里是要构建batch，可以直接构建成稀疏矩阵的形式（key-value）
