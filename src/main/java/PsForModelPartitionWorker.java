@@ -58,10 +58,9 @@ public class PsForModelPartitionWorker {
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
-        CurrentTimeUtil.setStartTime();
+        long start=System.currentTimeMillis();
         Set[] vSet=ParamPartition.partitionV();
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("建立索引的时间");
+        long end=System.currentTimeMillis();
 
 
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
@@ -86,7 +85,7 @@ public class PsForModelPartitionWorker {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LogisticRegression logisticRegression = new LogisticRegression(0.001f, 0.01f, 10);
+        LogisticRegression logisticRegression = new LogisticRegression(0.001f, 0.001f, 10);
         MemoryUtil.releaseMemory();
 
         CurrentTimeUtil.setStartTime();
@@ -95,6 +94,7 @@ public class PsForModelPartitionWorker {
         CurrentTimeUtil.showExecuteTime("训练时间为");
 
         WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());
+        logger.info("建立索引的时间为"+(end-start));
 
 
         WorkerContext.psRouterClient.shutdownAll();

@@ -42,10 +42,11 @@ public class WorkerForSVM {
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
 //        Set[] vSet = PartitionUtil.partitionV();
-        CurrentTimeUtil.setStartTime();
+        long start=System.currentTimeMillis();
         Set[] vSet=ParamPartition.partitionV();
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("建立索引时间为");
+        long end =System.currentTimeMillis();
+
+
 //        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         if (WorkerContext.workerId != Context.masterId) {
@@ -77,6 +78,7 @@ public class WorkerForSVM {
         CurrentTimeUtil.setEndTime();
         CurrentTimeUtil.showExecuteTime("训练时间为");
 
+        logger.info("索引建立时间为"+(end-start));
         WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());
         WorkerContext.psRouterClient.shutdownAll();
         WorkerContext.kvStoreForLevelDB.getDb().close();

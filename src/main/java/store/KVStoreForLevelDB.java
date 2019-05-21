@@ -508,6 +508,7 @@ public class KVStoreForLevelDB {
 
         // 先转化需要取出来哪些参数
         needParam = getNeedPartitionParam(set);
+        diskIOCount.set(diskIOCount.intValue()+needParam.size());
 
 
         // 构建参数map

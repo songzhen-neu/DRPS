@@ -77,11 +77,11 @@ public class DataProcessUtil {
             for(int j=0;j<batch.sampleList.size();j++){
                 float[] feature=batch.sampleList.get(j).feature;
                 for(int k=0;k<feature.length;k++){
-                    if(feature[k]>max[k]){
-                        max[k]=feature[k];
+                    if(Math.abs(feature[k])>max[k]){
+                        max[k]=Math.abs(feature[k]);
                     }
-                    if(feature[k]<min[k]){
-                        min[k]=feature[k];
+                    if(Math.abs(feature[k])<min[k]){
+                        min[k]=Math.abs(feature[k]);
                     }
                 }
             }
@@ -102,7 +102,12 @@ public class DataProcessUtil {
             for(int j=0;j<batch.sampleList.size();j++){
                 float[] feature=batch.sampleList.get(j).feature;
                 for(int k=0;k<feature.length;k++){
-                    feature[k]=(feature[k]-min[k])/(max[k]-min[k]);
+                    if(max[k]==min[k]){
+                        feature[k]=0;
+                    }else {
+                        feature[k]=(feature[k]-min[k])/(max[k]-min[k]);
+                    }
+
                 }
             }
 
@@ -444,7 +449,7 @@ public class DataProcessUtil {
         DB db = WorkerContext.kvStoreForLevelDB.getDb();
 
         // countSampleListSize就是当前已经读取的数据个数
-        while ((readline = br.readLine()) != null && countSampleListSize <= WorkerContext.sampleListSize) {
+        while ((readline = br.readLine()) != null && countSampleListSize < WorkerContext.sampleListSize) {
             // 这里+2，是因为前面有id和isClick属性
             String[] lineSplit = new String[Context.featureSize + WorkerContext.catSize + 2];
             String[] split = readline.split(",");
@@ -471,7 +476,7 @@ public class DataProcessUtil {
 //                System.out.println(lineSplit.length);
 //                System.out.println(i);
 //                System.out.println(readline);
-                if (lineSplit[i].equals("")) {
+                if (lineSplit[i].equals("")||(Float.parseFloat(lineSplit[i])==Float.NaN)) {
                     feature[i - 2 - catSize] = 0f;
                 } else {
                     feature[i - 2 - catSize] = Float.parseFloat(lineSplit[i]);
@@ -484,6 +489,7 @@ public class DataProcessUtil {
 //                getMetaCat(catSetList,lineSplit,catSet);
                 catList.add(getMetaCat_ForMasterBuild(lineSplit, catSet));
                 sampleBatch.sampleList.add(sample);
+                countSampleListSize++;
 
             } else {
 
@@ -500,12 +506,12 @@ public class DataProcessUtil {
                 WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + (countSampleListSize / WorkerContext.sampleBatchSize - 1)).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
                 catList.clear();
                 catSet.clear();
-                sampleBatch = new SampleList();
+//                sampleBatch = new SampleList();
                 MemoryUtil.releaseMemory();
-                sampleBatch.sampleList.add(sample);
+//                sampleBatch.sampleList.add(sample);
                 catList.add(getMetaCat_ForMasterBuild(lineSplit, catSet));
             }
-            countSampleListSize++;
+
         }
 
         if (sampleBatch.sampleList != null) {

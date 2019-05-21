@@ -24,6 +24,7 @@ public class DataOfflinePartition {
         // train 8000000
         // dataset 140000
         // housing 4400000
+        // data 200000
 
 
 //        DataPartitioning.dataPartitioning(SVM);

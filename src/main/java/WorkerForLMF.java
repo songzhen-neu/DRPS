@@ -31,10 +31,10 @@ public class WorkerForLMF {
         DataProcessUtil.metaToDB_LMF();
 
         // 需要先对参数维度进行划分
-        CurrentTimeUtil.setStartTime();
+        long start=System.currentTimeMillis();
         Set[] vSet= ParamPartition.partitionV_LMF();
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("建立索引时间为");
+        long end=System.currentTimeMillis();
+
 
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         if (WorkerContext.workerId != Context.masterId) {
@@ -58,6 +58,7 @@ public class WorkerForLMF {
         lmf.train();
         CurrentTimeUtil.setEndTime();
         CurrentTimeUtil.showExecuteTime("训练时间为");
+        logger.info("建立索引的时间为:"+(end -start));
 
         WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());
         WorkerContext.psRouterClient.shutdownAll();
