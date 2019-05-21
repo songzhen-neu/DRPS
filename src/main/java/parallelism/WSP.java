@@ -88,6 +88,7 @@ public class WSP {
                     WSP_WaitBarrier[i] = new AtomicBoolean(false);
                     WSP_IsWaiting[i] = new AtomicBoolean(false);
                     WSP_BarrierIsWaiting[i] = new AtomicBoolean(false);
+                    isContainedInOtherPlan[i]=new AtomicBoolean(false);
                 }
 
             }
@@ -96,14 +97,16 @@ public class WSP {
 
     public static AtomicBoolean isFinished = new AtomicBoolean(false);
     public static AtomicInteger barrier_forIsRespOrWaited = new AtomicInteger(0);
-    public static AtomicBoolean isContainedInOtherPlan = new AtomicBoolean(false);
+    public static AtomicBoolean[] isContainedInOtherPlan = new AtomicBoolean[Context.workerNum];
     public static AtomicBoolean isFirstItaration = new AtomicBoolean(true);
     public static CyclicBarrier cyclicBarrier = new CyclicBarrier(Context.workerNum);
+    public static AtomicBoolean barrier=new AtomicBoolean(false);
 
 
     public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) throws ClassNotFoundException, IOException, InterruptedException {
         if (Context.workerNum > 1) {
             if (ServerContext.serverId == Context.masterId) {
+                isContainedInOtherPlan[workerId].set(false);
                 // 等待直到非master的所有server都等待master的指令才继续执行
                 RespTool.waitForNonMasterServerWaiting(workerId, WSP_IsWaiting);
 
@@ -150,13 +153,13 @@ public class WSP {
                             }
                         }
 
-                        isContainedInOtherPlan.set(true);
+                        isContainedInOtherPlan[workerId].set(true);
                     }
                 }
 
 
                 // 如果不包含在其他worker的执行方案里，那么需要进行策略选择
-                if (!isContainedInOtherPlan.get()) {
+                if (!isContainedInOtherPlan[workerId].get()) {
                     if (isFirstItaration.get()) {
                         iTTableArray[workerId].endTime = System.currentTimeMillis();
                         iTTableArray[workerId].execTime = iTTableArray[workerId].endTime - iTTableArray[workerId].startTime;
@@ -166,11 +169,11 @@ public class WSP {
                         } catch (BrokenBarrierException e) {
                             e.printStackTrace();
                         }
-
-                        while (cyclicBarrier.getNumberWaiting() > 0) {
-                            Thread.sleep(10);
-                        }
-                        cyclicBarrier.reset();
+//
+//                        while (cyclicBarrier.getNumberWaiting() > 0) {
+//                            Thread.sleep(10);
+//                        }
+//                        cyclicBarrier.reset();
                         isFirstItaration.set(false);
                         RespTool.respParam(resp, neededParamIndices);
 
@@ -190,8 +193,8 @@ public class WSP {
                             sCTArray[i].negGain = sCTArray[i].waitTime + sCTArray[i].staleness;
 
                         }
-                        System.out.println("waitTime1111111111111111111111111:" + sCTArray[workerId].waitTime);
-                        System.out.println("staleness1111111111111111111111111:" + sCTArray[workerId].staleness);
+//                        System.out.println("waitTime1111111111111111111111111:" + sCTArray[workerId].waitTime);
+//                        System.out.println("staleness1111111111111111111111111:" + sCTArray[workerId].staleness);
                         optimalPlanSet[workerId] = getIOfMinNegGain(iTTableArray, sCTArray, workerId);
                         if (optimalPlanSet[workerId].size() == 0) {
                             RespTool.respParam(resp, neededParamIndices);
@@ -227,7 +230,7 @@ public class WSP {
 
                 while (!WSP_WaitBarrier[workerId].get()) {
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(1);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -244,7 +247,7 @@ public class WSP {
                 // 等待master的notify
                 while (!task.isDone()) {
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(1);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -309,13 +312,13 @@ public class WSP {
                             }
                         }
 
-                        isContainedInOtherPlan.set(true);
+                        isContainedInOtherPlan[workerId].set(true);
                     }
                 }
 
 
                 // 如果不包含在其他worker的执行方案里，那么需要进行策略选择
-                if (!isContainedInOtherPlan.get()) {
+                if (!isContainedInOtherPlan[workerId].get()) {
                     if (isFirstItaration.get()) {
                         iTTableArray[workerId].endTime = System.currentTimeMillis();
                         iTTableArray[workerId].execTime = iTTableArray[workerId].endTime - iTTableArray[workerId].startTime;

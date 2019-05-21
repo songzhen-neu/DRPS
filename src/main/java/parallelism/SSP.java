@@ -97,7 +97,7 @@ public class SSP {
                             if (count[j].get() == barrier[j].size()) {
                                 while (!barrierIsWaiting[j].get()){
                                     try{
-                                        Thread.sleep(10);
+                                        Thread.sleep(1);
                                     }catch (InterruptedException e){
                                         e.printStackTrace();
                                     }
@@ -206,7 +206,7 @@ public class SSP {
 
                     while (!barrierForOtherServer[workerId].get()) {
                         try {
-                            Thread.sleep(10);
+                            Thread.sleep(1);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -223,7 +223,7 @@ public class SSP {
                 // 等待master的notify
                 while (!task.isDone()) {
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(1);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
