@@ -2,6 +2,7 @@ package parallelism;
 
 import context.Context;
 import context.ServerContext;
+import context.WorkerContext;
 import dataStructure.parallelismControlModel.IterationTimeTable;
 import dataStructure.parallelismControlModel.StrategyChoiceTable;
 import io.grpc.stub.StreamObserver;
@@ -88,7 +89,9 @@ public class WSP {
                     WSP_WaitBarrier[i] = new AtomicBoolean(false);
                     WSP_IsWaiting[i] = new AtomicBoolean(false);
                     WSP_BarrierIsWaiting[i] = new AtomicBoolean(false);
-                    isContainedInOtherPlan[i]=new AtomicBoolean(false);
+                    isContainedInOtherPlan[i] = new AtomicBoolean(false);
+                    containedInId[i] = new AtomicInteger(-1);
+                    isFirstItaration[i] = new AtomicBoolean(true);
                 }
 
             }
@@ -98,9 +101,10 @@ public class WSP {
     public static AtomicBoolean isFinished = new AtomicBoolean(false);
     public static AtomicInteger barrier_forIsRespOrWaited = new AtomicInteger(0);
     public static AtomicBoolean[] isContainedInOtherPlan = new AtomicBoolean[Context.workerNum];
-    public static AtomicBoolean isFirstItaration = new AtomicBoolean(true);
+    public static AtomicBoolean[] isFirstItaration = new AtomicBoolean[Context.workerNum];
     public static CyclicBarrier cyclicBarrier = new CyclicBarrier(Context.workerNum);
-    public static AtomicBoolean barrier=new AtomicBoolean(false);
+    public static AtomicBoolean barrier = new AtomicBoolean(false);
+    public static AtomicInteger[] containedInId = new AtomicInteger[Context.workerNum];
 
 
     public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) throws ClassNotFoundException, IOException, InterruptedException {
@@ -110,157 +114,162 @@ public class WSP {
                 // 等待直到非master的所有server都等待master的指令才继续执行
                 RespTool.waitForNonMasterServerWaiting(workerId, WSP_IsWaiting);
 
-                // master统一控制所有server的同步异步，其他worker只需要等待即可
-                for (int i = 0; i < Context.workerNum; i++) {
-                    if (optimalPlanSet[i].contains(workerId)) {
-                        synchronized (barrier_forWSP[i]) {
-                            count[i].incrementAndGet();
-                            if (optimalPlanSet[i].size() == count[i].get()) {
-//                                while (!WSP_BarrierIsWaiting[i].get()){
-//                                    try{
-//                                        Thread.sleep(10);
-//                                    }catch (InterruptedException e){
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-                                barrier_forWSP[i].notifyAll();
+                // 如果是第一次迭代的话，那么需要同步一样返回，记录一下时间
+                if (isFirstItaration[workerId].get()) {
+                    iTTableArray[workerId].endTime = System.currentTimeMillis();
+                    iTTableArray[workerId].execTime = iTTableArray[workerId].endTime - iTTableArray[workerId].startTime;
+                    isFirstItaration[workerId].set(false);
+                    RespTool.respParam(resp, neededParamIndices);
 
-                                for (int j = 0; j < Context.serverNum; j++) {
-                                    if (j != Context.masterId) {
-                                        Context.psRouterClient.getPsWorkers().get(i).getBlockingStub().notifyForWSP(IMessage.newBuilder().setI(workerId).build());
+                    try {
+                        cyclicBarrier.await();
+                    } catch (BrokenBarrierException e) {
+                        e.printStackTrace();
+                    }
+
+                    iTTableArray[workerId].startTime = System.currentTimeMillis();
+                    iTTableArray[workerId].endTime = iTTableArray[workerId].startTime + iTTableArray[workerId].execTime;
+                    iTTableArray[workerId].iteration = 1;
+                } else {
+                    synchronized (barrier) {
+                        // master统一控制所有server的同步异步，其他worker只需要等待即可
+                        // 现在有一个bug，如果所有worker同时进这个函数发现都没包含，然后在同时进入另外一个函数需要互相等待，这样就死锁了
+                        for (int i = 0; i < Context.workerNum; i++) {
+                            // 这里是遍历有没有其他的worker i在等待workerId
+                            if (optimalPlanSet[i].contains(workerId)) {
+                                count[i].incrementAndGet();
+                                if (optimalPlanSet[i].size() == count[i].get()) {
+                                    while (!barrier_forWSP[i].get()) {
+                                        try {
+                                            Thread.sleep(1);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    synchronized (barrier_forWSP[i]) {
+                                        // 这里notify的是包含workerId的 worker
+                                        barrier_forWSP[i].notifyAll();
                                     }
                                 }
-                                optimalPlanSet[i].clear();
-                            } else {
-//                        count[i].incrementAndGet();
-                                barrier_forWSP[i].wait();
-                            }
-                        }
 
+                                // 这应该是第一次执行，需要初始化迭代时间表的一些信息
 
-                        // 返回完参数之后开始更新时间，如果不在上述要求线程（等待线程）里面，那么需要进行策略选择，
-                        // 如果在的话，上面已经选择过等待还是继续了，当可以继续执行时需要更新当前的一写ITTable的信息
-
-                        // 只执行一次这段代码
-                        synchronized (isFinished) {
-                            if (isFinished.getAndSet(true)) {
-                                iTTableArray[i].execTime = System.currentTimeMillis() - iTTableArray[i].startTime;
-                                iTTableArray[i].startTime = System.currentTimeMillis();
-                                iTTableArray[i].endTime = iTTableArray[i].startTime + iTTableArray[i].endTime;
-                                int iteration = getMaxIteration(iTTableArray);
-                                iTTableArray[i].iteration = iteration + 1;
-
-                            }
-                        }
-
-                        isContainedInOtherPlan[workerId].set(true);
-                    }
-                }
-
-
-                // 如果不包含在其他worker的执行方案里，那么需要进行策略选择
-                if (!isContainedInOtherPlan[workerId].get()) {
-                    if (isFirstItaration.get()) {
-                        iTTableArray[workerId].endTime = System.currentTimeMillis();
-                        iTTableArray[workerId].execTime = iTTableArray[workerId].endTime - iTTableArray[workerId].startTime;
-                        // 同步代码
-                        try {
-                            cyclicBarrier.await();
-                        } catch (BrokenBarrierException e) {
-                            e.printStackTrace();
-                        }
+//                                synchronized (isFinished) {
+//                                    if (isFinished.getAndSet(true)) {
+//                                        iTTableArray[i].execTime = System.currentTimeMillis() - iTTableArray[i].startTime;
+//                                        iTTableArray[i].startTime = System.currentTimeMillis();
+//                                        iTTableArray[i].endTime = iTTableArray[i].startTime + iTTableArray[i].endTime;
+//                                        int iteration = getMaxIteration(iTTableArray);
+//                                        iTTableArray[i].iteration = iteration + 1;
 //
-//                        while (cyclicBarrier.getNumberWaiting() > 0) {
-//                            Thread.sleep(10);
-//                        }
-//                        cyclicBarrier.reset();
-                        isFirstItaration.set(false);
-                        RespTool.respParam(resp, neededParamIndices);
-
-                        iTTableArray[workerId].startTime = System.currentTimeMillis();
-                        iTTableArray[workerId].endTime = iTTableArray[workerId].startTime + iTTableArray[workerId].execTime;
-                        iTTableArray[workerId].iteration = 1;
-                    } else {
-                        int maxIteration = getMaxIteration(iTTableArray);
-                        iTTableArray[workerId].endTime = System.currentTimeMillis();
-                        for (int i = 0; i < Context.workerNum; i++) {
-                            sCTArray[i].waitTime = iTTableArray[workerId].endTime - iTTableArray[i].iteration;
-                            if (i != workerId) {
-                                sCTArray[i].staleness = maxIteration + 1 - iTTableArray[i].iteration;
-                            } else {
-                                sCTArray[i].staleness = 0;
+//                                    }
+//                                }
+                                // 只要被1个包含，就包含了，那么workerId就得等待
+                                // 必须所有都通知了，才能走
+                                isContainedInOtherPlan[workerId].set(true);
                             }
-                            sCTArray[i].negGain = sCTArray[i].waitTime + sCTArray[i].staleness;
-
-                        }
-//                        System.out.println("waitTime1111111111111111111111111:" + sCTArray[workerId].waitTime);
-//                        System.out.println("staleness1111111111111111111111111:" + sCTArray[workerId].staleness);
-                        optimalPlanSet[workerId] = getIOfMinNegGain(iTTableArray, sCTArray, workerId);
-                        if (optimalPlanSet[workerId].size() == 0) {
-                            RespTool.respParam(resp, neededParamIndices);
-                        } else {
-                            synchronized (barrier_forWSP[workerId]) {
-                                barrier_forWSP[workerId].wait();
-                            }
-                            RespTool.respParam(resp, neededParamIndices);
                         }
 
+
+                        // 如果不包含在其他worker的执行方案里，那么需要进行策略选择
+                        if (!isContainedInOtherPlan[workerId].get()) {
+                            int maxIteration = getMaxIteration(iTTableArray);
+                            iTTableArray[workerId].endTime = System.currentTimeMillis();
+                            for (int i = 0; i < Context.workerNum; i++) {
+                                sCTArray[i].waitTime = iTTableArray[workerId].endTime - iTTableArray[i].iteration;
+                                if (i != workerId) {
+                                    sCTArray[i].staleness = maxIteration + 1 - iTTableArray[i].iteration;
+                                } else {
+                                    sCTArray[i].staleness = 0;
+                                }
+                                sCTArray[i].negGain = sCTArray[i].waitTime + sCTArray[i].staleness;
+                            }
+
+                            optimalPlanSet[workerId] = getIOfMinNegGain(iTTableArray, sCTArray, workerId);
+
+                        }
                     }
-                } else {
-                    RespTool.respParam(resp, neededParamIndices);
-                }
+
+
+
                 synchronized (isFinished) {
                     isFinished.set(false);
                 }
-            } else {
-                // 等待master的通知（在等待之后发送消息给master）
-                FutureTask<Boolean> task = new FutureTask<>(() -> {
-                    try {
-                        WSP_WaitBarrier[workerId].set(true);
-                        WSP_WaitBarrier[workerId].wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }, Boolean.TRUE);
-                synchronized (WSP_WaitBarrier[workerId]) {
-                    new Thread(task).start();
+                synchronized (barrier_forWSP[workerId]) {
+                    barrier_forWSP[workerId].set(false);
                 }
 
-                // 保证了一定进入了上面对barrierForOtherServer[workerId]的锁
-
-                while (!WSP_WaitBarrier[workerId].get()) {
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                if (!isContainedInOtherPlan[workerId].get() && optimalPlanSet[workerId].size() != 0) {
+                    synchronized (barrier_forWSP[workerId]) {
+                        barrier_forWSP[workerId].set(true);
+                        barrier_forWSP[workerId].wait();
                     }
                 }
 
-                synchronized (WSP_WaitBarrier[workerId]) {
-                    WSP_WaitBarrier[workerId].set(false);
-                }
-                // 这样可以保证只有在上面锁释放的时候，才能通知master，该进程在等待
-                Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().notifyNonMasterIsWaitingWSP(ServerIdAndWorkerId.newBuilder()
-                        .setWorkerId(workerId)
-                        .setServerId(ServerContext.serverId)
-                        .build());
-                // 等待master的notify
-                while (!task.isDone()) {
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                for (int j = 0; j < Context.serverNum; j++) {
+                    if (j != Context.masterId) {
+                        Context.psRouterClient.getPsWorkers().get(j).getBlockingStub().notifyForWSP(IMessage.newBuilder().setI(workerId).build());
                     }
                 }
                 RespTool.respParam(resp, neededParamIndices);
+
+
+                // 返回完参数之后开始更新时间，如果不在上述要求线程（等待线程）里面，那么需要进行策略选择，
+                // 如果在的话，上面已经选择过等待还是继续了，当可以继续执行时需要更新当前的一写ITTable的信息
+
+
             }
 
+
         } else {
+            // 等待master的通知（在等待之后发送消息给master）
+            FutureTask<Boolean> task = new FutureTask<>(() -> {
+                try {
+                    WSP_WaitBarrier[workerId].set(true);
+                    WSP_WaitBarrier[workerId].wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }, Boolean.TRUE);
+            synchronized (WSP_WaitBarrier[workerId]) {
+                new Thread(task).start();
+            }
+
+            // 保证了一定进入了上面对barrierForOtherServer[workerId]的锁
+
+            while (!WSP_WaitBarrier[workerId].get()) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            synchronized (WSP_WaitBarrier[workerId]) {
+                WSP_WaitBarrier[workerId].set(false);
+            }
+            // 这样可以保证只有在上面锁释放的时候，才能通知master，该进程在等待
+            Context.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().notifyNonMasterIsWaitingWSP(ServerIdAndWorkerId.newBuilder()
+                    .setWorkerId(workerId)
+                    .setServerId(ServerContext.serverId)
+                    .build());
+            // 等待master的notify
+            while (!task.isDone()) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            RespTool.respParam(resp, neededParamIndices);
+        }
+
+    } else {
             RespTool.respParam(resp, neededParamIndices);
         }
 
 
-    }
+}
 
 
     public static void isRespOrWaited_LMF(int workerId, StreamObserver<SRListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) throws ClassNotFoundException, IOException, InterruptedException {
@@ -319,7 +328,7 @@ public class WSP {
 
                 // 如果不包含在其他worker的执行方案里，那么需要进行策略选择
                 if (!isContainedInOtherPlan[workerId].get()) {
-                    if (isFirstItaration.get()) {
+                    if (isFirstItaration[workerId].get()) {
                         iTTableArray[workerId].endTime = System.currentTimeMillis();
                         iTTableArray[workerId].execTime = iTTableArray[workerId].endTime - iTTableArray[workerId].startTime;
                         // 同步代码
@@ -333,7 +342,7 @@ public class WSP {
                             Thread.sleep(10);
                         }
                         cyclicBarrier.reset();
-                        isFirstItaration.set(false);
+                        isFirstItaration[workerId].set(false);
                         RespTool.respParam_LMF(resp, neededParamIndices);
 
                         iTTableArray[workerId].startTime = System.currentTimeMillis();

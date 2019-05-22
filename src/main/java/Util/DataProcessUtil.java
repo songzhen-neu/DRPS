@@ -449,7 +449,7 @@ public class DataProcessUtil {
         DB db = WorkerContext.kvStoreForLevelDB.getDb();
 
         // countSampleListSize就是当前已经读取的数据个数
-        while ((readline = br.readLine()) != null && countSampleListSize < WorkerContext.sampleListSize) {
+        while ((readline = br.readLine()) != null && countSampleListSize <=WorkerContext.sampleListSize) {
             // 这里+2，是因为前面有id和isClick属性
             String[] lineSplit = new String[Context.featureSize + WorkerContext.catSize + 2];
             String[] split = readline.split(",");
@@ -485,14 +485,13 @@ public class DataProcessUtil {
 
 
             Sample sample = new Sample(feature, cat, click);
-            if (sampleBatch.sampleList.size() != WorkerContext.sampleBatchSize) {
+
+            if (sampleBatch.sampleList.size() !=WorkerContext.sampleBatchSize) {
 //                getMetaCat(catSetList,lineSplit,catSet);
                 catList.add(getMetaCat_ForMasterBuild(lineSplit, catSet));
                 sampleBatch.sampleList.add(sample);
                 countSampleListSize++;
-
             } else {
-
 
                 Map<String, Long> dimMap = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getCatDimMapBySet(catSet);
 
@@ -510,12 +509,14 @@ public class DataProcessUtil {
                 MemoryUtil.releaseMemory();
 //                sampleBatch.sampleList.add(sample);
                 catList.add(getMetaCat_ForMasterBuild(lineSplit, catSet));
+                countSampleListSize++;
+                sampleBatch.sampleList.clear();
             }
 
         }
 
         if (sampleBatch.sampleList != null) {
-            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + (countSampleListSize / WorkerContext.sampleBatchSize-1)).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
+            WorkerContext.kvStoreForLevelDB.getDb().put(("sampleBatch" + ((countSampleListSize) / (WorkerContext.sampleBatchSize))).getBytes(), TypeExchangeUtil.toByteArray(sampleBatch));
         }
 
 

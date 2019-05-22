@@ -85,8 +85,6 @@ public class SSP {
                 // 做三个worker的同步异步问题
                 RespTool.waitForNonMasterServerWaiting(workerId, isWaiting);
 
-
-
                 synchronized (barrier) {
                     System.out.println(iterationOfWi + ",worker" + workerId + " barrier in");
                     // 判断当workerId执行完后，判断workerId是否被其他worker等待
@@ -125,7 +123,7 @@ public class SSP {
                                 } else if (Context.parallelismControlModel == ParallelismControlModel.SSP) {
                                     if (iteration[i].get() <= iteration[workerId].get() + 1 - bound) {
                                         barrier[workerId].add(i);
-//                                logger.info("worker:" + workerId + ",wait:" + i);
+                                logger.info("worker:" + workerId + ",wait:" + i);
                                     }
                                 }
 
@@ -146,12 +144,11 @@ public class SSP {
 
                 if (barrier[workerId].size() != 0 && !isContains[workerId].get()) {
                     try {
-//                            logger.info(workerId + ":" + "4");
                         synchronized (barrier[workerId]) {
                             System.out.println(iterationOfWi + "," + workerId + ":" + "begin");
                             barrierIsWaiting[workerId].set(true);
                             barrier[workerId].wait();
-                            System.out.println(iterationOfWi + "," + workerId + ":" + "end");
+//                            System.out.println(iterationOfWi + "," + workerId + ":" + "end");
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -189,7 +186,7 @@ public class SSP {
                 FutureTask<Boolean> task = new FutureTask<>(() -> {
                     try {
 
-                        System.out.println("bbba");
+
                         barrierForOtherServer[workerId].set(true);
                         barrierForOtherServer[workerId].wait();
                         System.out.println("aaa");

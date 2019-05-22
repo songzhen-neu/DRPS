@@ -183,7 +183,7 @@ public class PServer implements net.PSGrpc.PS {
 //            logger.info("curIndex:"+ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().longValue());
 
                 SLKVListMessage slkvListMessage = MessageDataTransUtil.Map_2_SLKVListMessage(map);
-                logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
+//                logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
 
                 responsedObject.onNext(slkvListMessage);
                 responsedObject.onCompleted();
