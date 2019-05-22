@@ -112,7 +112,7 @@ public class WSP {
     public static void isRespOrWaited(int workerId, StreamObserver<SFKVListMessage> resp, Set<String> neededParamIndices, int iterationOfWi) throws ClassNotFoundException, IOException, InterruptedException {
         if (Context.workerNum > 1) {
 //            System.out.println(Context.trainRoundNum);
-            if(iterationOfWi==Context.trainRoundNum.get()){
+            if(iterationOfWi<Context.trainRoundNum.get()){
                 if (ServerContext.serverId == Context.masterId) {
                     isContainedInOtherPlan[workerId].set(false);
                     // 等待直到非master的所有server都等待master的指令才继续执行
@@ -280,6 +280,9 @@ public class WSP {
                     RespTool.respParam(resp, neededParamIndices);
                 }
             }else {
+                for(int i=0;i<Context.serverNum;i++){
+                    barrier_forWSP[i].notifyAll();
+                }
                 RespTool.respParam(resp, neededParamIndices);
             }
 
