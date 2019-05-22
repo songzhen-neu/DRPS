@@ -88,7 +88,8 @@ public class KVStoreForLevelDB {
         // 这是按照最初的取余进行分配的
         for (long i = 0; i < sparseDimSize; i++) {
             if (i % Context.serverNum == ServerContext.serverId) {
-                Param param = new Param("p" + i, RandomUtil.getRandomValue(-0.1f, 0.1f));
+//                Param param = new Param("p" + i, RandomUtil.getRandomValue(-0.1f, 0.1f));
+                Param param = new Param("p" + i, 0);
                 db.put(("p" + i).getBytes(), TypeExchangeUtil.toByteArray(param));
 //                System.out.println("params:" + i);
             }
@@ -108,7 +109,8 @@ public class KVStoreForLevelDB {
 //            } else {
                 Set<Param> paramSet = new HashSet<Param>();
                 for (Object l : set) {
-                    Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
+//                    Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
+                    Param param = new Param("p" + l, 0);
 //                logger.info("catParam"+l);
                     paramSet.add(param);
                 }
@@ -138,7 +140,8 @@ public class KVStoreForLevelDB {
 
         if (Context.masterId == ServerContext.serverId) {
             for (int i = 0; i < featureParams.length; i++) {
-                featureParams[i] = RandomUtil.getRandomValue(-0.1f, 0.1f);
+//                featureParams[i] = RandomUtil.getRandomValue(-0.1f, 0.1f);
+                featureParams[i]=0;
             }
         }
 
@@ -437,7 +440,8 @@ public class KVStoreForLevelDB {
             if (i % Context.serverNum == ServerContext.serverId) {
                 RowOrColParam rowOrColParam=new RowOrColParam(r);
                 for(int j=0;j<rowOrColParam.param.length;j++){
-                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
+//                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
+                    rowOrColParam.param[j]= 0f;
                     rowOrColParam.index="p"+i;
                 }
                 db.put(("p" + i).getBytes(), TypeExchangeUtil.toByteArray(rowOrColParam));
@@ -454,7 +458,8 @@ public class KVStoreForLevelDB {
             for (Object l : set) {
                 RowOrColParam rowOrColParam=new RowOrColParam(r);
                 for(int j=0;j<rowOrColParam.param.length;j++){
-                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
+//                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
+                    rowOrColParam.param[j]=0f;
                     rowOrColParam.index="p"+l;
                 }
 

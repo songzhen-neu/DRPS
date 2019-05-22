@@ -7,7 +7,7 @@ package dataStructure.parallelismControlModel;
  * @create: 2019-04-08 15:17
  */
 public class StrategyChoiceTable {
-    public long waitTime;
+    public float waitTime;
     public int staleness;
-    public long negGain;
+    public float negGain;
 }
