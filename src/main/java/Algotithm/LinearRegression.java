@@ -101,11 +101,13 @@ public class LinearRegression {
 
                 loss = calculateLoss(outputValueOfBatch, batch) / WorkerContext.sampleBatchSize;
 
+
                 System.out.println("error echo:" + i + ",batch:" + j + ",loss:" + loss);
 
                 paramsMap.clear();
-
-
+            }
+            if(loss<0.5f){
+                break;
             }
         }
         System.out.println("zongshijian:" + totalTime);

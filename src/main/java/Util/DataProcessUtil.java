@@ -509,8 +509,9 @@ public class DataProcessUtil {
                 MemoryUtil.releaseMemory();
 //                sampleBatch.sampleList.add(sample);
                 catList.add(getMetaCat_ForMasterBuild(lineSplit, catSet));
-                countSampleListSize++;
                 sampleBatch.sampleList.clear();
+                sampleBatch.sampleList.add(sample);
+                countSampleListSize++;
             }
 
         }

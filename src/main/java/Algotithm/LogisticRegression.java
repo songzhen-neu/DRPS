@@ -8,10 +8,7 @@ import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
 
 import javafx.concurrent.Worker;
-import net.IMessage;
-import net.PSRouterClient;
-import net.PSWorker;
-import net.SFKVListMessage;
+import net.*;
 import org.iq80.leveldb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +64,11 @@ public class LogisticRegression {
                 .sendTrainRoundNum(IMessage.newBuilder().setI(WorkerContext.sampleBatchListSize * echo).build());
         // 该层是循环echo遍数据集
         long totalTime = 0;
+        long start=System.currentTimeMillis();
+        boolean isExec=false;
+        boolean isExec1=false;
+        boolean isExec2=false;
+        boolean isExec3=false;
         for (int i = 0; i < echo; i++) {
             // 该层是循环所有的batch
             for (int j = 0; j < WorkerContext.sampleBatchListSize; j++) {
@@ -105,11 +107,30 @@ public class LogisticRegression {
                 WorkerContext.psRouterClient.sendGradientMap(gradientMap);
 
                 loss = calculateLoss(outputValueOfBatch, batch) / WorkerContext.sampleBatchSize;
+                WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().sendLoss(LossMessage.newBuilder()
+                        .setLoss(loss)
+                        .setReqHost(WorkerContext.workerId)
+                        .setStartTime(start).build());
+                if(Math.abs(loss)<0.65f&&!isExec){
+                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+                    isExec=true;
+                }
+                if(Math.abs(loss)<0.6f && !isExec1){
+                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+                    isExec1=true;
+                }
+                if(Math.abs(loss)<0.55f && !isExec2){
+                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+                    isExec2=true;
+                }
+                if(Math.abs(loss)<0.5f && !isExec3){
+                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+                    isExec3=true;
+                }
 
                 System.out.println("error echo:" + i + ",batch:" + j + ",loss:" + loss);
 
                 paramsMap.clear();
-
 
             }
         }

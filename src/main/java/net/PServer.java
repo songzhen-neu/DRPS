@@ -136,6 +136,10 @@ public class PServer implements net.PSGrpc.PS {
             ls_partitionedVSet[i] = new ArrayList<Set>();
         }
 
+        for(int i=0;i<isShow.length;i++){
+            isShow[i]=false;
+        }
+
     }
 
     public void stop() {
@@ -1563,6 +1567,35 @@ public class PServer implements net.PSGrpc.PS {
         logger.info("通信个数："+networkCount);
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
+    }
+
+
+    public static AtomicDouble loss=new AtomicDouble(0);
+    public static boolean[] isShow=new boolean[4];
+    @Override
+    public void sendLoss(LossMessage req,StreamObserver<BMessage> resp){
+        loss.set(loss.get()+req.getLoss());
+        barrier_WorkerNum();
+        if(req.getReqHost()==Context.masterId) {
+            if ((loss.get() / Context.workerNum) < 0.65 && !isShow[0]) {
+                isShow[0] = true;
+                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+            }
+
+            if ((loss.get() / Context.workerNum) < 0.6 && !isShow[1]) {
+                isShow[1] = true;
+                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+            }
+            if ((loss.get() / Context.workerNum) < 0.55 && !isShow[2]) {
+                isShow[2] = true;
+                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+            }
+
+            if ((loss.get() / Context.workerNum) < 0.50 && !isShow[3]) {
+                isShow[3] = true;
+                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+            }
+        }
     }
 
 

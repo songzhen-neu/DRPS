@@ -39,9 +39,15 @@ service PS {
     rpc GetNeededParamsLMF(PullRequestMessage) returns(SRListMessage){};
     rpc SendGradMapLMF(SRListMessage) returns(SMessage){};
     rpc ShowSomeStatisticAfterTrain(BMessage) returns(BMessage){};
+    rpc SendLoss(LossMessage) returns(BMessage){};
 
 }
 
+message LossMessage{
+    int32 ReqHost=1;
+    float loss=2;
+    int64 startTime=3;
+}
 
 message SRListMessage{
     // 这里sr是string和RowOrColParam

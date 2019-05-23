@@ -441,7 +441,7 @@ public class KVStoreForLevelDB {
                 RowOrColParam rowOrColParam=new RowOrColParam(r);
                 for(int j=0;j<rowOrColParam.param.length;j++){
 //                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
-                    rowOrColParam.param[j]= 0f;
+                    rowOrColParam.param[j]= 0.1f;
                     rowOrColParam.index="p"+i;
                 }
                 db.put(("p" + i).getBytes(), TypeExchangeUtil.toByteArray(rowOrColParam));
@@ -459,7 +459,7 @@ public class KVStoreForLevelDB {
                 RowOrColParam rowOrColParam=new RowOrColParam(r);
                 for(int j=0;j<rowOrColParam.param.length;j++){
 //                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
-                    rowOrColParam.param[j]=0f;
+                    rowOrColParam.param[j]=0.1f;
                     rowOrColParam.index="p"+l;
                 }
 
