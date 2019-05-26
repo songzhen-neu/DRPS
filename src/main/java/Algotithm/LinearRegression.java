@@ -106,9 +106,9 @@ public class LinearRegression {
 
                 paramsMap.clear();
             }
-            if(loss<0.5f){
-                break;
-            }
+//            if(loss<0.5f){
+//                break;
+//            }
         }
         System.out.println("zongshijian:" + totalTime);
     }
@@ -143,10 +143,10 @@ public class LinearRegression {
                 if (sample.cat[j] != -1) {
                     if (map.get("p" + sample.cat[j]) != null) {
                         float curGradient = map.get("p" + sample.cat[j]);
-                        curGradient += learningRate * error[i]*paramsMap.get("p" + sample.cat[j]);
+                        curGradient += learningRate * error[i];
                         map.put("p" + j, curGradient);
                     } else {
-                        map.put("p" + sample.cat[j], learningRate * error[i]* paramsMap.get("p" + sample.cat[j]));
+                        map.put("p" + sample.cat[j], learningRate * error[i]);
                     }
                 }
 

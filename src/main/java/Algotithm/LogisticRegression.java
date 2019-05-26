@@ -69,6 +69,10 @@ public class LogisticRegression {
         boolean isExec1=false;
         boolean isExec2=false;
         boolean isExec3=false;
+        long a1=0;
+        long a2=0;
+        long a3=0;
+        long a4=0;
         for (int i = 0; i < echo; i++) {
             // 该层是循环所有的batch
             for (int j = 0; j < WorkerContext.sampleBatchListSize; j++) {
@@ -107,23 +111,28 @@ public class LogisticRegression {
                 WorkerContext.psRouterClient.sendGradientMap(gradientMap);
 
                 loss = calculateLoss(outputValueOfBatch, batch) / WorkerContext.sampleBatchSize;
+
                 WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().sendLoss(LossMessage.newBuilder()
                         .setLoss(loss)
                         .setReqHost(WorkerContext.workerId)
                         .setStartTime(start).build());
                 if(Math.abs(loss)<0.65f&&!isExec){
+                    a1=System.currentTimeMillis();
                     System.out.println("训练时间："+(System.currentTimeMillis()-start));
                     isExec=true;
                 }
                 if(Math.abs(loss)<0.6f && !isExec1){
+                    a2=System.currentTimeMillis();
                     System.out.println("训练时间："+(System.currentTimeMillis()-start));
                     isExec1=true;
                 }
                 if(Math.abs(loss)<0.55f && !isExec2){
+                    a3=System.currentTimeMillis();
                     System.out.println("训练时间："+(System.currentTimeMillis()-start));
                     isExec2=true;
                 }
                 if(Math.abs(loss)<0.5f && !isExec3){
+                    a4=System.currentTimeMillis();
                     System.out.println("训练时间："+(System.currentTimeMillis()-start));
                     isExec3=true;
                 }
@@ -133,7 +142,13 @@ public class LogisticRegression {
                 paramsMap.clear();
 
             }
+            System.out.println("训练时间："+(a1-start));
+            System.out.println("训练时间："+(a2-start));
+            System.out.println("训练时间："+(a3-start));
+            System.out.println("训练时间："+(a4-start));
         }
+
+
         System.out.println("zongshijian:" + totalTime);
     }
 

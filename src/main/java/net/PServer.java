@@ -1100,6 +1100,7 @@ public class PServer implements net.PSGrpc.PS {
 
 
     CyclicBarrier cyclicBarrier_workerNum = new CyclicBarrier(Context.workerNum);
+    CyclicBarrier cyclicBarrier_workerNum2 = new CyclicBarrier(Context.workerNum);
     AtomicBoolean isSatisfyMinGain = new AtomicBoolean(false);
     AtomicDouble[]  diskCost;
 
@@ -1260,6 +1261,24 @@ public class PServer implements net.PSGrpc.PS {
          */
         try {
             cyclicBarrier_workerNum.await();
+            // 只让一个线程执行reset
+        } catch (BrokenBarrierException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void barrier_WorkerNum2() {
+        /**
+         *@Description: 用来进行线程同步，同时在执行完reset了，可保证其复用性
+         * 但是注意，这里只针对同步线程个数是workerNum的
+         *@Param: []
+         *@return: void
+         *@Author: SongZhen
+         *@date: 下午3:14 19-5-6
+         */
+        try {
+            cyclicBarrier_workerNum2.await();
             // 只让一个线程执行reset
         } catch (BrokenBarrierException | InterruptedException e) {
             e.printStackTrace();
@@ -1574,28 +1593,30 @@ public class PServer implements net.PSGrpc.PS {
     public static boolean[] isShow=new boolean[4];
     @Override
     public void sendLoss(LossMessage req,StreamObserver<BMessage> resp){
-        loss.set(loss.get()+req.getLoss());
-        barrier_WorkerNum();
+        // 不能加同步，不然对于SSP、WSP错了
+//        barrier_WorkerNum2();
         if(req.getReqHost()==Context.masterId) {
-            if ((loss.get() / Context.workerNum) < 0.65 && !isShow[0]) {
+            if (Math.abs(req.getLoss()) < 0.65 && !isShow[0]) {
                 isShow[0] = true;
-                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
 
-            if ((loss.get() / Context.workerNum) < 0.6 && !isShow[1]) {
+            if (Math.abs(req.getLoss()) < 0.6 && !isShow[1]) {
                 isShow[1] = true;
-                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
-            if ((loss.get() / Context.workerNum) < 0.55 && !isShow[2]) {
+            if (Math.abs(req.getLoss()) < 0.55 && !isShow[2]) {
                 isShow[2] = true;
-                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
 
-            if ((loss.get() / Context.workerNum) < 0.50 && !isShow[3]) {
+            if (Math.abs(req.getLoss())  < 0.50 && !isShow[3]) {
                 isShow[3] = true;
-                System.out.println(loss.get()/Context.workerNum + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
         }
+        resp.onNext(BMessage.newBuilder().setB(true).build());
+        resp.onCompleted();
     }
 
 

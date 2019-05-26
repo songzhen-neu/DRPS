@@ -66,7 +66,7 @@ public class DataProcessUtil {
 
         // 初始化max和min数组，max为float的最小值，min为float的最大值
         for(int i=0;i<Context.featureSize;i++){
-            max[i]=Float.MIN_VALUE;
+            max[i]=-Float.MAX_VALUE;
             min[i]=Float.MAX_VALUE;
         }
 
@@ -77,11 +77,11 @@ public class DataProcessUtil {
             for(int j=0;j<batch.sampleList.size();j++){
                 float[] feature=batch.sampleList.get(j).feature;
                 for(int k=0;k<feature.length;k++){
-                    if(Math.abs(feature[k])>max[k]){
-                        max[k]=Math.abs(feature[k]);
+                    if(feature[k]>max[k]){
+                        max[k]=feature[k];
                     }
-                    if(Math.abs(feature[k])<min[k]){
-                        min[k]=Math.abs(feature[k]);
+                    if(feature[k]<min[k]){
+                        min[k]=feature[k];
                     }
                 }
             }
