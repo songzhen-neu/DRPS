@@ -8,6 +8,7 @@ import context.WorkerContext;
 import dataStructure.SparseMatrix.Matrix;
 import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
+import io.grpc.stub.StreamObserver;
 import net.IMessage;
 import net.PSWorker;
 import net.SFKVListMessage;
@@ -139,27 +140,25 @@ public class SVM {
                 cost += (1 - sample.click * outputValue[i]);
             }
 
-            for(int j=0;j<sample.feature.length;j++){
-                cost+= 0.5*lambda*paramsMap.get("f"+j);
-                float f=map.get("f"+j);
-                if(sample.click*outputValue[i]-1<0){
-                    map.put("f"+j,f-sample.click*sample.feature[j]);
-                }
+        }
 
+        for(String s:paramsMap.keySet()) {
+            cost += 0.5 * lambda * paramsMap.get(s)*paramsMap.get(s);
+        }
+
+        for(int i=0;i<batch.sampleList.size();i++){
+            Sample sample=batch.sampleList.get(i);
+            for(int j=0;j<sample.feature.length;j++){
+//                if(outputValue[i]*sample.click-1<0){
+                    map.put("f"+j,(map.get("f"+j)-sample.click*sample.feature[j]));
+//                }
             }
 
             for(int j=0;j<sample.cat.length;j++){
-                if(sample.cat[j]!=-1){
-//                    System.out.println("batchcatmiss:"+i);
-                    cost+=0.5*lambda*paramsMap.get("p"+sample.cat[j]);
-                    float f=map.get("p"+sample.cat[j]);
-                    if(sample.click*outputValue[i]-1<0){
-                        map.put("p"+sample.cat[j],f-sample.click*sample.cat[j]);
-                    }
-                }
-
+//                if(outputValue[i]*sample.click-1<0){
+                    map.put("p"+sample.cat[j],(map.get("p"+sample.cat[j])-sample.click));
+//                }
             }
-
         }
 
 
@@ -167,7 +166,7 @@ public class SVM {
         this.cost=cost;
 
         for (String key : map.keySet()) {
-            map.put(key, -map.get(key)*learningRate);
+            map.put(key, map.get(key)*learningRate);
         }
         return map;
     }

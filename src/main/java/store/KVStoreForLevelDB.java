@@ -89,7 +89,7 @@ public class KVStoreForLevelDB {
         for (long i = 0; i < sparseDimSize; i++) {
             if (i % Context.serverNum == ServerContext.serverId) {
 //                Param param = new Param("p" + i, RandomUtil.getRandomValue(-0.1f, 0.1f));
-                Param param = new Param("p" + i, 0);
+                Param param = new Param("p" + i, 0.1f);
                 db.put(("p" + i).getBytes(), TypeExchangeUtil.toByteArray(param));
 //                System.out.println("params:" + i);
             }
@@ -110,7 +110,7 @@ public class KVStoreForLevelDB {
                 Set<Param> paramSet = new HashSet<Param>();
                 for (Object l : set) {
 //                    Param param = new Param("p" + l, RandomUtil.getRandomValue(-0.1f, 0.1f));
-                    Param param = new Param("p" + l, 0);
+                    Param param = new Param("p" + l, 0.1f);
 //                logger.info("catParam"+l);
                     paramSet.add(param);
                 }
@@ -141,7 +141,7 @@ public class KVStoreForLevelDB {
         if (Context.masterId == ServerContext.serverId) {
             for (int i = 0; i < featureParams.length; i++) {
 //                featureParams[i] = RandomUtil.getRandomValue(-0.1f, 0.1f);
-                featureParams[i]=0;
+                featureParams[i]=0.1f;
             }
         }
 

@@ -149,7 +149,6 @@ public class LinearRegression {
                         map.put("p" + sample.cat[j], learningRate * error[i]);
                     }
                 }
-
             }
         }
 

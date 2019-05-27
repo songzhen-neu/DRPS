@@ -75,7 +75,7 @@ public class WorkerForLinearRegression {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LinearRegression linearRegression = new LinearRegression(0.001f, 0.01f, 100);
+        LinearRegression linearRegression = new LinearRegression(0.001f, 0.001f, 100);
         MemoryUtil.releaseMemory();
 
         CurrentTimeUtil.setStartTime();

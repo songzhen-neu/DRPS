@@ -324,9 +324,10 @@ public class WSP {
                     } catch (BrokenBarrierException e) {
                         e.printStackTrace();
                     }
-                    if (iTTableArray[workerId].execTime > maxIteratitionTime.get()) {
-                        maxIteratitionTime.set(iTTableArray[workerId].execTime);
-                    }
+//                        if (iTTableArray[workerId].execTime > maxIteratitionTime.get()) {
+//                            maxIteratitionTime.set(iTTableArray[workerId].execTime);
+//                        }
+                    maxIteratitionTime.set(iTTableArray[workerId].execTime/Context.workerNum);
 
                     iTTableArray[workerId].startTime = System.currentTimeMillis();
                     iTTableArray[workerId].endTime = iTTableArray[workerId].startTime + iTTableArray[workerId].execTime;
@@ -385,7 +386,7 @@ public class WSP {
                                     // 如果要等待i，那么
                                     for (int j = 0; j < Context.workerNum; j++) {
                                         if (j != workerId && j != i) {
-                                            sCTArray[workerId].staleness += (maxIteration + 1 - iTTableArray[j].iteration);
+                                            sCTArray[i].staleness += (maxIteration + 1 - iTTableArray[j].iteration);
                                         }
                                     }
                                 }
@@ -393,6 +394,11 @@ public class WSP {
                             }
 
                             optimalPlanSet[workerId] = getIOfMinNegGain(iTTableArray, sCTArray, workerId);
+                            for(int i=0;i<Context.workerNum;i++){
+                                sCTArray[i].waitTime=0;
+                                sCTArray[i].staleness=0;
+                                sCTArray[i].negGain=0;
+                            }
 
                         }
                     }
