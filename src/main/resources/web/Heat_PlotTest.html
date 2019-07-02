@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Document</title>
+</head>
+
+<script src="https://cdn.plot.ly/plotly-1.2.0.min.js"></script>
+<body>
+<p id="tester" style="width:600px;height:250px;"></p>
+</body>
+
+<script >
+    myDiv = document.getElementById('tester');
+    var data = [
+        {
+            z: [[1, 20, 30], [20, 1, 60], [30, 60, 1]],
+            type: 'heatmap'
+        }
+    ];
+
+    Plotly.plot(myDiv, data);
+</script>
+
+</html>

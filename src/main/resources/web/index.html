@@ -1,0 +1,99 @@
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+
+<div id="myDiv" style="width: 480px; height: 400px;"></div>
+<!--<div id="myDiv1" style="width: 480px; height: 400px;"></div>-->
+<script>
+
+    window.charts = {};
+    window.step = {};
+    $(document).ready(function(){
+        setInterval(function () {
+            htmlobj = $.ajax({
+                url:"/?act=data",
+                async:false,
+                type:'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType:'json',
+                data:JSON.stringify(window.step)
+            });
+
+            htmlobj1 = $.ajax({
+                url:"/?act=data1",
+                async:false,
+                type:'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType:'json',
+                data:JSON.stringify(window.step)
+            });
+
+            obj = JSON.parse(htmlobj.responseText);
+            obj1 = JSON.parse(htmlobj1.responseText);
+            if(obj1!=null){
+                obj1 =JSON.parse(htmlobj1.responseText);
+                Object.keys(obj1).sort();
+            }
+
+            Object.keys(obj).sort();
+
+            var rightPoint = {
+                x: obj1.l1x,
+                y: obj1.l1y,
+                name: 'rightPoint',
+                mode:'markers',
+                type: 'scatter'
+            };
+            var falsePoint = {
+                x: obj1.l2x,
+                y: obj1.l2y,
+                name: 'falsePoint',
+                mode:'markers',
+                type:'scatter'
+            };
+
+            var data=[rightPoint,falsePoint];
+
+            Plotly.newPlot("myDiv", data);
+
+
+            $.each(obj, function(id, val){
+                if (val.x == null || val.x.length == 0) {
+                    return;
+                }
+                var update = {
+                    y: [val.x],
+                    x: [val.y]
+                };
+                c = window.charts[id];
+                if (c == null || c == undefined) {
+                    newChart(id);
+                }
+                Plotly.extendTraces(id, update, [0]);
+                window.step[id] = update.x[0][update.x[0].length-1];
+            });
+        }, 1000);
+    });
+
+
+    function newChart(id) {
+        $(document.body).append("<div id='"+id+"' style='width: 1000px; height: 400px;'></div>");
+        var trace = {
+            x: [],
+            y: [],
+            xaxis: 'x',
+            yaxis: 'y',
+            type: 'scatter'
+        };
+        var layout = {
+            title: id,
+        };
+        window.charts[id]= Plotly.newPlot(id, [trace], layout);
+        window.step[id] = 0;
+        return window.charts[id];
+    }
+</script>
+</body>

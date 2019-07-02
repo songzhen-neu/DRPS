@@ -21,7 +21,7 @@ public class AlgorithmUtil {
         for (int l = 0; l < value.length; l++) {
             Sample sample = batch.sampleList.get(l);
             // 计算feature的value
-            for (int i = 0; i < sample.feature.length; i++) {
+            for (int i = 0; i < Context.featureSize; i++) {
                 if (sample.feature[i] != -1) {
                     value[l] += sample.feature[i] * paramsMap.get("f" + i);
                 }

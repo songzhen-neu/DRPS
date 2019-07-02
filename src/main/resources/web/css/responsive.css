@@ -1,0 +1,641 @@
+@media (min-width: 1080px) and (max-width: 1200px)
+{
+	.container {
+    width: 1040px;
+    margin: 0px auto;
+}
+.banner {
+    padding: 160px 0px 80px;
+}
+.section-head {
+    padding: 80px 0px 60px 25.5px;
+}
+.services-list {
+    padding-bottom: 80px;
+    float: left;
+}
+.services-list li {
+    float: left;
+    width: 313px;
+    text-align: center;
+    margin: 0px 25px;
+}
+.desc {
+    padding: 80px 0px;
+}
+.work-gallery ul li {
+    margin-bottom: 15px;
+    width: 235px;
+}
+.work-gallery ul li a img {
+    width: 235px;
+    height: 100%;
+}
+.team {
+    float: left;
+    margin-bottom: 80px;
+}
+.team li {
+    width: 235px;
+}
+.team li img {
+    width: 235px;
+    height: 100%;
+}
+.contact-section {
+    float: left;
+    padding-bottom: 80px;
+}
+.contact-form {
+    width: 550px;
+    float: left;
+}
+.contact-details {
+    float: left;
+    margin-left: 80px;
+    width: 410px;
+}
+
+}
+@media (min-width: 768px) and (max-width: 1080px)
+{
+	.container {
+    margin: 0px auto;
+    width: 728px;
+}
+.banner {
+    padding: 160px 0px 60px;
+}
+.banner-text {
+    width: 70%;
+    padding: 60px 0px;
+}
+.banner-text h2 {
+    font-size: 25px;
+}
+p.under-tagline {
+    color: #FFF;
+    font-size: 15px;
+    line-height: 30px;
+    font-weight: 300;
+    margin-top: 25px;
+}
+.section-head {
+    padding: 60px 0px 60px 25.5px;
+}
+.services-list {
+    padding-bottom: 60px;
+    float: left;
+}
+.services-list li {
+    float: left;
+    width: 229px;
+    text-align: center;
+    margin: 0px 10px;
+}
+.services-list h4 {
+    font-size: 15px;
+    padding-top: 30px;
+    text-transform: uppercase;
+    color: #3D4351;
+}
+.desc {
+    padding: 60px 0px;
+}
+.desc h3 {
+    font-size: 23px;
+}
+.desc p {
+    color: #737373;
+    width: 90%;
+    font-size: 16px;
+}
+.work-gallery {
+    padding-bottom: 60px;
+    float: left;
+}
+.work-gallery ul li {
+    float: left;
+    margin-left: 60px;
+    margin-bottom: 20px;
+    width: 275px;
+}
+.team {
+    float: left;
+    margin-bottom: 60px;
+}
+.team li {
+    background-color: #FFF;
+    width: 275px;
+    margin-left: 60px;
+    float: left;
+    box-shadow: 0px 1px 1px -1px #888;
+    margin-bottom: 40px;
+}
+.contact-section {
+    float: left;
+    padding-bottom: 60px;
+}
+.contact-form {
+    float: left;
+    width: 97%;
+}
+.contact-details {
+    width: 500px;
+    float: left;
+    margin-left: 0px;
+}
+}
+@media only screen 
+and (min-device-width : 768px) 
+and (max-device-width : 1024px) 
+and (orientation : landscape) 
+{
+	.container {
+    margin: 0px auto;
+    width: 728px;
+}
+.banner {
+    padding: 160px 0px 60px;
+}
+.banner-text {
+    width: 70%;
+    padding: 60px 0px;
+}
+.banner-text h2 {
+    font-size: 25px;
+}
+p.under-tagline {
+    color: #FFF;
+    font-size: 15px;
+    line-height: 30px;
+    font-weight: 300;
+    margin-top: 25px;
+}
+.section-head {
+    padding: 60px 0px 60px 25.5px;
+}
+.services-list {
+    padding-bottom: 60px;
+    float: left;
+}
+.services-list li {
+    float: left;
+    width: 229px;
+    text-align: center;
+    margin: 0px 10px;
+}
+.services-list h4 {
+    font-size: 15px;
+    padding-top: 30px;
+    text-transform: uppercase;
+    color: #3D4351;
+}
+.desc {
+    padding: 60px 0px;
+}
+.desc h3 {
+    font-size: 23px;
+}
+.desc p {
+    color: #737373;
+    width: 90%;
+    font-size: 16px;
+}
+.work-gallery {
+    padding-bottom: 60px;
+    float: left;
+}
+.work-gallery ul li {
+    float: left;
+    margin-left: 60px;
+    margin-bottom: 20px;
+    width: 275px;
+}
+.team {
+    float: left;
+    margin-bottom: 60px;
+}
+.team li {
+    background-color: #FFF;
+    width: 275px;
+    margin-left: 60px;
+    float: left;
+    box-shadow: 0px 1px 1px -1px #888;
+    margin-bottom: 40px;
+}
+.contact-section {
+    float: left;
+    padding-bottom: 60px;
+}
+.contact-form {
+    float: left;
+    width: 97%;
+}
+.contact-details {
+    width: 500px;
+    float: left;
+    margin-left: 0px;
+}
+}
+@media (min-width: 640px) and (max-width: 768px)
+{
+	.container {
+    margin: 0px auto;
+    width: 620px;
+}
+.banner {
+    background: url('../images/bg.png') no-repeat fixed 0% 0% / 100% 100% #3D454A;
+    padding: 120px 0px 60px;
+    cursor: default;
+}
+.banner-text {
+    width: 70%;
+    margin: 0px auto;
+    padding: 60px 0px;
+}
+.banner-text h2 {
+    color: #FFF;
+    font-size: 21px;
+    font-weight: 300;
+    line-height: 1.5;
+}
+p.under-tagline {
+    color: #FFF;
+    font-size: 14px;
+    line-height: 30px;
+    font-weight: 300;
+    margin-top: 25px;
+}
+.section-head {
+    padding: 60px 0px 60px 25.5px;
+}
+.services-list {
+    padding-bottom: 60px;
+    float: none;
+}
+.services-list li:first-child {
+    margin-left: auto;
+}
+.services-list li {
+    width: 350px;
+    text-align: center;
+    margin: 20px auto;
+    float: none;
+}
+.services-list li:last-child {
+    margin-right: auto;
+}
+.desc {
+    background: url('../images/p.jpg') no-repeat fixed 0% 0% / 100% 100% #3D454A;
+    padding: 40px 0px;
+    cursor: default;
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+.desc h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #FFF;
+    text-shadow: 1px 1px 1px #000;
+}
+.desc p {
+    color: #737373;
+    width: 90%;
+    font-size: 14px;
+    line-height: 30px;
+    margin: 25px auto 0px;
+    text-shadow: 1px 1px 1px #000;
+}
+.work-gallery {
+    padding-bottom: 60px;
+    float: left;
+}
+.work-gallery ul li {
+    float: left;
+    margin-left: 24px;
+    margin-bottom: 24px;
+    width: 275px;
+}
+.team {
+    float: left;
+    margin-bottom: 60px;
+}
+.team li {
+    background-color: #FFF;
+    width: 275px;
+    margin-left: 24px;
+    float: left;
+    box-shadow: 0px 1px 1px -1px #888;
+    margin-bottom: 24px;
+}
+.contact-section {
+    float: left;
+    padding-bottom: 60px;
+}
+.contact-details {
+    float: left;
+    margin-left: 0px;
+    width: 500px;
+}
+
+}
+@media (min-width: 480px) and (max-width: 640px)
+{
+	.container
+	{
+		width: 440px;
+		margin: 0 auto;
+	}
+	.logo {
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+.menu {
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+.menu ul li {
+    float: none;
+    text-align: center;
+	margin: 0px;
+	padding: 0px;
+}
+ul.nav li a {
+
+    display: block;
+    padding: 15px 0px;
+    background-color: #000;
+	transition: all 0.7s ease-in;
+}
+ul.nav li a:hover {
+    color: #FFF;
+    background-color: #16b1b5;
+}
+ul#menu {
+		position: static;
+		display: none;
+	}
+	
+	li {
+		margin-bottom: 1px;
+	}
+	
+	
+	
+	.show-menu {
+		display:block;
+	}
+	.banner {
+    background: url('../images/bg.png') no-repeat fixed #3D454A;
+    padding: 180px 0px 40px;
+    cursor: default;
+}
+.banner-text {
+    width: 100%;
+    margin: 0px auto;
+    padding: 20px 0px;
+}
+.banner-text h2 {
+    color: #FFF;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1.5;
+}
+p.under-tagline {
+    color: #FFF;
+    font-size: 14px;
+    line-height: 30px;
+    font-weight: 300;
+    margin-top: 25px;
+}
+.section-head {
+    padding: 40px 0px 40px 0px;
+}
+.section-head h3 {
+    color: #000;
+    font-size: 30px;
+    font-weight: 300;
+    text-align: center;
+}
+.services-list {
+    padding-bottom: 40px;
+    float: left;
+}
+.services-list li:first-child {
+    margin-left: auto;
+}
+.services-list li {
+    width: 350px;
+    margin: 20px 37.5px;
+    text-align: center;
+    float: left;
+}
+.desc {
+    background: url('../images/p.jpg') no-repeat fixed #3D454A;
+    padding: 40px 0px;
+    cursor: default;
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+.desc h3 {
+    font-size: 19px;
+    font-weight: 600;
+    color: #FFF;
+    text-shadow: 1px 1px 1px #000;
+}
+.desc p {
+    color: #737373;
+    width: 90%;
+    font-size: 14px;
+    line-height: 22px;
+    margin: 25px auto 0px;
+    text-shadow: 1px 1px 1px #000;
+}
+.work-gallery ul li {
+    margin-bottom: 20px;
+    width: 441px;
+    margin-left: 0px;
+    text-align: center;
+    float: left;
+}
+.team li {
+    background-color: #FFF;
+    width: 275px;
+    margin-left: 80px;
+    float: left;
+    box-shadow: 0px 1px 1px -1px #888;
+    margin-bottom: 25px;
+}
+.team {
+    margin-bottom: 40px;
+    float: left;
+}
+.contact-section {
+    float: left;
+    padding-bottom: 40px;
+}
+.contact-form {
+    width: 420px;
+    float: left;
+}
+.contact-details {
+    float: left;
+    margin-left: 0px;
+    width: 200px;
+}
+}
+@media (min-width: 20px) and (max-width: 480px)
+{
+	.container
+	{
+		width: 280px;
+		margin: 0 auto;
+	}
+	.logo {
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+.menu {
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+.menu ul li {
+    float: none;
+    text-align: center;
+	margin: 0px;
+	padding: 0px;
+}
+ul.nav li a {
+
+    display: block;
+    padding: 15px 0px;
+    background-color: #000;
+	transition: all 0.7s ease-in;
+}
+ul.nav li a:hover {
+    color: #FFF;
+    background-color: #16b1b5;
+}
+ul#menu {
+		position: static;
+		display: none;
+	}
+	
+	li {
+		margin-bottom: 1px;
+	}
+	
+	
+	
+	.show-menu {
+		display:block;
+	}
+	.banner {
+    background: url('../images/bg.png') no-repeat fixed #3D454A;
+    padding: 180px 0px 40px;
+    cursor: default;
+}
+.banner-text {
+    width: 100%;
+    margin: 0px auto;
+    padding: 20px 0px;
+}
+.banner-text h2 {
+    color: #FFF;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.5;
+}
+p.under-tagline {
+    color: #FFF;
+    font-size: 12px;
+    line-height: 30px;
+    font-weight: 300;
+    margin-top: 25px;
+}
+.section-head {
+    padding: 40px 0px 40px 0px;
+}
+.services-list {
+    padding-bottom: 40px;
+    float: left;
+}
+.services-list li:first-child {
+    margin-left: auto;
+}
+.section-head h3 {
+    color: #000;
+    font-size: 30px;
+    font-weight: 300;
+    text-align: center;
+}
+.services-list li {
+    width: 280px;
+    margin: 20px 0px;
+    text-align: center;
+    float: left;
+}
+.desc {
+    background: url('../images/p.jpg') no-repeat fixed #3D454A;
+    padding: 40px 0px;
+    cursor: default;
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+.desc h3 {
+    font-size: 19px;
+}
+.desc p {
+    width: 90%;
+    font-size: 14px;
+    line-height: 22px;
+    margin: 25px auto 0px;
+}
+.work-gallery ul li {
+    margin-bottom: 20px;
+    width: 280px;
+    margin-left: 0px;
+    text-align: center;
+    float: left;
+}
+.team li {
+    width: 275px;
+    margin-left: 2px;
+    float: left;
+	margin-bottom: 25px;
+}
+.team {
+    margin-bottom: 40px;
+    float: left;
+}
+.contact-section {
+    float: left;
+    padding-bottom: 40px;
+}
+.contact-form {
+    width: 260px;
+    float: left;
+}
+button.submit {
+
+    width: 107%;
+
+}
+.contact-details {
+    float: left;
+    margin-left: 0px;
+    width: 200px;
+}
+ul.socialmedia li {
+    margin: 0px 10px;
+    font-size: 26px;
+}
+}

@@ -1,6 +1,8 @@
 package Algotithm;
 
+import Jama.Matrix;
 import Util.*;
+import com.mkobos.pca_transform.PCA;
 import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import context.Context;
 import context.WorkerContext;
@@ -12,6 +14,7 @@ import net.*;
 import org.iq80.leveldb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import visual.UiClient;
 
 
 import java.io.IOException;
@@ -64,15 +67,15 @@ public class LogisticRegression {
                 .sendTrainRoundNum(IMessage.newBuilder().setI(WorkerContext.sampleBatchListSize * echo).build());
         // 该层是循环echo遍数据集
         long totalTime = 0;
-        long start=System.currentTimeMillis();
-        boolean isExec=false;
-        boolean isExec1=false;
-        boolean isExec2=false;
-        boolean isExec3=false;
-        long a1=0;
-        long a2=0;
-        long a3=0;
-        long a4=0;
+        long start = System.currentTimeMillis();
+//        boolean isExec=false;
+//        boolean isExec1=false;
+//        boolean isExec2=false;
+//        boolean isExec3=false;
+//        long a1=0;
+//        long a2=0;
+//        long a3=0;
+//        long a4=0;
         for (int i = 0; i < echo; i++) {
             // 该层是循环所有的batch
             for (int j = 0; j < WorkerContext.sampleBatchListSize; j++) {
@@ -111,45 +114,97 @@ public class LogisticRegression {
                 WorkerContext.psRouterClient.sendGradientMap(gradientMap);
 
                 loss = calculateLoss(outputValueOfBatch, batch) / WorkerContext.sampleBatchSize;
+                UiClient.ins().plot("loss", Math.abs(loss), j + i * WorkerContext.sampleBatchListSize);
+                plotScatter(batch, errorOfBatch);
 
                 WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().sendLoss(LossMessage.newBuilder()
                         .setLoss(loss)
                         .setReqHost(WorkerContext.workerId)
                         .setStartTime(start).build());
-                if(Math.abs(loss)<0.65f&&!isExec){
-                    a1=System.currentTimeMillis();
-                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
-                    isExec=true;
-                }
-                if(Math.abs(loss)<0.6f && !isExec1){
-                    a2=System.currentTimeMillis();
-                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
-                    isExec1=true;
-                }
-                if(Math.abs(loss)<0.55f && !isExec2){
-                    a3=System.currentTimeMillis();
-                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
-                    isExec2=true;
-                }
-                if(Math.abs(loss)<0.5f && !isExec3){
-                    a4=System.currentTimeMillis();
-                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
-                    isExec3=true;
-                }
+//                if(Math.abs(loss)<0.65f&&!isExec){
+//                    a1=System.currentTimeMillis();
+//                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+//                    isExec=true;
+//                }
+//                if(Math.abs(loss)<0.6f && !isExec1){
+//                    a2=System.currentTimeMillis();
+//                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+//                    isExec1=true;
+//                }
+//                if(Math.abs(loss)<0.55f && !isExec2){
+//                    a3=System.currentTimeMillis();
+//                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+//                    isExec2=true;
+//                }
+//                if(Math.abs(loss)<0.5f && !isExec3){
+//                    a4=System.currentTimeMillis();
+//                    System.out.println("训练时间："+(System.currentTimeMillis()-start));
+//                    isExec3=true;
+//                }
 
                 System.out.println("error echo:" + i + ",batch:" + j + ",loss:" + loss);
 
                 paramsMap.clear();
 
             }
-            System.out.println("训练时间："+(a1-start));
-            System.out.println("训练时间："+(a2-start));
-            System.out.println("训练时间："+(a3-start));
-            System.out.println("训练时间："+(a4-start));
+//            System.out.println("训练时间："+(a1-start));
+//            System.out.println("训练时间："+(a2-start));
+//            System.out.println("训练时间："+(a3-start));
+//            System.out.println("训练时间："+(a4-start));
         }
 
 
         System.out.println("zongshijian:" + totalTime);
+    }
+
+    public void plotScatter(SampleList batch, float[] error) {
+        int count = 0;
+        for (int i = 0; i < error.length; i++) {
+            if (Math.abs(error[i]) < 0.5) {
+                count++;
+            }
+        }
+        Matrix trainingData = new Matrix(new double[][]{
+                {1, 2, 3, 4, 5, 6, 1, 2, 2, 3},
+                {6, 5, 4, 3, 2, 1, 7, 4, 2, 3},
+                {2, 2, 2, 2, 2, 2, 2, 6, 2, 3}
+        });
+
+        PCA pca = new PCA(trainingData);
+        double[][] d=new double[batch.sampleList.size()][Context.featureSize];
+        for(int i=0;i<batch.sampleList.size();i++){
+            for(int j=0;j<Context.featureSize;j++){
+                d[i][j]=(double) batch.sampleList.get(i).feature[j];
+            }
+        }
+
+        Matrix testData = new Matrix(d);
+        // 分别表示正确分类的xy，和错误分类的xy
+        List<Double> l1x=new ArrayList<Double>();
+        List<Double> l1y=new ArrayList<Double>();
+        List<Double> l2x=new ArrayList<Double>();
+        List<Double> l2y=new ArrayList<Double>();
+        // 用来存储上述list
+        Map<String,List<Double>> map=new HashMap<String, List<Double>>();
+
+        Matrix transformedData = pca.transform(testData, PCA.TransformationType.WHITENING);
+        for (int r = 0; r < transformedData.getRowDimension(); r++) {
+                if(Math.abs(error[r])<0.5){
+                    // 正确分类
+                    l1x.add(transformedData.get(r,0));
+                    l1y.add(transformedData.get(r,1));
+                }else {
+                    l2x.add(transformedData.get(r,0));
+                    l2y.add(transformedData.get(r,1));
+                }
+        }
+        map.put("l1x",l1x);
+        map.put("l1y",l1y);
+        map.put("l2x",l2x);
+        map.put("l2y",l2y);
+
+        UiClient.ins().plotScatterGraph("LoRScatter",map);
+        System.out.println("count:" + count);
     }
 
     public float calculateLoss(float[] outputValueOfBatch, SampleList batch) {

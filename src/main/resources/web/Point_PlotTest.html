@@ -1,0 +1,68 @@
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+
+<div id="myDiv" style="width: 480px; height: 400px;"></div>
+<script>
+
+
+    $(document).ready(function(){
+        setInterval(function () {
+            htmlobj = $.ajax({
+                url:"/?act=data",
+                async:false,
+                type:'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType:'json',
+                data:JSON.stringify("")
+            });
+            obj = JSON.parse(htmlobj.responseText);
+            Object.keys(obj).sort();
+
+
+                var trace1 = {
+                    x: obj.x0,
+                    y: obj.x1,
+                    mode:'markers',
+                    type: 'scatter'
+                };
+                var trace2 = {
+                    x: obj.x2,
+                    y: obj.x3,
+                    mode:'markers',
+                    type:'scatter'
+                };
+
+                var data=[trace1,trace2];
+
+                Plotly.newPlot("myDiv", data);
+
+        }, 1000);
+    });
+
+
+    function newChart(id) {
+        $(document.body).append("<div id='"+id+"' style='width: 1000px; height: 400px;'></div>");
+        var trace1 = {
+            x: [],
+            y: [],
+            mode:'markers',
+            type: 'scatter'
+        };
+        var trace2 = {
+            x:[],
+            y:[],
+            mode:'markers',
+            type:'scatter'
+        };
+
+        var data=[trace1,trace2];
+        window.charts[id]= Plotly.newPlot(id, data);
+        window.step[id] = 0;
+        return window.charts[id];
+    }
+</script>
+</body>

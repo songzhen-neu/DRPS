@@ -70,7 +70,7 @@ public class WorkerForSVM {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        SVM svm = new SVM(0.1f,0.0001f, 100);
+        SVM svm = new SVM(0.0001f,0.0001f, 100);
         MemoryUtil.releaseMemory();
 
         CurrentTimeUtil.setStartTime();

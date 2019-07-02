@@ -149,15 +149,15 @@ public class SVM {
         for(int i=0;i<batch.sampleList.size();i++){
             Sample sample=batch.sampleList.get(i);
             for(int j=0;j<sample.feature.length;j++){
-//                if(outputValue[i]*sample.click-1<0){
+                if(outputValue[i]*sample.click-1<0){
                     map.put("f"+j,(map.get("f"+j)-sample.click*sample.feature[j]));
-//                }
+                }
             }
 
             for(int j=0;j<sample.cat.length;j++){
-//                if(outputValue[i]*sample.click-1<0){
+                if(outputValue[i]*sample.click-1<0){
                     map.put("p"+sample.cat[j],(map.get("p"+sample.cat[j])-sample.click));
-//                }
+                }
             }
         }
 
@@ -166,7 +166,7 @@ public class SVM {
         this.cost=cost;
 
         for (String key : map.keySet()) {
-            map.put(key, map.get(key)*learningRate);
+            map.put(key, -map.get(key)*learningRate);
         }
         return map;
     }

@@ -1,0 +1,308 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:width="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/style.css" rel="stylesheet" type="text/css"/>
+    <link href="css/responsive.css" rel="stylesheet" type="text/css"/>
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,100,300,400italic,700,700italic,900,900italic'
+          rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,600,300,200' rel='stylesheet'
+          type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto+Slab:400,300,100,700' rel='stylesheet' type='text/css'>
+    <link href="css/font-awesome.min.css" rel="stylesheet" media="screen">
+    <script type="text/javascript" src="js/smoothscroll.js"></script>
+    <script type="text/javascript" src="js/home.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <title>Experimental Console</title>
+</head>
+
+
+<script>
+
+    window.charts = {};
+    window.step = {};
+    $(document).ready(function(){
+        setInterval(function () {
+            htmlobj = $.ajax({
+                url:"/?act=data",
+                async:false,
+                type:'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType:'json',
+                data:JSON.stringify(window.step)
+            });
+
+            htmlobj1 = $.ajax({
+                url:"/?act=data1",
+                async:false,
+                type:'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType:'json',
+                data:JSON.stringify(window.step)
+            });
+
+            obj = JSON.parse(htmlobj.responseText);
+            obj1 = JSON.parse(htmlobj1.responseText);
+            if(obj1!=null){
+                obj1 =JSON.parse(htmlobj1.responseText);
+                Object.keys(obj1).sort();
+            }
+
+            Object.keys(obj).sort();
+
+            var rightPoint = {
+                x: obj1.l1x,
+                y: obj1.l1y,
+                name: 'rightPoint',
+                mode:'markers',
+                type: 'scatter'
+            };
+            var falsePoint = {
+                x: obj1.l2x,
+                y: obj1.l2y,
+                name: 'falsePoint',
+                mode:'markers',
+                type:'scatter'
+            };
+
+            var data=[rightPoint,falsePoint];
+
+            Plotly.newPlot("shiyantu1", data);
+
+
+            $.each(obj, function(id, val){
+                if (val.x == null || val.x.length == 0) {
+                    return;
+                }
+                var update = {
+                    y: [val.x],
+                    x: [val.y]
+                };
+                c = window.charts[id];
+                var trace = {
+                    x: [val.x],
+                    y: [val.y],
+                    xaxis: 'x',
+                    yaxis: 'y',
+                    type: 'scatter'
+                };
+                if (c == null || c == undefined) {
+                    window.step[id] = 0;
+                    Plotly.newPlot("shiyantu2", [trace], layout);
+                }
+                Plotly.extendTraces(id, update, [0]);
+                window.step[id] = update.x[0][update.x[0].length-1];
+            });
+        }, 1000);
+    });
+
+
+
+</script>
+
+
+<body>
+<!--------Start Header----------->
+<div class="header">
+    <div class="container">
+        <div class="logo-menu">
+            <div class="logo">
+                <h1>Laboratory Open Day</h1>
+            </div>
+            <div class="menu">
+                <label for="show-menu" class="show-menu">Show Menu</label>
+                <input type="checkbox" id="show-menu" role="button"></input>
+                <ul class="nav" id="menu">
+                    <li><a href="#">HOME</a></li>
+                    <li><a href="#introduction">INTRODUCTION</a></li>
+                    <li><a href="#related">OTHERS</a></li>
+                    <li><a href="#work">OURS</a></li>
+                    <li><a href="#experiment">EXPERIMENT</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!--------End Header------------->
+
+<!--------Banner Starts---------->
+<div class="banner">
+    <div class="container">
+        <div class="banner-text">
+            <h2 class="tagline">Our research is distributed machine learning<br/>We design and implement a distributed
+                machine learning system called <span>DRPS</span></h2>
+            <p class="under-tagline">DRPS is a distributed machine learning system based on parameter server with a
+                disk-resident schema. We propose a partitioning algorithm on parameter models called PPMCD and a
+                parallel control model called WSP to improve performance</p>
+            <button class="mainbutton" onclick="githubClick()">CODE ON GITHUB</button>
+
+        </div>
+    </div>
+</div>
+<!--------Banner Ends------------>
+
+<div class="related" id="introduction">
+    <div class="container">
+        <div class="section-head">
+            <h3>Introduction</h3>
+            <!--<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In quis faucibus leo. Ut ac arcu a diam mollis semper. In nec blandit nisl, nec cursus lectus.</p>-->
+        </div>
+        <div class="introdTitle">
+            <h1> What is distributed computing framework?</h1>
+            <img src="images/distributed.png" width="500" height="500"/>
+        </div>
+
+
+    </div>
+</div>
+
+
+<!--------related work Starts-------->
+<div class="related" id="related">
+    <div class="container">
+        <div class="section-head">
+            <h3>Related <span>Work</span></h3>
+            <!--<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In quis faucibus leo. Ut ac arcu a diam mollis semper. In nec blandit nisl, nec cursus lectus.</p>-->
+        </div>
+        <div class="services-list">
+            <ul>
+                <li>
+                    <div class="service-icon icon1"></div>
+                    <h4>HOGWILD!</h4>
+                    <p>HOGWILD! is a stand-alone machine learning system without good scalability.</p>
+                </li>
+                <li>
+                    <div class="service-icon icon2"></div>
+                    <h4>Hadoop And Spark</h4>
+                    <p>Hadoop and Spark are based on the distributed computing framework called MapReduce.</p>
+                </li>
+                <li>
+                    <div class="service-icon icon3"></div>
+                    <h4>TensorFlow and Angel</h4>
+                    <p>TensorFlow and Angel are based on the distributed framework of Parameter Server.</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<!--------Services Ends---------->
+
+
+<!--------Desc Starts------------>
+<div class="desc">
+    <div class="container">
+        <h3>There are still much work to be done in distributed machine learning</h3>
+        <p></p>
+    </div>
+</div>
+<!--------Desc Ends-------------->
+
+
+<!--------Work Starts------------>
+<div class="work" id="work">
+    <div class="container">
+        <div class="section-head">
+            <h3>Our <span>Works</span></h3>
+        </div>
+
+        <div class="services-list">
+
+            <div class="div-hori">
+                <div class="framework-Title">FrameWork of DRPS</div>
+                <div><img src="images/systemFramwork.png"/></div>
+            </div>
+            <div class="div-hori1">
+                <div>
+                    <img class="mubiao-img" src="images/mubiao.png"/>
+                    <div class="mubiao-text">Our Work And Goals</div>
+                </div>
+
+                <div style="float: left;margin-top: 20px;margin-left: 100px">
+                    <p style="width: 500px;">1.With limited resource, we make it possible to train big scale machine
+                        learning model, and we implement a disk-resident parameter server called <span
+                                style="color: red;">DRPS</span>.</p>
+                    <p style="width: 500px;">2.We optimized two aspects of DRPS: parameter partition and parallel
+                        control, which make DRPS a <span style="color: red">I/O efficient</span> machine learning
+                        system.</p>
+                    <p style="width: 500px;">3.We design <span style="color: red">PPMCD</span> algorithm and <span
+                            style="color: red">WSP</span> model, which are core engines of DRPS. </p>
+
+                </div>
+
+            </div>
+
+            <div style="float:left;margin-left: 100px;margin-top: 40px">
+                <div style="float: left">
+                    <img src="images/graph.png" width="130px" height="130px"/>
+                    <h4 class="biaoti">DGNN System</h4>
+                </div>
+            </div>
+
+            <div style="float:left;margin-left: 60px;margin-top: 40px">
+                <div style="float: left">
+                    <img src="images/yasuo.png" width="130px" height="130px"/>
+                    <h4 class="biaoti">Data Reduction</h4>
+                </div>
+
+            </div>
+
+            <div style="float:left;margin-left: 60px;margin-top: 40px">
+                <div style="float: left">
+                    <img src="images/gpu.png" width="130px" height="130px"/>
+                    <h4 class="biaoti">Distributed GPU System</h4>
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+<!--------Work Ends-------------->
+
+<!--------About Starts----------->
+<div class="about" id="experiment">
+    <div class="container">
+        <div class="section-head">
+            <h3>Experiment <span>Console</span></h3>
+        </div>
+        <div class="team">
+            <ul>
+                <li><div id="shiyantu1"></div><h5>Angela Leo</h5><span class="team-info">Web developer</span>
+                </li>
+                <li><div id="shiyantu2"></div><h5>Angela Leo</h5><span class="team-info">Web developer</span>
+                </li>
+                <li><img src="images/team-member3.jpg"/><h5>Angela Leo</h5><span class="team-info">Web developer</span>
+                </li>
+                <li><img src="images/team-member4.jpg"/><h5>Angela Leo</h5><span class="team-info">Web developer</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<!--------About Ends------------->
+
+
+<!--------Footer Starts---------->
+<div class="footer">
+    <div class="container">
+        <div class="infooter">
+            <p class="copyright">Copyright &copy; Exemplary 2014 by HTML5 Layouts - More Templates <a
+                    href="http://www.cssmoban.com/" target="_blank" title="1">1</a> - Collect from <a
+                    href="http://www.cssmoban.com/" title="网页模板" target="_blank">1</a></p>
+        </div>
+        <ul class="socialmedia">
+            <li><a href=""><i class="icon-twitter"></i></a></li>
+            <li><a href=""><i class="icon-facebook"></i></a></li>
+            <li><a href=""><i class="icon-dribbble"></i></a></li>
+            <li><a href=""><i class="icon-linkedin"></i></a></li>
+            <li><a href=""><i class="icon-instagram"></i></a></li>
+        </ul>
+    </div>
+</div>
+<!--------Footer Ends------------>
+</body>
+</html>

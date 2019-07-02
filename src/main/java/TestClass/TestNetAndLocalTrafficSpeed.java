@@ -1,14 +1,27 @@
 package TestClass;
 
 import Util.CurrentTimeUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import context.Context;
 import context.WorkerContext;
+import fi.iki.elonen.NanoHTTPD;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
 import net.IListMessage;
-import net.IMessage;
 import net.PSWorker;
-import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import visual.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @program: simplePsForModelPartition
@@ -65,5 +78,96 @@ public class TestNetAndLocalTrafficSpeed {
         CurrentTimeUtil.showExecuteTime("local");
 
 
+    }
+
+    /**
+     * @program: simplePsForModelPartition
+     * @description:
+     * @author: SongZhen
+     * @create: 2019-06-24 14:47
+     */
+    public static class UiServer_test extends NanoHTTPD implements UiServerGrpc.UiServer {
+        static Logger logger = LoggerFactory.getLogger(UiServer_test.class);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ConcurrentHashMap<String, List<Float>> xs = new ConcurrentHashMap<>();
+
+        ConcurrentHashMap<String, List<Float>> ys = new ConcurrentHashMap<>();
+
+        Server server;
+
+        public UiServer_test() throws IOException {
+            super(8888);
+            start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
+            server = ServerBuilder.forPort(8990).addService(UiServerGrpc.bindService(this)).build();
+            try {
+                server.start();
+                server.awaitTermination();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                close();
+            }
+        }
+
+        public void close() {
+            server.shutdown();
+        }
+
+        public static void main(String[] args) {
+            try {
+                new UiServer_test();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private static boolean isFinished=false;
+        @Override
+        public Response serve(IHTTPSession session) {
+            String msg = "";
+            Map<String, Object> result = Maps.newHashMap();
+            Map<String, String> parms = session.getParms();
+            if("data".equals(parms.get("act"))){
+
+
+                for(int i=0;i<4;i++){
+                    List<Float> ls=new ArrayList<Float>();
+                    for(int j=0;j<10;j++){
+                        ls.add(new Random().nextFloat());
+                    }
+                    result.put("x"+i,ls);
+
+                }
+
+                try {
+                    return newFixedLengthResponse(objectMapper.writeValueAsString(result));
+                }catch (JsonProcessingException e){
+                    e.printStackTrace();
+                    return newFixedLengthResponse(e.getMessage());
+                }
+
+            }else {
+                return newFixedLengthResponse(TestDataSet.readToString(UiServer.class.getResource("").getPath() + "../../../src/main/resources/web/Point_PlotTest.html"));
+            }
+
+
+
+        }
+
+
+        @Override
+        public void plot(PlotMessage req, StreamObserver<PlotMessage> resp) {
+            List<Float> x=req.getData().getXList();
+            List<Float> y=req.getData().getYList();
+            resp.onNext(PlotMessage.newBuilder().build());
+            resp.onCompleted();
+        }
+
+        @Override
+        public void plotScatterGraph(plotScatterGraphMessage request, StreamObserver<Flag> responseObserver) {
+
+        }
     }
 }
