@@ -4,103 +4,21 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="css/style.css" rel="stylesheet" type="text/css"/>
-    <link href="css/responsive.css" rel="stylesheet" type="text/css"/>
+    <link href="http://localhost:8080/web/css/style.css" rel="stylesheet" type="text/css"/>
+    <link href="http://localhost:8080/web/css/responsive.css" rel="stylesheet" type="text/css"/>
     <link href='http://fonts.googleapis.com/css?family=Lato:400,100,300,400italic,700,700italic,900,900italic'
           rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,600,300,200' rel='stylesheet'
           type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Roboto+Slab:400,300,100,700' rel='stylesheet' type='text/css'>
-    <link href="css/font-awesome.min.css" rel="stylesheet" media="screen">
-    <script type="text/javascript" src="js/smoothscroll.js"></script>
-    <script type="text/javascript" src="js/home.js"></script>
-    <script src="js/jquery.min.js"></script>
+    <!--<link href="http://localhost:8080/web/css/font-awesome.min.css" rel="stylesheet" media="screen">-->
+    <script type="text/javascript" src="http://localhost:8080/web/js/smoothscroll.js"></script>
+    <script type="text/javascript" src="http://localhost:8080/web/js/home.js"></script>
+    <script src="http://localhost:8080/web/js/jquery.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
     <title>Experimental Console</title>
 </head>
-
-
-<script>
-
-    window.charts = {};
-    window.step = {};
-    $(document).ready(function(){
-        setInterval(function () {
-            htmlobj = $.ajax({
-                url:"/?act=data",
-                async:false,
-                type:'post',
-                contentType: 'application/json;charset=utf-8',
-                dataType:'json',
-                data:JSON.stringify(window.step)
-            });
-
-            htmlobj1 = $.ajax({
-                url:"/?act=data1",
-                async:false,
-                type:'post',
-                contentType: 'application/json;charset=utf-8',
-                dataType:'json',
-                data:JSON.stringify(window.step)
-            });
-
-            obj = JSON.parse(htmlobj.responseText);
-            obj1 = JSON.parse(htmlobj1.responseText);
-            if(obj1!=null){
-                obj1 =JSON.parse(htmlobj1.responseText);
-                Object.keys(obj1).sort();
-            }
-
-            Object.keys(obj).sort();
-
-            var rightPoint = {
-                x: obj1.l1x,
-                y: obj1.l1y,
-                name: 'rightPoint',
-                mode:'markers',
-                type: 'scatter'
-            };
-            var falsePoint = {
-                x: obj1.l2x,
-                y: obj1.l2y,
-                name: 'falsePoint',
-                mode:'markers',
-                type:'scatter'
-            };
-
-            var data=[rightPoint,falsePoint];
-
-            Plotly.newPlot("shiyantu1", data);
-
-
-            $.each(obj, function(id, val){
-                if (val.x == null || val.x.length == 0) {
-                    return;
-                }
-                var update = {
-                    y: [val.x],
-                    x: [val.y]
-                };
-                c = window.charts[id];
-                var trace = {
-                    x: [val.x],
-                    y: [val.y],
-                    xaxis: 'x',
-                    yaxis: 'y',
-                    type: 'scatter'
-                };
-                if (c == null || c == undefined) {
-                    window.step[id] = 0;
-                    Plotly.newPlot("shiyantu2", [trace], layout);
-                }
-                Plotly.extendTraces(id, update, [0]);
-                window.step[id] = update.x[0][update.x[0].length-1];
-            });
-        }, 1000);
-    });
-
-
-
-</script>
 
 
 <body>
@@ -151,7 +69,7 @@
         </div>
         <div class="introdTitle">
             <h1> What is distributed computing framework?</h1>
-            <img src="images/distributed.png" width="500" height="500"/>
+            <img src="http://localhost:8080/web/images/distributed.png" width="500" height="500"/>
         </div>
 
 
@@ -211,11 +129,11 @@
 
             <div class="div-hori">
                 <div class="framework-Title">FrameWork of DRPS</div>
-                <div><img src="images/systemFramwork.png"/></div>
+                <div><img src="http://localhost:8080/web/images/systemFramwork.png"/></div>
             </div>
             <div class="div-hori1">
                 <div>
-                    <img class="mubiao-img" src="images/mubiao.png"/>
+                    <img class="mubiao-img" src="http://localhost:8080/web/images/mubiao.png"/>
                     <div class="mubiao-text">Our Work And Goals</div>
                 </div>
 
@@ -235,14 +153,14 @@
 
             <div style="float:left;margin-left: 100px;margin-top: 40px">
                 <div style="float: left">
-                    <img src="images/graph.png" width="130px" height="130px"/>
+                    <img src="http://localhost:8080/web/images/graph.png" width="130px" height="130px"/>
                     <h4 class="biaoti">DGNN System</h4>
                 </div>
             </div>
 
             <div style="float:left;margin-left: 60px;margin-top: 40px">
                 <div style="float: left">
-                    <img src="images/yasuo.png" width="130px" height="130px"/>
+                    <img src="http://localhost:8080/web/images/yasuo.png" width="130px" height="130px"/>
                     <h4 class="biaoti">Data Reduction</h4>
                 </div>
 
@@ -250,7 +168,7 @@
 
             <div style="float:left;margin-left: 60px;margin-top: 40px">
                 <div style="float: left">
-                    <img src="images/gpu.png" width="130px" height="130px"/>
+                    <img src="http://localhost:8080/web/images/gpu.png" width="130px" height="130px"/>
                     <h4 class="biaoti">Distributed GPU System</h4>
                 </div>
 
@@ -264,24 +182,22 @@
 <!--------Work Ends-------------->
 
 <!--------About Starts----------->
-<div class="about" id="experiment">
-    <div class="container">
-        <div class="section-head">
-            <h3>Experiment <span>Console</span></h3>
+<div id="experiment" style="float:left;width: 1600px">
+    <div class="container" style="width: 1600px">
+        <div class="section-head" style="padding-left: 260px;padding-top: 40px">
+            <h3 id="h3">Experiment <span>Console</span></h3>
         </div>
-        <div class="team">
-            <ul>
-                <li><div id="shiyantu1"></div><h5>Angela Leo</h5><span class="team-info">Web developer</span>
-                </li>
-                <li><div id="shiyantu2"></div><h5>Angela Leo</h5><span class="team-info">Web developer</span>
-                </li>
-                <li><img src="images/team-member3.jpg"/><h5>Angela Leo</h5><span class="team-info">Web developer</span>
-                </li>
-                <li><img src="images/team-member4.jpg"/><h5>Angela Leo</h5><span class="team-info">Web developer</span>
-                </li>
-            </ul>
+        <div style="width: 1600px;padding-left:200px; height: 800px">
+
+            <div id="shiyantu1" style="width: 600px; height: 400px;float:left;"></div>
+            <div id="shiyantu2" style=" height: 400px;float: left;"></div>
+            <div id="shiyantu3" style="height: 400px;width:1000px;float: left;padding-left: 150px"></div>
+
         </div>
+
+
     </div>
+
 </div>
 <!--------About Ends------------->
 
@@ -305,4 +221,135 @@
 </div>
 <!--------Footer Ends------------>
 </body>
+
+<script>
+    var isShowPic = false;
+    window.charts = {};
+    window.step = {};
+    $(document).ready(function () {
+        setInterval(function () {
+            htmlobj = $.ajax({
+                url: "/?act=data",
+                async: false,
+                type: 'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(window.step)
+            });
+
+            htmlobj1 = $.ajax({
+                url: "/?act=data1",
+                async: false,
+                type: 'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(window.step)
+            });
+
+            htmlobj2 = $.ajax({
+                url: "/?act=data2",
+                async: false,
+                type: 'post',
+                contentType: 'application/json;charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(window.step)
+            });
+
+            obj = JSON.parse(htmlobj.responseText);
+            obj1 = JSON.parse(htmlobj1.responseText);
+            obj2 = JSON.parse(htmlobj2.responseText);
+            if (obj1 != null) {
+                obj1 = JSON.parse(htmlobj1.responseText);
+                Object.keys(obj1).sort();
+            }
+
+            Object.keys(obj).sort();
+
+            var layout1 = {
+                title: "分类效果图",
+            };
+
+            // 画分类效果图
+
+            var rightPoint = {
+                x: obj1.l1x,
+                y: obj1.l1y,
+                name: 'rightPoint',
+                mode: 'markers',
+                type: 'scatter'
+            };
+            var falsePoint = {
+                x: obj1.l2x,
+                y: obj1.l2y,
+                name: 'falsePoint',
+                mode: 'markers',
+                type: 'scatter'
+            };
+
+            var data = [rightPoint, falsePoint];
+
+            Plotly.newPlot("shiyantu1", data, layout1);
+
+            var data3 = [{
+                type: 'bar',
+                x: [obj2.w0,obj2.w1,obj2.w2],
+                y: ['w0', 'w1', 'w2'],
+                orientation: 'h',
+                marker: {
+                    color: 'rgba(55,128,191,0.6)',
+                    width: 1
+                }
+            }];
+
+            var layout3 = {
+                title: "worker控制图",
+            };
+            // 画worker进程图
+            Plotly.newPlot("shiyantu3", data3, layout3);
+
+
+            // 画损失函数下降图
+            if (!isShowPic) {
+                newChart("shiyantu2");
+            }
+
+            $.each(obj, function (id, val) {
+                if (val.x == null || val.x.length == 0) {
+                    return;
+                }
+                var update = {
+                    y: [val.x],
+                    x: [val.y]
+                };
+                c = window.charts[id];
+                if (c == null || c == undefined) {
+                    newChart(id);
+                }
+                Plotly.extendTraces("shiyantu2", update, [0]);
+                window.step[id] = update.x[0][update.x[0].length - 1];
+            });
+
+
+        }, 5000);
+    });
+
+    function newChart(id) {
+        var trace = {
+            x: [],
+            y: [],
+            xaxis: 'x',
+            yaxis: 'y',
+            type: 'scatter'
+        };
+        var layout2 = {
+            title: "损失函数下降图",
+        };
+        window.charts[id] = Plotly.newPlot("shiyantu2", [trace], layout2);
+        window.step[id] = 0;
+        return window.charts[id];
+    }
+
+
+</script>
+
 </html>

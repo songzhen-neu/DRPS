@@ -14,6 +14,7 @@ import net.*;
 import org.iq80.leveldb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import visual.Ui;
 import visual.UiClient;
 
 
@@ -143,6 +144,7 @@ public class LogisticRegression {
 //                }
 
                 System.out.println("error echo:" + i + ",batch:" + j + ",loss:" + loss);
+                UiClient.ins().plotWorkerProcess(WorkerContext.workerId,i*WorkerContext.sampleBatchListSize+j);
 
                 paramsMap.clear();
 

@@ -77,7 +77,7 @@ public class Context {
     public static float minGain=0f;
 
     /** 最大磁盘划分的大小*/
-    public static int maxDiskPartitionNum=100;
+    public static int maxDiskPartitionNum=5;
 
     /** 做对比实验，是否进行磁盘优化*/
     public static boolean isOptimizeDisk=false;
@@ -86,10 +86,15 @@ public class Context {
     public static boolean isOptimizeNetTraffic=false;
     // param用p表示，paramSet用s表示，feature用f表示
 
-    public static GeneralContextSetting svm=new GeneralContextSetting(10,1,1,10, ParallelismControlModel.AP);
-    public static GeneralContextSetting LoR=new GeneralContextSetting(10,3,3,5, ParallelismControlModel.AP);
-    public static GeneralContextSetting LiR=new GeneralContextSetting(0,3,3,10, ParallelismControlModel.AP);
-    public static GeneralContextSetting LMF=new GeneralContextSetting(1,1,1,300, ParallelismControlModel.AP);
+    /** wsp中标准化时间，乘以一个倍数*/
+    public static float TimeMulWSP=10f;
+
+
+    public static GeneralContextSetting SVM=new GeneralContextSetting(0,3,3,10, ParallelismControlModel.BSP);
+    // dataset 179  train 10
+    public static GeneralContextSetting LoR=new GeneralContextSetting(10,1,1,5, ParallelismControlModel.AP);
+    public static GeneralContextSetting LiR=new GeneralContextSetting(0,1,1,10, ParallelismControlModel.BSP);
+    public static GeneralContextSetting LMF=new GeneralContextSetting(1,3,3,10, ParallelismControlModel.WSP);
 
     public static void init() throws IOException {
         if(inited==true){

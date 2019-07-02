@@ -169,5 +169,10 @@ public class TestNetAndLocalTrafficSpeed {
         public void plotScatterGraph(plotScatterGraphMessage request, StreamObserver<Flag> responseObserver) {
 
         }
+
+        @Override
+        public void plotWorkerProcess(workerProcessMessage request, StreamObserver<Flag> responseObserver) {
+
+        }
     }
 }

@@ -57,4 +57,8 @@ public class UiClient {
         message.addPointCollection(plotDouble2);
         featureStub.plotScatterGraph(message.build());
     }
+
+    public void plotWorkerProcess(int id,int iteration){
+        featureStub.plotWorkerProcess(workerProcessMessage.newBuilder().setWorkerid(id).setCuriteration(iteration).build());
+    }
 }

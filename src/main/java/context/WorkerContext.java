@@ -89,16 +89,21 @@ public class WorkerContext {
         workerId=0;
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
-        LiR=new GeneralAlgorithmSetting(450,450,50,
+
+        // housing 9 0  data 13 7
+        LiR=new GeneralAlgorithmSetting(10000,10000,10000,
                 "data/LiRData/housing"+workerId+".csv",9,0);
-        LoR=new GeneralAlgorithmSetting(1000,1000,100,
+        // train 12 10
+        // dataset 7 179
+        LoR=new GeneralAlgorithmSetting(10000,10000,10000,
                 "data/LoRData/train"+workerId+".csv",12,10);
-        SVM=new GeneralAlgorithmSetting(450,450,50,
-                "data/SVMData/dataset"+workerId+".csv",3,4);
+        SVM=new GeneralAlgorithmSetting(100000,100000,10000,
+                "data/SVMData/train"+workerId+".csv",1,0);
 
         // 用户1～53424，电影1~10000，样本数量5976479
-        LMF=new LMFSetting(19000,19000,19000,10,
-                53424,10000,"data/LMFData/Goodbooks"+workerId+".csv");
+        // ratings 用户1~259137 电影1~165201
+        LMF=new LMFSetting(1000,1000,100,10,
+                259137,165201,"data/LMFData/ratings"+workerId+".csv");
 
         generalSetting=LoR;
         // 其实有了上面的数据结构，下述的参数都可以省略，但是为了尽量少的改后面的程序，这里不去掉这些冗余了

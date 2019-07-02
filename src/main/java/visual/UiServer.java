@@ -38,11 +38,14 @@ public class UiServer extends NanoHTTPD implements UiServerGrpc.UiServer {
 
     ConcurrentMap<String, List<Double>> list = new ConcurrentHashMap<String, List<Double>>();
 
+    ConcurrentMap<String, Integer> workerProcess = new ConcurrentHashMap<String, Integer>();
+
 
     Server server;
 
     public UiServer() throws IOException {
         super(8888);
+        init();
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         server = ServerBuilder.forPort(8990).addService(UiServerGrpc.bindService(this)).build();
         try {
@@ -52,6 +55,12 @@ public class UiServer extends NanoHTTPD implements UiServerGrpc.UiServer {
             e.printStackTrace();
         } finally {
             close();
+        }
+    }
+
+    public void init() {
+        for (int i = 0; i < 3; i++) {
+            workerProcess.put("w"+i, 0);
         }
     }
 
@@ -111,6 +120,9 @@ public class UiServer extends NanoHTTPD implements UiServerGrpc.UiServer {
 //                    result.put(index,list.get(index));
 //                }
                 return newFixedLengthResponse(objectMapper.writeValueAsString(list));
+            } else if ("data2".equals(params.get("act"))) {
+
+                return newFixedLengthResponse(objectMapper.writeValueAsString(workerProcess));
             } else {
                 return newFixedLengthResponse(TestDataSet.readToString(UiServer.class.getResource("").getPath() + "../../../src/main/resources/web/index1.html"));
             }
@@ -150,10 +162,10 @@ public class UiServer extends NanoHTTPD implements UiServerGrpc.UiServer {
 
     @Override
     public void plotScatterGraph(plotScatterGraphMessage req, StreamObserver<Flag> resp) {
-        List<Double> l1x=new ArrayList<Double>();
-        List<Double> l1y=new ArrayList<Double>();
-        List<Double> l2x=new ArrayList<Double>();
-        List<Double> l2y=new ArrayList<Double>();
+        List<Double> l1x = new ArrayList<Double>();
+        List<Double> l1y = new ArrayList<Double>();
+        List<Double> l2x = new ArrayList<Double>();
+        List<Double> l2y = new ArrayList<Double>();
         for (int j = 0; j < req.getPointCollection(0).getXCount(); j++) {
             l1x.add(req.getPointCollection(0).getX(j));
             l1y.add(req.getPointCollection(0).getY(j));
@@ -164,14 +176,19 @@ public class UiServer extends NanoHTTPD implements UiServerGrpc.UiServer {
             l2y.add(req.getPointCollection(1).getY(j));
         }
 
-        list.put("l1x",l1x);
-        list.put("l1y",l1y);
-        list.put("l2x",l2x);
-        list.put("l2y",l2y);
+        list.put("l1x", l1x);
+        list.put("l1y", l1y);
+        list.put("l2x", l2x);
+        list.put("l2y", l2y);
         resp.onNext(Flag.newBuilder().build());
         resp.onCompleted();
+    }
 
-
+    @Override
+    public void plotWorkerProcess(workerProcessMessage req, StreamObserver<Flag> resp) {
+        workerProcess.put("w"+req.getWorkerid(), req.getCuriteration());
+        resp.onNext(Flag.newBuilder().build());
+        resp.onCompleted();
     }
 
 

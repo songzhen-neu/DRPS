@@ -7,8 +7,13 @@ option java_multiple_files=true;
 service UiServer{
     rpc plot(PlotMessage) returns (PlotMessage){}
     rpc plotScatterGraph(plotScatterGraphMessage) returns(Flag){}
+    rpc plotWorkerProcess(workerProcessMessage) returns(Flag){}
 }
 
+message workerProcessMessage{
+    int32 workerid=1;
+    int32 curiteration=2;
+}
 message Flag{
     bool isSuccess=1;
 }
