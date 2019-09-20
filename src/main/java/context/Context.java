@@ -92,16 +92,16 @@ public class Context {
 
     public static GeneralContextSetting SVM=new GeneralContextSetting(0,3,3,10, ParallelismControlModel.BSP);
     // dataset 179  train 10
-    public static GeneralContextSetting LoR=new GeneralContextSetting(10,1,1,5, ParallelismControlModel.AP);
+    public static GeneralContextSetting LoR=new GeneralContextSetting(10,3,3,5, ParallelismControlModel.AP);
     public static GeneralContextSetting LiR=new GeneralContextSetting(0,1,1,10, ParallelismControlModel.BSP);
-    public static GeneralContextSetting LMF=new GeneralContextSetting(1,3,3,10, ParallelismControlModel.WSP);
+    public static GeneralContextSetting LMF=new GeneralContextSetting(1,1,1,10, ParallelismControlModel.WSP);
 
     public static void init() throws IOException {
         if(inited==true){
             return;
         }
 
-        GeneralContextSetting generalContextSetting=LoR;
+        GeneralContextSetting generalContextSetting=LMF;
         serverIp.put(0,"202.199.13.120");
         serverIp.put(1,"202.199.13.120");
         serverIp.put(2,"202.199.13.120");

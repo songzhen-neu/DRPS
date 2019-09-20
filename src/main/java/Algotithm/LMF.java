@@ -3,9 +3,11 @@ package Algotithm;
 import Util.MessageDataTransUtil;
 import Util.TypeExchangeUtil;
 import context.Context;
+import context.ServerContext;
 import context.WorkerContext;
 import dataStructure.SparseMatrix.Matrix;
 import dataStructure.SparseMatrix.MatrixElement;
+import dataStructure.parameter.ParamLMF.RowOrColParam;
 import dataStructure.sample.Sample;
 import dataStructure.sample.SampleList;
 import net.IMessage;
@@ -100,8 +102,13 @@ public class LMF {
                 logger.info("echo " + i + ":Sent request of Params to servers");
                 Future<SRListMessage> srListMessageFuture[] = new Future[Context.workerNum];
 
+                // 如果是本机的参数，可以直接通过db获取参数
+                for(String str:setArray[WorkerContext.workerId]){
+                    RowOrColParam rowOrColParam=(RowOrColParam)TypeExchangeUtil.toObject(ServerContext.kvStoreForLevelDB.getDb().get(str.getBytes()));
+                    paramsMap.put(str,rowOrColParam.param);
+                }
 
-                for (int l = 0; l < Context.serverNum; l++) {
+                for (int l = 0; l < Context.serverNum&& l!=WorkerContext.workerId; l++) {
 //                    if (setArray[l].size() != 0) {
                     logger.info("getNeededParams start");
 //                    CurrentTimeUtil.setStartTime();
@@ -113,7 +120,7 @@ public class LMF {
                     logger.info("getNeededParams end");
 //                    }
                 }
-                for (int l = 0; l < Context.serverNum; l++) {
+                for (int l = 0; l < Context.serverNum&& l!=WorkerContext.workerId; l++) {
                     while (!srListMessageFuture[l].isDone()) {
                         try {
                             Thread.sleep(1);

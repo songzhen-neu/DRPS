@@ -102,7 +102,7 @@ public class WorkerContext {
 
         // 用户1～53424，电影1~10000，样本数量5976479
         // ratings 用户1~259137 电影1~165201
-        LMF=new LMFSetting(1000,1000,100,10,
+        LMF=new LMFSetting(100000,100000,100000,100000,
                 259137,165201,"data/LMFData/ratings"+workerId+".csv");
 
         generalSetting=LoR;

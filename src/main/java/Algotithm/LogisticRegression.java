@@ -115,8 +115,11 @@ public class LogisticRegression {
                 WorkerContext.psRouterClient.sendGradientMap(gradientMap);
 
                 loss = calculateLoss(outputValueOfBatch, batch) / WorkerContext.sampleBatchSize;
-                UiClient.ins().plot("loss", Math.abs(loss), j + i * WorkerContext.sampleBatchListSize);
-                plotScatter(batch, errorOfBatch);
+                if(WorkerContext.workerId==Context.masterId){
+                    UiClient.ins().plot("loss", Math.abs(loss), j + i * WorkerContext.sampleBatchListSize);
+                    plotScatter(batch, errorOfBatch);
+                }
+
 
                 WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getBlockingStub().sendLoss(LossMessage.newBuilder()
                         .setLoss(loss)

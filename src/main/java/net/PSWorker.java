@@ -342,6 +342,10 @@ public class PSWorker {
         blockingStub.sendSparseDimSizeAndInitParamsLMF(message.build());
     }
 
+    public void serverSynchronization(){
+        blockingStub.serverSynchronization(HostMessage.newBuilder().setReqhost(WorkerContext.workerId).build());
+    }
+
 
 
 }

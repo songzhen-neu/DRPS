@@ -40,6 +40,7 @@ service PS {
     rpc SendGradMapLMF(SRListMessage) returns(SMessage){};
     rpc ShowSomeStatisticAfterTrain(BMessage) returns(BMessage){};
     rpc SendLoss(LossMessage) returns(BMessage){};
+    rpc serverSynchronization(HostMessage) returns(BMessage){};
 
 }
 
@@ -47,6 +48,9 @@ message LossMessage{
     int32 ReqHost=1;
     float loss=2;
     int64 startTime=3;
+}
+message HostMessage{
+    int32 reqhost=1;
 }
 
 message SRListMessage{

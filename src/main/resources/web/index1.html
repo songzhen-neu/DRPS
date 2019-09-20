@@ -4,17 +4,17 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="http://localhost:8080/web/css/style.css" rel="stylesheet" type="text/css"/>
-    <link href="http://localhost:8080/web/css/responsive.css" rel="stylesheet" type="text/css"/>
+    <link href="http://219.216.64.103:8080/web/css/style.css" rel="stylesheet" type="text/css"/>
+    <link href="http://219.216.64.103:8080/web/css/responsive.css" rel="stylesheet" type="text/css"/>
     <link href='http://fonts.googleapis.com/css?family=Lato:400,100,300,400italic,700,700italic,900,900italic'
           rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,600,300,200' rel='stylesheet'
           type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Roboto+Slab:400,300,100,700' rel='stylesheet' type='text/css'>
     <!--<link href="http://localhost:8080/web/css/font-awesome.min.css" rel="stylesheet" media="screen">-->
-    <script type="text/javascript" src="http://localhost:8080/web/js/smoothscroll.js"></script>
-    <script type="text/javascript" src="http://localhost:8080/web/js/home.js"></script>
-    <script src="http://localhost:8080/web/js/jquery.min.js"></script>
+    <script type="text/javascript" src="http://219.216.64.103:8080/web/js/smoothscroll.js"></script>
+    <script type="text/javascript" src="http://219.216.64.103:8080/web/js/home.js"></script>
+    <script src="http://219.216.64.103:8080/web/js/jquery.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
     <title>Experimental Console</title>
@@ -62,14 +62,27 @@
 <!--------Banner Ends------------>
 
 <div class="related" id="introduction">
-    <div class="container">
+    <div class="container" >
         <div class="section-head">
             <h3>Introduction</h3>
             <!--<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In quis faucibus leo. Ut ac arcu a diam mollis semper. In nec blandit nisl, nec cursus lectus.</p>-->
         </div>
-        <div class="introdTitle">
-            <h1> What is distributed computing framework?</h1>
-            <img src="http://localhost:8080/web/images/distributed.png" width="500" height="500"/>
+
+        <div style="margin-left: 30px">
+            <div class="introdTitle" style="float:left;">
+                <h1 style="margin-left: 40px"> What is large-scale ML?</h1>
+                <div style="margin-top: 50px;">
+                    <img src="http://219.216.64.103:8080/web/images/ai.png" width="380" height="380"/>
+                </div>
+
+            </div>
+            <div class="introdTitle" style="float: left;">
+                <h1 style="margin-left: 55px"> What is distributed computing?</h1>
+                <div>
+                    <img src="http://219.216.64.103:8080/web/images/distributed.png" width="500" height="500"/>
+                </div>
+
+            </div>
         </div>
 
 
@@ -129,11 +142,11 @@
 
             <div class="div-hori">
                 <div class="framework-Title">FrameWork of DRPS</div>
-                <div><img src="http://localhost:8080/web/images/systemFramwork.png"/></div>
+                <div><img src="http://219.216.64.103:8080/web/images/systemFramwork.png"/></div>
             </div>
             <div class="div-hori1">
                 <div>
-                    <img class="mubiao-img" src="http://localhost:8080/web/images/mubiao.png"/>
+                    <img class="mubiao-img" src="http://219.216.64.103:8080/web/images/mubiao.png"/>
                     <div class="mubiao-text">Our Work And Goals</div>
                 </div>
 
@@ -153,14 +166,14 @@
 
             <div style="float:left;margin-left: 100px;margin-top: 40px">
                 <div style="float: left">
-                    <img src="http://localhost:8080/web/images/graph.png" width="130px" height="130px"/>
+                    <img src="http://219.216.64.103:8080/web/images/graph.png" width="130px" height="130px"/>
                     <h4 class="biaoti">DGNN System</h4>
                 </div>
             </div>
 
             <div style="float:left;margin-left: 60px;margin-top: 40px">
                 <div style="float: left">
-                    <img src="http://localhost:8080/web/images/yasuo.png" width="130px" height="130px"/>
+                    <img src="http://219.216.64.103:8080/web/images/yasuo.png" width="130px" height="130px"/>
                     <h4 class="biaoti">Data Reduction</h4>
                 </div>
 
@@ -168,7 +181,7 @@
 
             <div style="float:left;margin-left: 60px;margin-top: 40px">
                 <div style="float: left">
-                    <img src="http://localhost:8080/web/images/gpu.png" width="130px" height="130px"/>
+                    <img src="http://219.216.64.103:8080/web/images/gpu.png" width="130px" height="130px"/>
                     <h4 class="biaoti">Distributed GPU System</h4>
                 </div>
 
@@ -292,7 +305,7 @@
 
             var data3 = [{
                 type: 'bar',
-                x: [obj2.w0,obj2.w1,obj2.w2],
+                x: [obj2.w0, obj2.w1, obj2.w2],
                 y: ['w0', 'w1', 'w2'],
                 orientation: 'h',
                 marker: {
@@ -330,7 +343,7 @@
             });
 
 
-        }, 5000);
+        }, 1000);
     });
 
     function newChart(id) {

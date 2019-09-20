@@ -610,7 +610,7 @@ public class DataProcessUtil {
                     continue;
                 }
                 MatrixElement matrixElement=new MatrixElement();
-                matrixElement.set((Integer.parseInt(data[0])-1),(Integer.parseInt(data[1])-1),Float.parseFloat(data[2]));
+                matrixElement.set((Integer.parseInt(data[0])),(Integer.parseInt(data[1])),Float.parseFloat(data[2]));
                 matrix.matrix.add(matrixElement);
                 count++;
                 if(count%WorkerContext.sampleBatchSize_LMF==0){

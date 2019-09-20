@@ -10,6 +10,11 @@ public class RandomUtil {
         return random.nextInt(10000)/10000.0f*(maxValue-minValue)+minValue;
     }
 
+    // 在指定数中产生随机数
+    public static float random(float[] index){
+        return index[random.nextInt(index.length-1)];
+    }
+
 
 
     public static int getIntRandomFromZeroToN(int n){

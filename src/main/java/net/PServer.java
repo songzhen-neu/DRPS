@@ -93,13 +93,15 @@ public class PServer implements net.PSGrpc.PS {
     private static AtomicDouble[][] commCost_temp;
     private static AtomicDouble[][] commCost;
 
-    /** 用来存储每个server存储了哪些维度，i是sever，set是参数划分块*/
+    /**
+     * 用来存储每个server存储了哪些维度，i是sever，set是参数划分块
+     */
     private static ConcurrentSet[] paramAssignSetArray;
 
-    /** 用来存储每个server都拥有哪些参数维度*/
+    /**
+     * 用来存储每个server都拥有哪些参数维度
+     */
     private static ConcurrentSet[] vSet;
-
-
 
 
 //    CyclicBarrier barrier = new CyclicBarrier(Context.workerNum);
@@ -136,8 +138,8 @@ public class PServer implements net.PSGrpc.PS {
             ls_partitionedVSet[i] = new ArrayList<Set>();
         }
 
-        for(int i=0;i<isShow.length;i++){
-            isShow[i]=false;
+        for (int i = 0; i < isShow.length; i++) {
+            isShow[i] = false;
         }
 
     }
@@ -386,8 +388,8 @@ public class PServer implements net.PSGrpc.PS {
                     resp.onCompleted();
                     break;
                 case AP:
-                    if(req.getWorkerId()!=ServerContext.serverId){
-                        networkCount.set(networkCount.intValue()+neededParamIndices.size());
+                    if (req.getWorkerId() != ServerContext.serverId) {
+                        networkCount.set(networkCount.intValue() + neededParamIndices.size());
                     }
                     sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
                     resp.onNext(sfkvListMessage);
@@ -1102,7 +1104,7 @@ public class PServer implements net.PSGrpc.PS {
     CyclicBarrier cyclicBarrier_workerNum = new CyclicBarrier(Context.workerNum);
     CyclicBarrier cyclicBarrier_workerNum2 = new CyclicBarrier(Context.workerNum);
     AtomicBoolean isSatisfyMinGain = new AtomicBoolean(false);
-    AtomicDouble[]  diskCost;
+    AtomicDouble[] diskCost;
 
     @Override
     public void sendAFMatrix(AFMatrixMessage req, StreamObserver<BMessage> resp) {
@@ -1165,8 +1167,8 @@ public class PServer implements net.PSGrpc.PS {
                     float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
                     // 这块要保证根据disk IO代价划分的划分块最大大小不能超过maxDiskPartitionNum，不然有些划分块太大，没办法做网络通信优化了
                     if (costReduce > maxTimeReduce
-                            &&partitionList.partitionList.get(i).partition.size()<=Context.maxDiskPartitionNum
-                            &&partitionList.partitionList.get(j).partition.size()<=Context.maxDiskPartitionNum) {
+                            && partitionList.partitionList.get(i).partition.size() <= Context.maxDiskPartitionNum
+                            && partitionList.partitionList.get(j).partition.size() <= Context.maxDiskPartitionNum) {
                         maxTimeReduce = costReduce;
                         pi = i;
                         pj = j;
@@ -1191,10 +1193,10 @@ public class PServer implements net.PSGrpc.PS {
                 // 在划分结束后，且实现最优划分时，需要记录最佳划分中，每个划分块的访问时间
                 // 这里让master机器的worker线程进行计算
                 // 其实访问时间就是对角线的cost时间
-                if(req.getReqHost()==Context.masterId){
-                    diskCost=new AtomicDouble[costTime.length];
-                    for(int i=0;i<diskCost.length;i++){
-                        diskCost[i]=new AtomicDouble(costTime[i][i]);
+                if (req.getReqHost() == Context.masterId) {
+                    diskCost = new AtomicDouble[costTime.length];
+                    for (int i = 0; i < diskCost.length; i++) {
+                        diskCost[i] = new AtomicDouble(costTime[i][i]);
                     }
                 }
 
@@ -1210,7 +1212,6 @@ public class PServer implements net.PSGrpc.PS {
 //                    }
 //                }
 //                partitionList=partitionList_temp;
-
 
 
                 // 这里还需要构建一个划分的反向索引，也就是可以通过参数找到其所在的划分
@@ -1241,13 +1242,12 @@ public class PServer implements net.PSGrpc.PS {
          *@date: 上午8:24 18-11-16
          */
         if (singlePartitionSize == 1) {
-            return (Context.diskSeekTime + (Context.setParamBaseSize_bytes+Context.singleParamOfSetSize_bytes) * Context.diskAccessTime);
+            return (Context.diskSeekTime + (Context.setParamBaseSize_bytes + Context.singleParamOfSetSize_bytes) * Context.diskAccessTime);
         } else {
             return (Context.diskSeekTime + (singlePartitionSize * Context.singleParamOfSetSize_bytes + Context.setParamBaseSize_bytes) * Context.diskAccessTime);
         }
 
     }
-
 
 
     public void barrier_WorkerNum() {
@@ -1287,37 +1287,36 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-
     @Override
-    public void sendCommCost(CommCostMessage req,StreamObserver<VSetMessage> resp){
+    public void sendCommCost(CommCostMessage req, StreamObserver<VSetMessage> resp) {
         // 现在收到了每个worker发送来的CommCost
         // 需要将CommCostMessage转化成float数组，也就是CommCost_i
-        float[] commCost_i=MessageDataTransUtil.CommCostMessage_2_CommCost(req);
+        float[] commCost_i = MessageDataTransUtil.CommCostMessage_2_CommCost(req);
 
-        if(req.getReqHost()==Context.masterId){
+        if (req.getReqHost() == Context.masterId) {
             // 因为要用到diskCost，但是如果不做磁盘优化，这个数据结构是null，这里需要初始化一下
-            if(!Context.isOptimizeDisk){
-                diskCost= new AtomicDouble[commCost_i.length];
-                for(int i=0;i<diskCost.length;i++){
-                    diskCost[i]=new AtomicDouble(0);
+            if (!Context.isOptimizeDisk) {
+                diskCost = new AtomicDouble[commCost_i.length];
+                for (int i = 0; i < diskCost.length; i++) {
+                    diskCost[i] = new AtomicDouble(0);
                 }
             }
 
 
             // 第一维表示第i台机器对每个划分块的访问次数，第二维表示划分块的个数
-            commCost_temp=new AtomicDouble[Context.workerNum][commCost_i.length];
+            commCost_temp = new AtomicDouble[Context.workerNum][commCost_i.length];
 
-            for(int i=0;i<commCost_temp.length;i++){
-                for(int j=0;j<commCost_temp[i].length;j++){
-                    commCost_temp[i][j]=new AtomicDouble(0);
+            for (int i = 0; i < commCost_temp.length; i++) {
+                for (int j = 0; j < commCost_temp[i].length; j++) {
+                    commCost_temp[i][j] = new AtomicDouble(0);
                 }
             }
             // 真正的通信代价，第一维表示每个划分块，第二维表示划分块放到这个server中的时间代价
-            commCost=new AtomicDouble[commCost_i.length][Context.serverNum];
+            commCost = new AtomicDouble[commCost_i.length][Context.serverNum];
 
-            for(int i=0;i<commCost.length;i++){
-                for(int j=0;j<commCost[i].length;j++){
-                    commCost[i][j]=new AtomicDouble(0);
+            for (int i = 0; i < commCost.length; i++) {
+                for (int j = 0; j < commCost[i].length; j++) {
+                    commCost[i][j] = new AtomicDouble(0);
                 }
             }
 
@@ -1326,33 +1325,33 @@ public class PServer implements net.PSGrpc.PS {
         barrier_WorkerNum();
 
         // 现在需要将各自的commCost_i整合到一个全局的float[][]里
-        for(int i=0;i<commCost_i.length;i++){
+        for (int i = 0; i < commCost_i.length; i++) {
             commCost_temp[req.getReqHost()][i].set(commCost_i[i]);
         }
 
         barrier_WorkerNum();
 
         // 开始用commCost计算每个划分块放到每个服务器上的时间代价comm
-        if(req.getReqHost()==Context.masterId){
-            for(int i=0;i<commCost.length;i++){
-                for(int j=0;j<commCost[i].length;j++){
-                    for(int k=0;k<Context.serverNum;k++){
-                        if(j!=k){
+        if (req.getReqHost() == Context.masterId) {
+            for (int i = 0; i < commCost.length; i++) {
+                for (int j = 0; j < commCost[i].length; j++) {
+                    for (int k = 0; k < Context.serverNum; k++) {
+                        if (j != k) {
                             // 也就是第i个划分放在第j台机器上的访问时间为，除了第j台机器外的其他机器k，对划分i的访问
-                            commCost[i][j].set(commCost[i][j].get()+commCost_temp[k][i].get());
+                            commCost[i][j].set(commCost[i][j].get() + commCost_temp[k][i].get());
                         }
                     }
-                    commCost[i][j].set(commCost[i][j].get()*Context.netTrafficTime);
+                    commCost[i][j].set(commCost[i][j].get() * Context.netTrafficTime);
                 }
             }
 
 
             // 需要对磁盘时间和通信时间进行累加
-            for(int i=0;i<commCost.length;i++){
-                for(int j=0;j<commCost[i].length;j++){
+            for (int i = 0; i < commCost.length; i++) {
+                for (int j = 0; j < commCost[i].length; j++) {
                     // commCost[i][j]是第i个划分在第j台机器上的通信代价
                     // diskCost[i]是第i个划分的磁盘代价
-                    commCost[i][j].set(commCost[i][j].get()+diskCost[i].get());
+                    commCost[i][j].set(commCost[i][j].get() + diskCost[i].get());
                 }
             }
 
@@ -1360,47 +1359,47 @@ public class PServer implements net.PSGrpc.PS {
             // 这里采用贪心策略进行划分,注意commCost的i表示第i个划分，j表示第j台机器
 
             // 先初始化paramAssignSetArray
-            paramAssignSetArray=new ConcurrentSet[Context.serverNum];
-            for(int i=0;i<paramAssignSetArray.length;i++){
-                paramAssignSetArray[i]=new ConcurrentSet();
+            paramAssignSetArray = new ConcurrentSet[Context.serverNum];
+            for (int i = 0; i < paramAssignSetArray.length; i++) {
+                paramAssignSetArray[i] = new ConcurrentSet();
             }
 
             // 定义每个桶的当前代价,java通过new方法创建了会初始化为0.0
-            float[] serverTotalCost=new float[Context.serverNum];
+            float[] serverTotalCost = new float[Context.serverNum];
             // 定义set存储当前哪些参数没有被划分,这里是用从0,1,2,3,...的方式存的
-            Set<Integer> notAssignedParamSet=new HashSet<Integer>();
-            for(int i=0;i<partitionList.partitionList.size();i++){
+            Set<Integer> notAssignedParamSet = new HashSet<Integer>();
+            for (int i = 0; i < partitionList.partitionList.size(); i++) {
                 notAssignedParamSet.add(i);
             }
 
 
             // 开始进行贪心策略划分
-            while(notAssignedParamSet.size()>0){
+            while (notAssignedParamSet.size() > 0) {
                 // 先选择要插入的桶
-                int minI_bucket=-1;
-                float minValue_bucket=Float.MAX_VALUE;
-                for(int i=0;i<serverTotalCost.length;i++){
-                    if(serverTotalCost[i]<minValue_bucket){
-                        minI_bucket=i;
-                        minValue_bucket=serverTotalCost[i];
+                int minI_bucket = -1;
+                float minValue_bucket = Float.MAX_VALUE;
+                for (int i = 0; i < serverTotalCost.length; i++) {
+                    if (serverTotalCost[i] < minValue_bucket) {
+                        minI_bucket = i;
+                        minValue_bucket = serverTotalCost[i];
                     }
                 }
 
                 // 在桶min_i中再选择插入的节点
-                int minI_node=-1;
-                float minValue_node=Float.MAX_VALUE;
-                for(int i=0;i<commCost.length;i++){
+                int minI_node = -1;
+                float minValue_node = Float.MAX_VALUE;
+                for (int i = 0; i < commCost.length; i++) {
                     // 如果是miniI_bucket桶里值最小的，而且没有被分配
-                    if(commCost[i][minI_bucket].get()<minValue_node&&notAssignedParamSet.contains(i)){
-                        minI_node=i;
-                        minValue_node=(float) commCost[i][minI_bucket].get();
+                    if (commCost[i][minI_bucket].get() < minValue_node && notAssignedParamSet.contains(i)) {
+                        minI_node = i;
+                        minValue_node = (float) commCost[i][minI_bucket].get();
                     }
                 }
 
                 // 分配miniI_node这个节点到miniI_bucket桶里，并且从notAssignedParamSet中删除minI_node
                 // 注意paramAssignSetArray中i表示桶，set表示节点
                 paramAssignSetArray[minI_bucket].add(minI_node);
-                serverTotalCost[minI_bucket]=serverTotalCost[minI_bucket]+(float) commCost[minI_node][minI_bucket].get();
+                serverTotalCost[minI_bucket] = serverTotalCost[minI_bucket] + (float) commCost[minI_node][minI_bucket].get();
                 notAssignedParamSet.remove(minI_node);
 
             }
@@ -1408,18 +1407,18 @@ public class PServer implements net.PSGrpc.PS {
             // 贪心策略完成后，得到paramAssignSetArray
             // 利用paramAssignSetArray和partitionList算出来vSet和ls_partitionedVSet
             // 先初始化vSet
-            vSet=new ConcurrentSet[Context.serverNum];
-            for(int i=0;i<vSet.length;i++){
-                vSet[i]=new ConcurrentSet();
+            vSet = new ConcurrentSet[Context.serverNum];
+            for (int i = 0; i < vSet.length; i++) {
+                vSet[i] = new ConcurrentSet();
             }
 
             // 构建vSet
             // i表示每台server
-            for(int i=0;i<paramAssignSetArray.length;i++){
+            for (int i = 0; i < paramAssignSetArray.length; i++) {
                 // j表示server中的划分块
-                for(int j:(Set<Integer>)paramAssignSetArray[i]){
-                    Partition partition=partitionList.partitionList.get(j);
-                    for(long param:partition.partition){
+                for (int j : (Set<Integer>) paramAssignSetArray[i]) {
+                    Partition partition = partitionList.partitionList.get(j);
+                    for (long param : partition.partition) {
                         vSet[i].add(param);
                     }
                 }
@@ -1429,12 +1428,12 @@ public class PServer implements net.PSGrpc.PS {
             // i表示第i个server，list表示这个server中的划分块，Set表示每个划分的内容
             // 这里应该用partitionList加paramAssignSetArray构建
             // 第i个server
-            for(int i=0;i<paramAssignSetArray.length;i++){
+            for (int i = 0; i < paramAssignSetArray.length; i++) {
                 // 第j个paramSet
-                for(int j:(Set<Integer>)paramAssignSetArray[i]){
+                for (int j : (Set<Integer>) paramAssignSetArray[i]) {
                     // 从partitionList中取出第j个paramSet
                     // 需要将原来的list类型转化成set类型，可以一个数一个数的加入到set中
-                    Set<Long> set=SetUtil.List_2_Set(partitionList.partitionList.get(j).partition);
+                    Set<Long> set = SetUtil.List_2_Set(partitionList.partitionList.get(j).partition);
                     // 将该set加入到第i个机器的list中
                     ls_partitionedVSet[i].add(set);
                 }
@@ -1447,7 +1446,7 @@ public class PServer implements net.PSGrpc.PS {
         barrier_WorkerNum();
 
         // 返回vSet，首先将vSet转化成vSetMessage
-        VSetMessage vSetMessage=MessageDataTransUtil.VSet_2_VSetMessage(vSet);
+        VSetMessage vSetMessage = MessageDataTransUtil.VSet_2_VSetMessage(vSet);
 
         // 最后需要返回vset
         resp.onNext(vSetMessage);
@@ -1456,29 +1455,29 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void setBestPartitionList(PartitionListMessage req,StreamObserver<BMessage> resp){
-        partitionList=MessageDataTransUtil.PartitionListMessage_2_PartitionList(req);
+    public void setBestPartitionList(PartitionListMessage req, StreamObserver<BMessage> resp) {
+        partitionList = MessageDataTransUtil.PartitionListMessage_2_PartitionList(req);
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }
 
     @Override
-    public void setLSPartitionVSet(LSetListArrayMessage req,StreamObserver<BMessage> resp){
-        ls_partitionedVSet=MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
-        ServerContext.kvStoreForLevelDB.ls_partitionedVSet=ls_partitionedVSet;
+    public void setLSPartitionVSet(LSetListArrayMessage req, StreamObserver<BMessage> resp) {
+        ls_partitionedVSet = MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
+        ServerContext.kvStoreForLevelDB.ls_partitionedVSet = ls_partitionedVSet;
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }
 
     @Override
-    public void sendIListMessage(IListMessage req,StreamObserver<BMessage> resp){
+    public void sendIListMessage(IListMessage req, StreamObserver<BMessage> resp) {
         /**
-        *@Description: 这个函数用来测试网络通信和本地通信速度For TestClass/TestNetAndLocalTrafficSpeed.java
-        *@Param: [req, resp]
-        *@return: void
-        *@Author: SongZhen
-        *@date: 下午12:46 19-5-10
-        */
+         *@Description: 这个函数用来测试网络通信和本地通信速度For TestClass/TestNetAndLocalTrafficSpeed.java
+         *@Param: [req, resp]
+         *@return: void
+         *@Author: SongZhen
+         *@date: 下午12:46 19-5-10
+         */
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }
@@ -1486,12 +1485,12 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void sendSparseDimSizeAndInitParamsLMF(InitVMessageLMF req, StreamObserver<BMessage> resp) {
         /**
-        *@Description: 为低秩矩阵分解专门设计的初始化参数的函数
-        *@Param: [req, resp]
-        *@return: void
-        *@Author: SongZhen
-        *@date: 下午2:25 19-5-14
-        */
+         *@Description: 为低秩矩阵分解专门设计的初始化参数的函数
+         *@Param: [req, resp]
+         *@return: void
+         *@Author: SongZhen
+         *@date: 下午2:25 19-5-14
+         */
 
         // 这里面就包含了这个server要存的所有参数
         List<Set> ls_params = ls_partitionedVSet[ServerContext.serverId];
@@ -1517,7 +1516,7 @@ public class PServer implements net.PSGrpc.PS {
 
 
         try {
-            ServerContext.kvStoreForLevelDB.initParamsLMF(req.getUserNum(),req.getMovieNum(),req.getR(), vSet, ls_params);
+            ServerContext.kvStoreForLevelDB.initParamsLMF(req.getUserNum(), req.getMovieNum(), req.getR(), vSet, ls_params);
             BMessage.Builder booleanMessage = BMessage.newBuilder();
             booleanMessage.setB(true);
             resp.onNext(booleanMessage.build());
@@ -1531,7 +1530,8 @@ public class PServer implements net.PSGrpc.PS {
     }
 
 
-    public static AtomicInteger networkCount=new AtomicInteger(0);
+    public static AtomicInteger networkCount = new AtomicInteger(0);
+
     @Override
     public void getNeededParamsLMF(PullRequestMessage req, StreamObserver<SRListMessage> resp) {
         // 获取需要访问的参数的key
@@ -1548,8 +1548,8 @@ public class PServer implements net.PSGrpc.PS {
                     resp.onCompleted();
                     break;
                 case AP:
-                    if(req.getWorkerId()!=ServerContext.serverId){
-                        networkCount.set(networkCount.intValue()+neededParamIndices.size());
+                    if (req.getWorkerId() != ServerContext.serverId) {
+                        networkCount.set(networkCount.intValue() + neededParamIndices.size());
                     }
                     sMatrixListMessage = ServerContext.kvStoreForLevelDB.getNeededParams_LMF(neededParamIndices);
                     resp.onNext(sMatrixListMessage);
@@ -1581,42 +1581,71 @@ public class PServer implements net.PSGrpc.PS {
     }
 
     @Override
-    public void showSomeStatisticAfterTrain(BMessage req,StreamObserver<BMessage> resp){
-        logger.info("磁盘IO次数："+ServerContext.kvStoreForLevelDB.diskIOCount);
-        logger.info("通信个数："+networkCount);
+    public void showSomeStatisticAfterTrain(BMessage req, StreamObserver<BMessage> resp) {
+        logger.info("磁盘IO次数：" + ServerContext.kvStoreForLevelDB.diskIOCount);
+        logger.info("通信个数：" + networkCount);
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
     }
 
 
-    public static AtomicDouble loss=new AtomicDouble(0);
-    public static boolean[] isShow=new boolean[4];
+    public static AtomicDouble loss = new AtomicDouble(0);
+    public static boolean[] isShow = new boolean[4];
+
     @Override
-    public void sendLoss(LossMessage req,StreamObserver<BMessage> resp){
+    public void sendLoss(LossMessage req, StreamObserver<BMessage> resp) {
         // 不能加同步，不然对于SSP、WSP错了
 //        barrier_WorkerNum2();
-        if(req.getReqHost()==Context.masterId) {
+        if (req.getReqHost() == Context.masterId) {
             if (Math.abs(req.getLoss()) < 0.65 && !isShow[0]) {
                 isShow[0] = true;
-                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + "," + req.getReqHost() + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
 
             if (Math.abs(req.getLoss()) < 0.6 && !isShow[1]) {
                 isShow[1] = true;
-                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + "," + req.getReqHost() + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
             if (Math.abs(req.getLoss()) < 0.55 && !isShow[2]) {
                 isShow[2] = true;
-                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + "," + req.getReqHost() + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
 
-            if (Math.abs(req.getLoss())  < 0.50 && !isShow[3]) {
+            if (Math.abs(req.getLoss()) < 0.50 && !isShow[3]) {
                 isShow[3] = true;
-                System.out.println(req.getLoss() + ","+req.getReqHost()+"训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
+                System.out.println(req.getLoss() + "," + req.getReqHost() + "训练时间为" + (System.currentTimeMillis() - req.getStartTime()));
             }
         }
         resp.onNext(BMessage.newBuilder().setB(true).build());
         resp.onCompleted();
+    }
+
+    public static AtomicInteger serverNum = new AtomicInteger(0);
+
+    @Override
+    public void serverSynchronization(HostMessage req, StreamObserver<BMessage> resp) {
+        synchronized (serverNum) {
+            serverNum.getAndIncrement();
+            if (serverNum.get() == Context.serverNum) {
+                serverNum.notifyAll();
+            } else {
+                try {
+                    serverNum.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if(req.getReqhost()==Context.masterId){
+            serverNum.set(0);
+        }
+
+        BMessage b=BMessage.newBuilder().setB(true).build();
+        resp.onNext(b);
+        resp.onCompleted();
+
+
     }
 
 
