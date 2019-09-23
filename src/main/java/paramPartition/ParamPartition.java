@@ -19,6 +19,7 @@ import io.netty.util.internal.ConcurrentSet;
 import net.BMessage;
 import org.iq80.leveldb.DB;
 import store.KVStoreForLevelDB;
+import sun.misc.GC;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -130,7 +131,7 @@ public class ParamPartition {
         System.out.println("剪枝的维度个数为："+prunedNum);
 
 
-
+        vAccessNum=null;
         return vSet;
     }
 

@@ -592,7 +592,7 @@ public class DataProcessUtil {
     }
 
 
-    public static void metaToDB_LMF(){
+    public static void metaToDB_LMF() throws IOException{
         // 这里需要对矩阵分batch，然后存入到数据库中
         DB db=WorkerContext.kvStoreForLevelDB.getDb();
         int count=0;
@@ -631,7 +631,7 @@ public class DataProcessUtil {
         }
 
 
-
+        db.close();
 
     }
 

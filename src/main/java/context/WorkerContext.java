@@ -84,77 +84,73 @@ public class WorkerContext {
 
 
 
+
+
     public static void init()throws IOException {
 
-        workerId=0;
+        workerId=QuickSetting.workerId;
         mode=Mode.DISTRIBUTED;
         isCatForwardFeature=true;
 
         // housing 9 0  data 13 7
-        LiR=new GeneralAlgorithmSetting(10000,10000,10000,
-                "data/LiRData/housing"+workerId+".csv",9,0);
+        LiR=new GeneralAlgorithmSetting(20000,20000,2000,
+                "data/LiRData/housing"+workerId+".csv",9,0,2000,"LiR");
         // train 12 10
         // dataset 7 179
         LoR=new GeneralAlgorithmSetting(10000,10000,10000,
-                "data/LoRData/train"+workerId+".csv",12,10);
-        SVM=new GeneralAlgorithmSetting(100000,100000,10000,
-                "data/SVMData/train"+workerId+".csv",1,0);
+                "data/LoRData/train"+workerId+".csv",12,10,2000,"LoR");
+        SVM=new GeneralAlgorithmSetting(300000,300000,10000,
+                "data/SVMData/train"+workerId+".csv",12,10,142503,"SVM");
 
         // 用户1～53424，电影1~10000，样本数量5976479
         // ratings 用户1~259137 电影1~165201
-        LMF=new LMFSetting(100000,100000,100000,100000,
+        LMF=new LMFSetting(20000,20000,2000,100,
                 259137,165201,"data/LMFData/ratings"+workerId+".csv");
 
-        generalSetting=LoR;
+//        LMF=new LMFSetting(10000,10000,2000,100,
+//                15000000,1000000,"data/LMFData/matrixData"+workerId+".csv");
+
+
+        switch (QuickSetting.algorithmName){
+            case "LiR": generalSetting=LiR;break;
+            case "LoR": generalSetting=LoR;break;
+            case "SVM": generalSetting=SVM;break;
+            case "LMF": break;
+            default:System.out.println("无该算法");
+        }
         // 其实有了上面的数据结构，下述的参数都可以省略，但是为了尽量少的改后面的程序，这里不去掉这些冗余了
 
 //        sampleListSize=50000;
-        sampleListSize=generalSetting.sampleListSize;
-
-
-
-//        samplePrunedSize=50000;
-        samplePrunedSize=generalSetting.samplePrunedSize;
-        samplePrunedSize_LMF=LMF.samplePrunedSize;
+        levelDBPathForWorker="data/leveldbForWorker/";
         pruneRate=0.001f;
-
-        // 下面是逻辑回归任务的数据集
-//        myDataPath="data/train"+workerId+".csv";
-        // 下面是线性回归任务
-//        myDataPath="data/linearRegressionData/Salary_Data"+workerId+".csv";
-        // 下面是低秩矩阵分解任务
-//        myDataPath="data/LMFData/LMFData"+workerId+".csv";
-        // 下面是SVM的数据集
-        myDataPath=generalSetting.myDataPath;
-        myDataPath_LMF=LMF.dataPath;
-
-//        catSize=12;
-//        catSize=2;
-        // 下面是SVM的catSize
-        catSize=generalSetting.catSize;
-
-//        sampleBatchSize=50000;
-        sampleBatchSize=generalSetting.sampleBatchSize;
         inMemSampleBatchNum=100;
 
         minPartitionSize=2;
-        userNum_LMF=LMF.userNum;
-        movieNum_LMF=LMF.movieNum;
+
+        if(!QuickSetting.algorithmName.equals("LMF")){
+            sampleListSize=generalSetting.sampleListSize;
+            samplePrunedSize=generalSetting.samplePrunedSize;
+            myDataPath=generalSetting.myDataPath;
+            sampleBatchSize=generalSetting.sampleBatchSize;
+            catSize=generalSetting.catSize;
+            sampleBatchListSize=generalSetting.sampleBatchListSize;
+            sampleBatchListPrunedSize=generalSetting.sampleBatchListPrunedSize;
+            kvStoreForLevelDB.init(levelDBPathForWorker,generalSetting.algorithmName);
+        }else {
+            samplePrunedSize_LMF=LMF.samplePrunedSize;
+            myDataPath_LMF=LMF.dataPath;
+            userNum_LMF=LMF.userNum;
+            movieNum_LMF=LMF.movieNum;
+            sampleListSize_LMF=LMF.sampleListSize; // 训练集的样本个数
+            samplePrunedSize_LMF=LMF.samplePrunedSize;
+            sampleBatchSize_LMF=LMF.sampleBatchSize;  // 一个batch的大小
+            r_LMF=LMF.r;
+            sampleBatchListPrunedSize_LMF=LMF.sampleBatchListPrunedSize;
+            sampleBatchListSize_LMF=LMF.sampleBatchListSize; // 训练集包含batch的数目
+            kvStoreForLevelDB.init(levelDBPathForWorker,"LMF");
+        }
 
 
-
-        sampleBatchListSize=generalSetting.sampleBatchListSize;
-        sampleBatchListPrunedSize=generalSetting.sampleBatchListPrunedSize;
-
-        sampleListSize_LMF=LMF.sampleListSize; // 训练集的样本个数
-        samplePrunedSize_LMF=LMF.samplePrunedSize;
-        sampleBatchSize_LMF=LMF.sampleBatchSize;  // 一个batch的大小
-        r_LMF=10;
-        sampleBatchListPrunedSize_LMF=LMF.sampleBatchListPrunedSize;
-        sampleBatchListSize_LMF=LMF.sampleBatchListSize; // 训练集包含batch的数目
-
-        levelDBPathForWorker="data/leveldbForWorker/";
-        kvStoreForLevelDB.init(levelDBPathForWorker);
 
 
 //        psWorker=new PSWorker(Context.serverIp.get(Context.masterId),Context.serverPort.get(Context.masterId));

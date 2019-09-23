@@ -46,6 +46,7 @@ public class WorkerForLMF {
                     PServer pServer = new PServer(Context.serverPort.get(ServerContext.serverId));
                     pServer.start();
                     pServer.blockUntilShutdown();
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
@@ -70,7 +71,7 @@ public class WorkerForLMF {
 
         // 先处理数据并放到key-value数据库中
         // 处理完的key是batchLMF0,value是matrix类型的
-        DataProcessUtil.metaToDB_LMF();
+//        DataProcessUtil.metaToDB_LMF();
 
         // 需要先对参数维度进行划分
         long start = System.currentTimeMillis();
@@ -93,13 +94,13 @@ public class WorkerForLMF {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LMF lmf = new LMF(0.1f, 0.001f, 100, WorkerContext.r_LMF, WorkerContext.userNum_LMF, WorkerContext.movieNum_LMF);
+        LMF lmf = new LMF(0.1f, 0.01f, 30, WorkerContext.r_LMF, WorkerContext.userNum_LMF, WorkerContext.movieNum_LMF);
         MemoryUtil.releaseMemory();
 
-        CurrentTimeUtil.setStartTime();
+        long start_train=System.currentTimeMillis();
         lmf.train();
-        CurrentTimeUtil.setEndTime();
-        CurrentTimeUtil.showExecuteTime("训练时间为");
+        long end_train=System.currentTimeMillis();
+        logger.info("训练时间："+(end_train-start_train));
         logger.info("建立索引的时间为:" + (end - start));
 
         WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());

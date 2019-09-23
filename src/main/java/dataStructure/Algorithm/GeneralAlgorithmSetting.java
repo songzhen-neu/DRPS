@@ -15,8 +15,10 @@ public class GeneralAlgorithmSetting {
     public int featureSize;
     public int sampleBatchListSize;
     public int sampleBatchListPrunedSize;
+    public long sparseDimSize;
+    public String algorithmName;
 
-    public GeneralAlgorithmSetting(int sampleListSize,int samplePrunedSize,int sampleBatchSize,String myDataPath,int catSize,int featureSize){
+    public GeneralAlgorithmSetting(int sampleListSize,int samplePrunedSize,int sampleBatchSize,String myDataPath,int catSize,int featureSize,long sparseDimSize, String algorithmName){
         this.sampleListSize=sampleListSize;
         this.samplePrunedSize=samplePrunedSize;
         this.sampleBatchSize=sampleBatchSize;
@@ -25,6 +27,8 @@ public class GeneralAlgorithmSetting {
         this.featureSize=featureSize;
         this.sampleBatchListSize=sampleListSize/sampleBatchSize;
         this.sampleBatchListPrunedSize=samplePrunedSize/sampleBatchSize;
+        this.sparseDimSize=sparseDimSize;
+        this.algorithmName=algorithmName;
 
     }
 

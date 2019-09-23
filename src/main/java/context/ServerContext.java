@@ -31,12 +31,20 @@ public class ServerContext {
         if (inited){
             return;
         }
-
-        serverId=0;
+        String algorithmName=null;
+        serverId=QuickSetting.serverId;
         isAsy=false;
+        switch (QuickSetting.algorithmName){
+            case "LiR": algorithmName="LiR";break;
+            case "LoR": algorithmName="LoR";break;
+            case "SVM": algorithmName="SVM";break;
+            case "LMF": algorithmName="LMF";break;
+            default:System.out.println("无该算法");
+        }
+
 
         levelDBPathForServer="data/leveldbForServer/";
-        kvStoreForLevelDB.init(levelDBPathForServer);
+        kvStoreForLevelDB.init(levelDBPathForServer,algorithmName);
 
 
 

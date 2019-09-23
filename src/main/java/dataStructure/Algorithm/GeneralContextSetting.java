@@ -14,13 +14,16 @@ public class GeneralContextSetting {
     public int serverNum;
     public int freqThreshold;
     public ParallelismControlModel parallelismControlModel;
+    public String algorithmName;
 
-    public GeneralContextSetting(int featureSize, int workerNum,int serverNum,int freqThreshold,ParallelismControlModel parallelismControlModel){
+
+    public GeneralContextSetting(int featureSize, int workerNum,int serverNum,int freqThreshold,ParallelismControlModel parallelismControlModel,String algorithmName){
         this.featureSize=featureSize;
         this.workerNum=workerNum;
         this.serverNum=serverNum;
         this.freqThreshold=freqThreshold;
         this.parallelismControlModel=parallelismControlModel;
+        this.algorithmName=algorithmName;
     }
 
 }

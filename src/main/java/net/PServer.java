@@ -190,7 +190,6 @@ public class PServer implements net.PSGrpc.PS {
 
                 SLKVListMessage slkvListMessage = MessageDataTransUtil.Map_2_SLKVListMessage(map);
 //                logger.info(ServerContext.kvStoreForLevelDB.getCurIndexOfSparseDim().toString());
-
                 responsedObject.onNext(slkvListMessage);
                 responsedObject.onCompleted();
             } catch (IOException e) {
@@ -379,6 +378,9 @@ public class PServer implements net.PSGrpc.PS {
         int workerId = req.getWorkerId();
         int iterationOfWi = req.getIteration();
         SFKVListMessage sfkvListMessage;
+        if (req.getWorkerId() != ServerContext.serverId) {
+            networkCount.set(networkCount.intValue() + neededParamIndices.size());
+        }
         try {
             switch (Context.parallelismControlModel) {
                 case BSP:
@@ -388,9 +390,9 @@ public class PServer implements net.PSGrpc.PS {
                     resp.onCompleted();
                     break;
                 case AP:
-                    if (req.getWorkerId() != ServerContext.serverId) {
-                        networkCount.set(networkCount.intValue() + neededParamIndices.size());
-                    }
+//                    if (req.getWorkerId() != ServerContext.serverId) {
+//                        networkCount.set(networkCount.intValue() + neededParamIndices.size());
+//                    }
                     sfkvListMessage = ServerContext.kvStoreForLevelDB.getNeededParams(neededParamIndices);
                     resp.onNext(sfkvListMessage);
                     resp.onCompleted();
@@ -1157,50 +1159,50 @@ public class PServer implements net.PSGrpc.PS {
 
             }
 
-            float maxTimeReduce = 0;
-            int pi = 0;
-            int pj = 0;
+            if (!Context.isUseOptimalIndex) {
+                float maxTimeReduce = 0;
+                int pi = 0;
+                int pj = 0;
 
-            // 计算最大的时间成本Reduce，也就是最佳合并pi，pj
-            for (int i = 0; i < partitionListSize - 1; i++) {
-                for (int j = i + 1; j < partitionListSize; j++) {
-                    float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
-                    // 这块要保证根据disk IO代价划分的划分块最大大小不能超过maxDiskPartitionNum，不然有些划分块太大，没办法做网络通信优化了
-                    if (costReduce > maxTimeReduce
-                            && partitionList.partitionList.get(i).partition.size() <= Context.maxDiskPartitionNum
-                            && partitionList.partitionList.get(j).partition.size() <= Context.maxDiskPartitionNum) {
-                        maxTimeReduce = costReduce;
-                        pi = i;
-                        pj = j;
-                    }
+                // 计算最大的时间成本Reduce，也就是最佳合并pi，pj
+                for (int i = 0; i < partitionListSize - 1; i++) {
+                    for (int j = i + 1; j < partitionListSize; j++) {
+                        float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
+                        // 这块要保证根据disk IO代价划分的划分块最大大小不能超过maxDiskPartitionNum，不然有些划分块太大，没办法做网络通信优化了
+                        if (costReduce > maxTimeReduce
+                               ) {
+                            maxTimeReduce = costReduce;
+                            pi = i;
+                            pj = j;
+                        }
 
 
-                }
-            }
-
-            // 重新构建partitionList，也就是合并之后的partitionList
-            // 如果小于最低收益的话，则不更新
-            if (maxTimeReduce > Context.minGain) {
-                System.out.println(pi + "," + pj);
-                int pjSize = getPiSize(partitionList.partitionList, pj);
-                for (int i = 0; i < pjSize; i++) {
-                    partitionList.partitionList.get(pi).partition.add(partitionList.partitionList.get(pj).partition.get(i));
-                }
-                partitionList.partitionList.remove(pj);
-
-            } else {
-                isSatisfyMinGain.set(true);
-                // 在划分结束后，且实现最优划分时，需要记录最佳划分中，每个划分块的访问时间
-                // 这里让master机器的worker线程进行计算
-                // 其实访问时间就是对角线的cost时间
-                if (req.getReqHost() == Context.masterId) {
-                    diskCost = new AtomicDouble[costTime.length];
-                    for (int i = 0; i < diskCost.length; i++) {
-                        diskCost[i] = new AtomicDouble(costTime[i][i]);
                     }
                 }
 
-                // 这里需要把只有一个参数的划分块删除（不能删除，因为后面还有对网络通信的优化，这些访问频率高的对网络通信影响也大）
+                // 重新构建partitionList，也就是合并之后的partitionList
+                // 如果小于最低收益的话，则不更新
+                if (maxTimeReduce > Context.minGain) {
+                    System.out.println(pi + "," + pj);
+                    int pjSize = getPiSize(partitionList.partitionList, pj);
+                    for (int i = 0; i < pjSize; i++) {
+                        partitionList.partitionList.get(pi).partition.add(partitionList.partitionList.get(pj).partition.get(i));
+                    }
+                    partitionList.partitionList.remove(pj);
+
+                } else {
+                    isSatisfyMinGain.set(true);
+                    // 在划分结束后，且实现最优划分时，需要记录最佳划分中，每个划分块的访问时间
+                    // 这里让master机器的worker线程进行计算
+                    // 其实访问时间就是对角线的cost时间
+                    if (req.getReqHost() == Context.masterId) {
+                        diskCost = new AtomicDouble[costTime.length];
+                        for (int i = 0; i < diskCost.length; i++) {
+                            diskCost[i] = new AtomicDouble(costTime[i][i]);
+                        }
+                    }
+
+                    // 这里需要把只有一个参数的划分块删除（不能删除，因为后面还有对网络通信的优化，这些访问频率高的对网络通信影响也大）
 //                PartitionList partitionList_temp=new PartitionList();
 //                for(int i=0;i<partitionList.partitionList.size();i++){
 //                    Partition partition_temp=new Partition();
@@ -1214,8 +1216,77 @@ public class PServer implements net.PSGrpc.PS {
 //                partitionList=partitionList_temp;
 
 
-                // 这里还需要构建一个划分的反向索引，也就是可以通过参数找到其所在的划分
+                    // 这里还需要构建一个划分的反向索引，也就是可以通过参数找到其所在的划分
+                }
+            } else {
+                float[] maxTimeReduce = new float[Context.K_mergeIndex];
+                int[] pi = new int[Context.K_mergeIndex];
+                int[] pj = new int[Context.K_mergeIndex];
+                // 记录，如果pi=5在topk的第一个，那么后面k-1个都不出现5了
+                Set<Integer> topkExist=new HashSet<Integer>();
+
+
+
+                // 计算最大的时间成本Reduce，也就是最佳合并pi，pj,这里计算的是前k大的
+                for (int i = 0; i < partitionListSize - 1; i++) {
+                    for (int j = i + 1; j < partitionListSize; j++) {
+                        float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
+                        // 这块要保证根据disk IO代价划分的划分块最大大小不能超过maxDiskPartitionNum，不然有些划分块太大，没办法做网络通信优化了
+                        insertTopKArray(topkExist,maxTimeReduce,costReduce,i,j,pi,pj);
+                    }
+                }
+
+                Set<Integer> arraySet=new HashSet<Integer>();
+
+                // 重新构建partitionList，也就是合并之后的partitionList
+                // 如果小于最低收益的话，则不更新
+                Set<Integer> needRemove=new HashSet<Integer>();
+
+                for (int m=0;m<maxTimeReduce.length;m++){
+                    if(maxTimeReduce[0]>Context.minGain){
+                        if (maxTimeReduce[m] > Context.minGain) {
+                            // 如果两个merge在该轮没有合并过，或者合并过但是满足条件，则执行合并
+                            if(!arraySet.contains(pi[m])&&!arraySet.contains(pj[m])){
+                                System.out.println(pi[m] + "," + pj[m]);
+                                int pjSize = getPiSize(partitionList.partitionList, pj[m]);
+                                for (int i = 0; i < pjSize; i++) {
+                                    partitionList.partitionList.get(pi[m]).partition.add(partitionList.partitionList.get(pj[m]).partition.get(i));
+                                }
+                                needRemove.add(pj[m]);
+                                arraySet.add(pi[m]);
+                                arraySet.add(pj[m]);
+                            }
+
+
+                        } else {
+                            break;
+                        }
+                    }else {
+                        isSatisfyMinGain.set(true);
+                        // 在划分结束后，且实现最优划分时，需要记录最佳划分中，每个划分块的访问时间
+                        // 这里让master机器的worker线程进行计算
+                        // 其实访问时间就是对角线的cost时间
+                        if (req.getReqHost() == Context.masterId) {
+                            diskCost = new AtomicDouble[costTime.length];
+                            for (int i = 0; i < diskCost.length; i++) {
+                                diskCost[i] = new AtomicDouble(costTime[i][i]);
+                            }
+                        }
+
+                        break;
+                    }
+
+                }
+
+                Integer[] needRemoveArray =new Integer[needRemove.size()];
+                needRemove.toArray(needRemoveArray);
+                Arrays.sort(needRemoveArray);
+                for(int i=needRemoveArray.length-1;i>=0;i--){
+                    partitionList.partitionList.remove(partitionList.partitionList.get(needRemoveArray[i]));
+                }
+
             }
+
         }
 
         // 同步一下，直到master线程执行完partitionList的更新后返回结果
@@ -1224,6 +1295,28 @@ public class PServer implements net.PSGrpc.PS {
         resp.onCompleted();
 
     }
+
+
+    public static void insertTopKArray(Set<Integer> topkExist, float[] maxTimeReduce, float costReduce, int i,int j,int[] pi,int[] pj){
+        // 给定i，j对应的costReduce，按照大小插入数组maxTimeReduce，并记录插入位置
+        for(int m=0;m<maxTimeReduce.length;m++){
+            if(costReduce>maxTimeReduce[m]&&!topkExist.contains(i)&&!topkExist.contains(j)){
+                // 插入到m位置，后面的值全部后移，最后一个值删掉
+                for(int l=maxTimeReduce.length-2;l>=m;l--){
+                    maxTimeReduce[l+1]=maxTimeReduce[l];
+                    pi[l+1]=pi[l];
+                    pj[l+1]=pj[l];
+                }
+                maxTimeReduce[m]=costReduce;
+                pi[m]=i;
+                pj[m]=j;
+                topkExist.add(i);
+                topkExist.add(j);
+                break;
+            }
+        }
+    }
+
 
     /*获取划分i的大小*/
     public static int getPiSize(List<Partition> partitionList, int pi) {
@@ -1637,11 +1730,11 @@ public class PServer implements net.PSGrpc.PS {
             }
         }
 
-        if(req.getReqhost()==Context.masterId){
+        if (req.getReqhost() == Context.masterId) {
             serverNum.set(0);
         }
 
-        BMessage b=BMessage.newBuilder().setB(true).build();
+        BMessage b = BMessage.newBuilder().setB(true).build();
         resp.onNext(b);
         resp.onCompleted();
 

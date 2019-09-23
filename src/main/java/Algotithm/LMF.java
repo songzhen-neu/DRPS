@@ -103,41 +103,44 @@ public class LMF {
                 Future<SRListMessage> srListMessageFuture[] = new Future[Context.workerNum];
 
                 // 如果是本机的参数，可以直接通过db获取参数
-                for(String str:setArray[WorkerContext.workerId]){
-                    RowOrColParam rowOrColParam=(RowOrColParam)TypeExchangeUtil.toObject(ServerContext.kvStoreForLevelDB.getDb().get(str.getBytes()));
-                    paramsMap.put(str,rowOrColParam.param);
-                }
+//                for(String str:setArray[WorkerContext.workerId]){
+//                    RowOrColParam rowOrColParam=(RowOrColParam)TypeExchangeUtil.toObject(ServerContext.kvStoreForLevelDB.getDb().get(str.getBytes()));
+//                    paramsMap.put(str,rowOrColParam.param);
+//                }
 
-                for (int l = 0; l < Context.serverNum&& l!=WorkerContext.workerId; l++) {
-//                    if (setArray[l].size() != 0) {
-                    logger.info("getNeededParams start");
+                for (int l = 0; l < Context.serverNum; l++) {
+//                    if(l!=WorkerContext.workerId){
+                        logger.info("getNeededParams start");
 //                    CurrentTimeUtil.setStartTime();
-                    srListMessageFuture[l] = psRouterClient.get(l).getNeededParamsLMF(setArray[l],
-                            WorkerContext.workerId,
-                            WorkerContext.sampleBatchListSize * (i) + j + 1);
+                        srListMessageFuture[l] = psRouterClient.get(l).getNeededParamsLMF(setArray[l],
+                                WorkerContext.workerId,
+                                WorkerContext.sampleBatchListSize * (i) + j + 1);
 //                    CurrentTimeUtil.setEndTime();
 //                    CurrentTimeUtil.showExecuteTime("获取一次参数的时间");
-                    logger.info("getNeededParams end");
+                        logger.info("getNeededParams end");
 //                    }
                 }
-                for (int l = 0; l < Context.serverNum&& l!=WorkerContext.workerId; l++) {
-                    while (!srListMessageFuture[l].isDone()) {
+                for (int l = 0; l < Context.serverNum; l++) {
+//                    if(l!=WorkerContext.workerId){
+                        while (!srListMessageFuture[l].isDone()) {
+                            try {
+                                Thread.sleep(1);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
+                            paramsMapsTemp[l] = MessageDataTransUtil.SRListMessage_2_Map(srListMessageFuture[l].get());
+                        } catch (InterruptedException | ExecutionException e) {
                             e.printStackTrace();
                         }
-                    }
-                    try {
-                        paramsMapsTemp[l] = MessageDataTransUtil.SRListMessage_2_Map(srListMessageFuture[l].get());
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
 
-                    for (String key : paramsMapsTemp[l].keySet()) {
-                        // 把远程请求到的参数放到paramsMap里，这里内存是可以存得下一个batch的参数的
-                        paramsMap.put(key, paramsMapsTemp[l].get(key));
-                    }
+                        for (String key : paramsMapsTemp[l].keySet()) {
+                            // 把远程请求到的参数放到paramsMap里，这里内存是可以存得下一个batch的参数的
+                            paramsMap.put(key, paramsMapsTemp[l].get(key));
+                        }
+//                    }
+
                 }
 
                 // 接下来是计算更新。根据batch

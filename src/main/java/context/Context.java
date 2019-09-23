@@ -13,6 +13,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import dataStructure.enumType.ParallelismControlModel;
+
 /**
  * @program: simplePsForModelPartition
  * @description: 共同的context
@@ -21,34 +22,43 @@ import dataStructure.enumType.ParallelismControlModel;
  */
 
 
-
 public class Context {
 
 
-    /** 网络通信server的相关配置*/
-    public static Map<Integer,String> serverIp= new HashMap<Integer, String>();
-    public static Map<Integer,Integer> serverPort= new HashMap<Integer, Integer>();
+    /**
+     * 网络通信server的相关配置
+     */
+    public static Map<Integer, String> serverIp = new HashMap<Integer, String>();
+    public static Map<Integer, Integer> serverPort = new HashMap<Integer, Integer>();
 
 
-    /** 稀疏维度大小*/
-    public static long sparseDimSize;
     public static int featureSize;
 
-    /** 是否是分布式执行*/
+    /**
+     * 是否是分布式执行
+     */
     public static boolean isDist;
 
-    /** 是否初始化完毕*/
-    public static boolean inited=false;
+    /**
+     * 是否初始化完毕
+     */
+    public static boolean inited = false;
 
-    /** worker和server数量*/
+    /**
+     * worker和server数量
+     */
     public static int workerNum;
     public static int serverNum;
 
-    /** 数据集划分*/
+    /**
+     * 数据集划分
+     */
     public static int partitionedDataSize;
     public static int dataPartitionNum;
 
-    /** 判断是不是server的master机器，管参数分配的*/
+    /**
+     * 判断是不是server的master机器，管参数分配的
+     */
     public static int masterId;
     public static String dataPath;
 
@@ -71,91 +81,139 @@ public class Context {
     public static PSRouterClient psRouterClient;
 
     public static CyclicBarrier[] cyclicBarrier_sub1;
-    public static AtomicInteger trainRoundNum=new AtomicInteger(0);
+    public static AtomicInteger trainRoundNum = new AtomicInteger(0);
 
-    public static final float alpha_WSP=0.01f;
-    public static float minGain=0f;
+    public static final float alpha_WSP = 0.01f;
+    public static float minGain = 5f;
 
-    /** 最大磁盘划分的大小*/
-    public static int maxDiskPartitionNum=5;
+    /**
+     * 最大磁盘划分的大小
+     */
+    public static int maxDiskPartitionNum = 5;
 
-    /** 做对比实验，是否进行磁盘优化*/
-    public static boolean isOptimizeDisk=false;
+    /**
+     * 做对比实验，是否进行磁盘优化
+     */
+    public static boolean isOptimizeDisk;
 
-    /** 做对比实验，是否进行网络*/
-    public static boolean isOptimizeNetTraffic=false;
+    /**
+     * 做对比实验，是否进行网络
+     */
+    public static boolean isOptimizeNetTraffic;
     // param用p表示，paramSet用s表示，feature用f表示
 
-    /** wsp中标准化时间，乘以一个倍数*/
-    public static float TimeMulWSP=10f;
+    /**
+     * wsp中标准化时间，乘以一个倍数
+     */
+    public static float TimeMulWSP = 10f;
+
+    public static int K_mergeIndex = 50;
+
+    public static boolean isUseOptimalIndex;
 
 
-    public static GeneralContextSetting SVM=new GeneralContextSetting(0,3,3,10, ParallelismControlModel.BSP);
+    public static GeneralContextSetting SVM = null;
     // dataset 179  train 10
-    public static GeneralContextSetting LoR=new GeneralContextSetting(10,3,3,5, ParallelismControlModel.AP);
-    public static GeneralContextSetting LiR=new GeneralContextSetting(0,1,1,10, ParallelismControlModel.BSP);
-    public static GeneralContextSetting LMF=new GeneralContextSetting(1,1,1,10, ParallelismControlModel.WSP);
+    public static GeneralContextSetting LoR = null;
+    public static GeneralContextSetting LiR = null;
+    public static GeneralContextSetting LMF = null;
+
+    /**
+     * 稀疏维度大小
+     */
+    // 需要手动输入稀疏维度的个数
+    public static long sparseDimSize;
 
     public static void init() throws IOException {
-        if(inited==true){
+        if (inited == true) {
             return;
         }
+        GeneralContextSetting SVM = new GeneralContextSetting(10, QuickSetting.workerNum, QuickSetting.serverNum, QuickSetting.freqThreshold, QuickSetting.parallel, "SVM");
+        // dataset 179  train 10
+        GeneralContextSetting LoR = new GeneralContextSetting(10, QuickSetting.workerNum, QuickSetting.serverNum, QuickSetting.freqThreshold, QuickSetting.parallel, "LoR");
+        GeneralContextSetting LiR = new GeneralContextSetting(0, QuickSetting.workerNum, QuickSetting.serverNum, QuickSetting.freqThreshold, QuickSetting.parallel, "LiR");
+        GeneralContextSetting LMF = new GeneralContextSetting(1, QuickSetting.workerNum, QuickSetting.serverNum, QuickSetting.freqThreshold, QuickSetting.parallel, "LMF");
 
-        GeneralContextSetting generalContextSetting=LMF;
-        serverIp.put(0,"202.199.13.120");
-        serverIp.put(1,"202.199.13.120");
-        serverIp.put(2,"202.199.13.120");
-        serverPort.put(0,9010);
-        serverPort.put(1,9011);
-        serverPort.put(2,9012);
+        GeneralContextSetting generalContextSetting = null;
+        switch (QuickSetting.algorithmName) {
+            case "LiR":
+                generalContextSetting = LiR;
+                break;
+            case "LoR":
+                generalContextSetting = LoR;
+                break;
+            case "SVM":
+                generalContextSetting = SVM;
+                break;
+            case "LMF":
+                generalContextSetting = LMF;
+                break;
+            default:
+                System.out.println("无该算法");
+        }
+        isOptimizeDisk = QuickSetting.isOptimizeDisk;
+        isUseOptimalIndex = QuickSetting.isUseOptimalIndex;
+        isOptimizeNetTraffic = QuickSetting.isOptimizeNetTraffic;
 
-        boundForSSP=2;
+        serverIp.put(0, "202.199.13.120");
+        serverIp.put(1, "202.199.13.120");
+        serverIp.put(2, "202.199.13.120");
+        serverPort.put(0, 9010);
+        serverPort.put(1, 9011);
+        serverPort.put(2, 9012);
 
-        setParamBaseSize_bytes=128;
-        singleParamOfSetSize_bytes=22;
+        boundForSSP = 2;
+
+        setParamBaseSize_bytes = 128;
+        singleParamOfSetSize_bytes = 22;
 
 //        featureSize=10;
 //        featureSize=2;
-        featureSize=generalContextSetting.featureSize;
+        featureSize = generalContextSetting.featureSize;
 
-        isDist=true;
+        isDist = true;
 
 
         // 当worker和server数量都是1，则为单机运行，masterId设置为0
-        workerNum=generalContextSetting.workerNum;
-        serverNum=generalContextSetting.serverNum;
-        dataPartitionNum=workerNum;
-        masterId=0;
+        workerNum = generalContextSetting.workerNum;
+        serverNum = generalContextSetting.serverNum;
+        dataPartitionNum = workerNum;
+        masterId = 0;
 
 
+        maxMessageSize = Integer.MAX_VALUE;
 
-        maxMessageSize=Integer.MAX_VALUE;
+        inited = true;
 
-        inited=true;
-
-        diskSeekTime=0.0029f;
-        diskAccessTime=0.0000046f;
+        diskSeekTime = 1f;
+        diskAccessTime = 0.01f;
 //        netTrafficTime=0.0000095f;
-        netTrafficTime=0.00000095f;
-        floatSize_bytes=79;
+        netTrafficTime = 0.00000095f;
+        floatSize_bytes = 79;
 
 //        freqThresholdForSingleMachine=0;
 //        freqThreshold=freqThresholdForSingleMachine*workerNum;   // 表示大于freqThreshold这个频率的
-	    freqThreshold=generalContextSetting.freqThreshold;
-        usePruneRate=true;
+        freqThreshold = generalContextSetting.freqThreshold;
+        usePruneRate = true;
 
-        psRouterClient=new PSRouterClient();
-        parallelismControlModel=generalContextSetting.parallelismControlModel;
-        switch (parallelismControlModel){
-            case SSP:SSP.init();break;
-            case SSP_S:SSP.init();break;
-            case WSP:WSP.init();break;
+        psRouterClient = new PSRouterClient();
+        parallelismControlModel = generalContextSetting.parallelismControlModel;
+        switch (parallelismControlModel) {
+            case SSP:
+                SSP.init();
+                break;
+            case SSP_S:
+                SSP.init();
+                break;
+            case WSP:
+                WSP.init();
+                break;
         }
 
-        if(workerNum>1){
-            cyclicBarrier_sub1=new CyclicBarrier[workerNum];
-            for(int i=0;i<cyclicBarrier_sub1.length;i++){
-                cyclicBarrier_sub1[i]=new CyclicBarrier(workerNum-1);
+        if (workerNum > 1) {
+            cyclicBarrier_sub1 = new CyclicBarrier[workerNum];
+            for (int i = 0; i < cyclicBarrier_sub1.length; i++) {
+                cyclicBarrier_sub1[i] = new CyclicBarrier(workerNum - 1);
             }
         }
 

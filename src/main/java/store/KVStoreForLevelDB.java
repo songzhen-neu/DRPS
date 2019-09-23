@@ -58,10 +58,11 @@ public class KVStoreForLevelDB {
 //    public static ConcurrentMap<Long,String> catToCatSetMap;
 
 
-    public void init(String path) throws IOException {
-        FileUtil.deleteFile(new File(path + "db/"));
-        db = Iq80DBFactory.factory.open(new File(path, "db"), new Options().createIfMissing(true));
+    public void init(String path,String algorithmName) throws IOException {
+//        FileUtil.deleteFile(new File(path + "db/"));
+        db = Iq80DBFactory.factory.open(new File(path, algorithmName+"db"), new Options().createIfMissing(true));
     }
+
 
     @Synchronized
     public Map<String, Long> getIndex(SListMessage sListMessage) throws IOException, ClassNotFoundException {
