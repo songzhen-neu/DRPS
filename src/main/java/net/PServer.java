@@ -1,15 +1,13 @@
 package net;
 
 
-import Util.DataProcessUtil;
-import Util.MessageDataTransUtil;
-import Util.PartitionUtil;
-import Util.SetUtil;
+import Util.*;
 import com.google.common.collect.Maps;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.AtomicDoubleArray;
 import com.google.protobuf.Internal;
+import com.google.protobuf.Type;
 import context.Context;
 import context.ServerContext;
 import context.WorkerContext;
@@ -263,6 +261,13 @@ public class PServer implements net.PSGrpc.PS {
 
 
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            ServerContext.kvStoreForLevelDB.getDb().put("catToCatSetMap".getBytes(),TypeExchangeUtil.toByteArray(ServerContext.kvStoreForLevelDB.catToCatSetMap));
+            ServerContext.kvStoreForLevelDB.getDb().put("ls_partitionedVSet".getBytes(),TypeExchangeUtil.toByteArray(ServerContext.kvStoreForLevelDB.ls_partitionedVSet));
+        }catch (IOException e){
             e.printStackTrace();
         }
 
@@ -774,6 +779,8 @@ public class PServer implements net.PSGrpc.PS {
             respMessage.addL(l);
         }
 
+        Context.maxDiskPartitionNum=prunedVSet.size()/(Context.serverNum*6);
+
 //        System.out.println("isFinish06:");
 //        logger.info("prunedVSet"+prunedVSet.size());
         resp.onNext(respMessage.build());
@@ -948,6 +955,12 @@ public class PServer implements net.PSGrpc.PS {
         sMessage.setStr("" + ServerContext.serverId);
         ServerContext.kvStoreForLevelDB.ls_partitionedVSet = MessageDataTransUtil.LSetListArrayMessage_2_SetListArray(req);
         ls_partitionedVSet = ServerContext.kvStoreForLevelDB.ls_partitionedVSet;
+        try {
+            ServerContext.kvStoreForLevelDB.getDb().put("ls_partitionedVSet".getBytes(),TypeExchangeUtil.toByteArray(ls_partitionedVSet));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
         // 需要构建catToCatSetMap索引
 //        Map<String,String> catToCatSetMap=new HashMap<String, String>();
 //
@@ -1170,7 +1183,7 @@ public class PServer implements net.PSGrpc.PS {
                         float costReduce = costTime[i][i] + costTime[j][j] - costTime[i][j];
                         // 这块要保证根据disk IO代价划分的划分块最大大小不能超过maxDiskPartitionNum，不然有些划分块太大，没办法做网络通信优化了
                         if (costReduce > maxTimeReduce
-                               ) {
+                                && ((partitionList.partitionList.get(i).partition.size()+partitionList.partitionList.get(j).partition.size())<=Context.maxDiskPartitionNum)) {
                             maxTimeReduce = costReduce;
                             pi = i;
                             pj = j;
@@ -1182,7 +1195,7 @@ public class PServer implements net.PSGrpc.PS {
 
                 // 重新构建partitionList，也就是合并之后的partitionList
                 // 如果小于最低收益的话，则不更新
-                if (maxTimeReduce > Context.minGain) {
+                if (maxTimeReduce > Context.minGain ) {
                     System.out.println(pi + "," + pj);
                     int pjSize = getPiSize(partitionList.partitionList, pj);
                     for (int i = 0; i < pjSize; i++) {
@@ -1289,6 +1302,8 @@ public class PServer implements net.PSGrpc.PS {
 
         }
 
+
+
         // 同步一下，直到master线程执行完partitionList的更新后返回结果
         barrier_WorkerNum();
         resp.onNext(BMessage.newBuilder().setB(isSatisfyMinGain.get()).build());
@@ -1300,7 +1315,8 @@ public class PServer implements net.PSGrpc.PS {
     public static void insertTopKArray(Set<Integer> topkExist, float[] maxTimeReduce, float costReduce, int i,int j,int[] pi,int[] pj){
         // 给定i，j对应的costReduce，按照大小插入数组maxTimeReduce，并记录插入位置
         for(int m=0;m<maxTimeReduce.length;m++){
-            if(costReduce>maxTimeReduce[m]&&!topkExist.contains(i)&&!topkExist.contains(j)){
+            if(costReduce>maxTimeReduce[m]&&!topkExist.contains(i)&&!topkExist.contains(j)
+                    && ((partitionList.partitionList.get(i).partition.size()+partitionList.partitionList.get(j).partition.size())<=Context.maxDiskPartitionNum)){
                 // 插入到m位置，后面的值全部后移，最后一个值删掉
                 for(int l=maxTimeReduce.length-2;l>=m;l--){
                     maxTimeReduce[l+1]=maxTimeReduce[l];
@@ -1587,6 +1603,8 @@ public class PServer implements net.PSGrpc.PS {
 
         // 这里面就包含了这个server要存的所有参数
         List<Set> ls_params = ls_partitionedVSet[ServerContext.serverId];
+
+
         // 把ls_partitionVset中元素数量是1的删除
 
 
@@ -1620,6 +1638,15 @@ public class PServer implements net.PSGrpc.PS {
             e.printStackTrace();
         }
 
+        try {
+            ServerContext.kvStoreForLevelDB.getDb().put("catToCatSetMap".getBytes(),TypeExchangeUtil.toByteArray(ServerContext.kvStoreForLevelDB.catToCatSetMap));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+
+
+
     }
 
 
@@ -1628,10 +1655,14 @@ public class PServer implements net.PSGrpc.PS {
     @Override
     public void getNeededParamsLMF(PullRequestMessage req, StreamObserver<SRListMessage> resp) {
         // 获取需要访问的参数的key
+
         Set<String> neededParamIndices = MessageDataTransUtil.ProtoStringList_2_Set(req.getNeededGradDimList());
         int workerId = req.getWorkerId();
         int iterationOfWi = req.getIteration();
         SRListMessage sMatrixListMessage;
+        if (req.getWorkerId() != ServerContext.serverId) {
+            networkCount.set(networkCount.intValue() + neededParamIndices.size());
+        }
         try {
             switch (Context.parallelismControlModel) {
                 case BSP:
@@ -1641,9 +1672,6 @@ public class PServer implements net.PSGrpc.PS {
                     resp.onCompleted();
                     break;
                 case AP:
-                    if (req.getWorkerId() != ServerContext.serverId) {
-                        networkCount.set(networkCount.intValue() + neededParamIndices.size());
-                    }
                     sMatrixListMessage = ServerContext.kvStoreForLevelDB.getNeededParams_LMF(neededParamIndices);
                     resp.onNext(sMatrixListMessage);
                     resp.onCompleted();

@@ -16,7 +16,7 @@ public class DataOfflinePartition {
         PartitionSetting SVM = new PartitionSetting(3, 100000, "data/SVMData/dataset");
         PartitionSetting LiR = new PartitionSetting(5, 200000, "data/LiRData/data");
         PartitionSetting LMF = new PartitionSetting(5, 1100000, "data/LMFData/Goodbooks");
-        PartitionSetting LoR = new PartitionSetting(5, 140000, "data/LoRData/dataset");
+        PartitionSetting LoR = new PartitionSetting(5, 8000000, "data/LoRData/train");
 
 
         // rating每个数据集4800000
@@ -28,7 +28,7 @@ public class DataOfflinePartition {
 
 
 //        DataPartitioning.dataPartitioning(SVM);
-        DataPartitioning.dataPartitioning(LiR);
+        DataPartitioning.dataPartitioning(LoR);
 //        DataPartitioning.dataPartitioning(LMF);
 //        DataPartitioning.dataPartitioning(LoR);
     }

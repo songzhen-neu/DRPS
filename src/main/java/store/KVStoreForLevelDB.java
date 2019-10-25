@@ -89,6 +89,9 @@ public class KVStoreForLevelDB {
         // 这是按照最初的取余进行分配的
         for (long i = 0; i < sparseDimSize; i++) {
             if (i % Context.serverNum == ServerContext.serverId) {
+                if(i%100000==0){
+                    System.out.println(i);
+                }
 //                Param param = new Param("p" + i, RandomUtil.getRandomValue(-0.1f, 0.1f));
                 Param param = new Param("p" + i, 0.1f);
                 db.put(("p" + i).getBytes(), TypeExchangeUtil.toByteArray(param));
@@ -161,6 +164,20 @@ public class KVStoreForLevelDB {
     public SFKVListMessage getNeededParams(Set<String> set) throws ClassNotFoundException, IOException {
         CurrentTimeUtil.setStartTime();
         DB db = ServerContext.kvStoreForLevelDB.getDb();
+
+        if (!isInit_ls.get()){
+            try {
+                logger.info("ls and catmap init");
+                ServerContext.kvStoreForLevelDB.ls_partitionedVSet=(List<Set>[]) TypeExchangeUtil.toObject(ServerContext.kvStoreForLevelDB.getDb().get("ls_partitionedVSet".getBytes()));
+                ServerContext.kvStoreForLevelDB.catToCatSetMap= (Map<String, String>) TypeExchangeUtil.toObject(ServerContext.kvStoreForLevelDB.getDb().get("catToCatSetMap".getBytes()));
+                isInit_ls.set(true);
+            }catch (IOException e){
+                e.printStackTrace();
+            }catch (ClassNotFoundException e){
+                e.printStackTrace();
+            }
+        }
+
 
         SFKVListMessage.Builder sfkvlistMessage = SFKVListMessage.newBuilder();
         // map仅存储需要的，而paramMap可能会包括一些catParamSet多余的参数
@@ -366,7 +383,7 @@ public class KVStoreForLevelDB {
          */
 
         Set<String> needParam = new HashSet<String>();
-        List<Set> paramKeySetList = ls_partitionedVSet[ServerContext.serverId];
+        List<Set> paramKeySetList = ServerContext.kvStoreForLevelDB.ls_partitionedVSet[ServerContext.serverId];
         // 先转化需要取出来哪些参数
         for (String key : set) {
 //            long index_forKey = -1;
@@ -437,8 +454,12 @@ public class KVStoreForLevelDB {
 
         // 这是按照最初的取余进行分配的
         // 对所有参数进行取余的分配，之后还会删掉存在别人server中的v
+//        DB db=ServerContext.kvStoreForLevelDB.getDb();
         for (long i = 0; i < userNum+movieNum; i++) {
             if (i % Context.serverNum == ServerContext.serverId) {
+                if(i%100000==0){
+                    System.out.println(i);
+                }
                 RowOrColParam rowOrColParam=new RowOrColParam(r);
                 for(int j=0;j<rowOrColParam.param.length;j++){
 //                    rowOrColParam.param[j]=RandomUtil.getRandomValue(-0.1f,0.1f);
@@ -449,6 +470,8 @@ public class KVStoreForLevelDB {
 //                System.out.println("params:" + i);
             }
         }
+
+
 
         // 还有一部分数据是划分到这台服务器上，但是既不在catParamSet，又不在取余的参数中，而在Vset中
 
@@ -498,14 +521,25 @@ public class KVStoreForLevelDB {
     }
 
 
+    public AtomicBoolean isInit_ls=new AtomicBoolean(false);
     @Synchronized
     public SRListMessage getNeededParams_LMF(Set<String> set) throws ClassNotFoundException, IOException {
         CurrentTimeUtil.setStartTime();
         DB db = ServerContext.kvStoreForLevelDB.getDb();
-
+        if (!isInit_ls.get()){
+            try {
+                ServerContext.kvStoreForLevelDB.ls_partitionedVSet=(List<Set>[]) TypeExchangeUtil.toObject(ServerContext.kvStoreForLevelDB.getDb().get("ls_partitionedVSet".getBytes()));
+                ServerContext.kvStoreForLevelDB.catToCatSetMap= (Map<String, String>) TypeExchangeUtil.toObject(ServerContext.kvStoreForLevelDB.getDb().get("catToCatSetMap".getBytes()));
+                isInit_ls.set(true);
+            }catch (IOException e){
+                e.printStackTrace();
+            }catch (ClassNotFoundException e){
+                e.printStackTrace();
+            }
+        }
         // map仅存储需要的，而paramMap可能会包括一些catParamSet多余的参数
         Map<String, Float[]> map = new HashMap<String, Float[]>();
-        List<Set> paramKeySetList = ls_partitionedVSet[ServerContext.serverId];
+        List<Set> paramKeySetList = ServerContext.kvStoreForLevelDB.ls_partitionedVSet[ServerContext.serverId];
         long index = -1;
         // 存储需要访问的参数，也就是包含划分块的参数。catParamSet和catParam
         Set<String> needParam = new HashSet<String>();

@@ -201,7 +201,7 @@ public class WSP {
                                             }
                                         }
                                     }
-                                    sCTArray[i].negGain = sCTArray[i].waitTime + sCTArray[i].staleness;
+                                    sCTArray[i].negGain = (1/iTTableArray[i].execTime)*sCTArray[i].waitTime + (1/(Context.workerNum-1))*sCTArray[i].staleness;
                                 }
 
                                 optimalPlanSet[workerId] = getIOfMinNegGain(iTTableArray, sCTArray, workerId);
@@ -390,7 +390,7 @@ public class WSP {
                                         }
                                     }
                                 }
-                                sCTArray[i].negGain = sCTArray[i].waitTime + sCTArray[i].staleness;
+                                sCTArray[i].negGain = (1/iTTableArray[i].execTime)*sCTArray[i].waitTime + (1/(Context.workerNum-1))*sCTArray[i].staleness;
                             }
 
                             optimalPlanSet[workerId] = getIOfMinNegGain(iTTableArray, sCTArray, workerId);

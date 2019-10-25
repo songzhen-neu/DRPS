@@ -94,6 +94,7 @@ public class LMF {
         for (int i = 0; i < echo; i++) {
             // 该层是循环所有的batch
             for (int j = 0; j < WorkerContext.sampleBatchListSize_LMF; j++) {
+                long start=System.currentTimeMillis();
                 Matrix batch = (Matrix) TypeExchangeUtil.toObject(db.get(("batchLMF" + j).getBytes()));
                 // 根据sampleBatch得到训练需要用到的参数
                 Set<String>[] setArray = getNeededParamsKey(batch);
@@ -156,6 +157,8 @@ public class LMF {
 //
                 paramsMap.clear();
 
+                long end= System.currentTimeMillis();
+                System.out.println("batch time:"+ (end-start));
 
             }
         }

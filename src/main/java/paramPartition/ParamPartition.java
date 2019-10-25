@@ -56,7 +56,7 @@ public class ParamPartition {
             while (!isFinishedPartition) {
                 // 获取当前的partition
                 bestPartitionList = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getBestPartition();
-
+                System.out.println("best:"+bestPartitionList.partitionList.size()+",catMap:"+catPrunedRecord.size());
                 // 根据当前的partitionList，每个worker都去统计AFMatrix，并将AF矩阵push到master中
                 int[][] afMatrix = buildAFMatrix(bestPartitionList, batchSampledRecord, catPrunedRecord);
 
@@ -272,6 +272,7 @@ public class ParamPartition {
             while (!isFinishedPartition) {
                 // 获取当前的partition
                 bestPartitionList = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getBestPartition();
+                System.out.println("bestPartitionListSize:"+bestPartitionList.partitionList.size()+",catPruned:"+catPrunedRecord.size());
 
                 // 根据当前的partitionList，每个worker都去统计AFMatrix，并将AF矩阵push到master中
                 int[][] afMatrix = buildAFMatrix_LMF(bestPartitionList, batchSampledRecord, catPrunedRecord);

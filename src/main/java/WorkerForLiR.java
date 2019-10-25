@@ -22,9 +22,9 @@ import java.util.Set;
  * @author: SongZhen
  * @create: 2019-05-13 10:41
  */
-public class WorkerForLinearRegression {
+public class WorkerForLiR {
     public static void main(String[] args) throws IOException,ClassNotFoundException,InterruptedException {
-        Logger logger = LoggerFactory.getLogger(WorkerForLinearRegression.class);
+        Logger logger = LoggerFactory.getLogger(WorkerForLiR.class);
         Context.init();
         ServerContext.init();
         WorkerContext.init();
@@ -35,7 +35,7 @@ public class WorkerForLinearRegression {
             @Override
             public void run() {
                 try {
-                    System.out.println("start a LR server thread");
+                    System.out.println("start a LiR server thread");
                     // 当前server的端口号
                     PServer pServer = new PServer(Context.serverPort.get(ServerContext.serverId));
                     pServer.start();
@@ -106,7 +106,7 @@ public class WorkerForLinearRegression {
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
 
         // 开始训练
-        LinearRegression linearRegression = new LinearRegression(0.001f, 0.001f, 50);
+        LinearRegression linearRegression = new LinearRegression(0.001f, 0.001f, 10);
         MemoryUtil.releaseMemory();
 
         long start_train=System.currentTimeMillis();

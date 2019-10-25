@@ -93,22 +93,22 @@ public class WorkerContext {
         isCatForwardFeature=true;
 
         // housing 9 0  data 13 7
-        LiR=new GeneralAlgorithmSetting(20000,20000,2000,
-                "data/LiRData/housing"+workerId+".csv",9,0,2000,"LiR");
+        LiR=new GeneralAlgorithmSetting(2000,200,200,
+                "data/LiRData/skewed"+workerId+".csv",9,0,1000000000,"LiR");
         // train 12 10
         // dataset 7 179
-        LoR=new GeneralAlgorithmSetting(10000,10000,10000,
-                "data/LoRData/train"+workerId+".csv",12,10,2000,"LoR");
-        SVM=new GeneralAlgorithmSetting(300000,300000,10000,
-                "data/SVMData/train"+workerId+".csv",12,10,142503,"SVM");
+        LoR=new GeneralAlgorithmSetting(100000,100000,10000,
+                "data/LoRData/train"+workerId+".csv",12,10,1000000,"LoR");
+        SVM=new GeneralAlgorithmSetting(30000,30000,30000,
+                "data/SVMData/train"+workerId+".csv",12,10,23742,"SVM");
 
         // 用户1～53424，电影1~10000，样本数量5976479
         // ratings 用户1~259137 电影1~165201
-        LMF=new LMFSetting(20000,20000,2000,100,
-                259137,165201,"data/LMFData/ratings"+workerId+".csv");
+//        LMF=new LMFSetting(100000,100000,10000,10,
+//                259137,165201,"data/LMFData/ratings"+workerId+".csv");
 
-//        LMF=new LMFSetting(10000,10000,2000,100,
-//                15000000,1000000,"data/LMFData/matrixData"+workerId+".csv");
+        LMF=new LMFSetting(470000,470000,47000,10,
+                259137,165201,"data/LMFData/ratings"+workerId+".csv");
 
 
         switch (QuickSetting.algorithmName){

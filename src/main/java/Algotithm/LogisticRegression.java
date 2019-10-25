@@ -80,6 +80,7 @@ public class LogisticRegression {
         for (int i = 0; i < echo; i++) {
             // 该层是循环所有的batch
             for (int j = 0; j < WorkerContext.sampleBatchListSize; j++) {
+                long start_batch=System.currentTimeMillis();
                 SampleList batch = (SampleList) TypeExchangeUtil.toObject(db.get(("sampleBatch" + j).getBytes()));
                 // 根据sampleBatch得到训练需要用到的参数
                 Set<String>[] setArray = getNeededParamsKey(batch);
@@ -151,6 +152,9 @@ public class LogisticRegression {
 
                 paramsMap.clear();
 
+                long end_batch=System.currentTimeMillis();
+                System.out.println("batchtime:"+(end_batch-start_batch));
+
             }
 //            System.out.println("训练时间："+(a1-start));
 //            System.out.println("训练时间："+(a2-start));
@@ -192,23 +196,24 @@ public class LogisticRegression {
         // 用来存储上述list
         Map<String,List<Double>> map=new HashMap<String, List<Double>>();
 
-        Matrix transformedData = pca.transform(testData, PCA.TransformationType.WHITENING);
-        for (int r = 0; r < transformedData.getRowDimension(); r++) {
-                if(Math.abs(error[r])<0.5){
-                    // 正确分类
-                    l1x.add(transformedData.get(r,0));
-                    l1y.add(transformedData.get(r,1));
-                }else {
-                    l2x.add(transformedData.get(r,0));
-                    l2y.add(transformedData.get(r,1));
-                }
-        }
-        map.put("l1x",l1x);
-        map.put("l1y",l1y);
-        map.put("l2x",l2x);
-        map.put("l2y",l2y);
-
-        UiClient.ins().plotScatterGraph("LoRScatter",map);
+        // 下面做可视化的
+//        Matrix transformedData = pca.transform(testData, PCA.TransformationType.WHITENING);
+//        for (int r = 0; r < transformedData.getRowDimension(); r++) {
+//                if(Math.abs(error[r])<0.5){
+//                    // 正确分类
+//                    l1x.add(transformedData.get(r,0));
+//                    l1y.add(transformedData.get(r,1));
+//                }else {
+//                    l2x.add(transformedData.get(r,0));
+//                    l2y.add(transformedData.get(r,1));
+//                }
+//        }
+//        map.put("l1x",l1x);
+//        map.put("l1y",l1y);
+//        map.put("l2x",l2x);
+//        map.put("l2y",l2y);
+//
+//        UiClient.ins().plotScatterGraph("LoRScatter",map);
         System.out.println("count:" + count);
     }
 
@@ -225,31 +230,36 @@ public class LogisticRegression {
         Map<String, Float> map = new HashMap<String, Float>();
         for (int i = 0; i < batch.sampleList.size(); i++) {
             Sample sample = batch.sampleList.get(i);
-            for (int j = 0; j < sample.feature.length; j++) {
-                if (sample.feature[j] != -1) {
-                    if (map.get("f" + j) != null) {
-                        float curGradient = map.get("f" + j);
-                        curGradient += learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("f" + j);
-                        map.put("f" + j, curGradient);
-                    } else {
-                        map.put("f" + j, learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("f" + j));
+            if(sample.feature!=null){
+                for (int j = 0; j < sample.feature.length; j++) {
+                    if (sample.feature[j] != -1) {
+                        if (map.get("f" + j) != null) {
+                            float curGradient = map.get("f" + j);
+                            curGradient += learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("f" + j);
+                            map.put("f" + j, curGradient);
+                        } else {
+                            map.put("f" + j, learningRate * error[i] * sample.feature[j] - l2Lambda * paramsMap.get("f" + j));
+                        }
                     }
-                }
 
+                }
+            }
+            if(sample.cat!=null){
+                for (int j = 0; j < sample.cat.length; j++) {
+                    if (sample.cat[j] != -1) {
+                        if (map.get("p" + sample.cat[j]) != null) {
+                            float curGradient = map.get("p" + sample.cat[j]);
+                            curGradient += learningRate * error[i] - l2Lambda * paramsMap.get("p" + sample.cat[j]);
+                            map.put("p" + j, curGradient);
+                        } else {
+                            map.put("p" + sample.cat[j], learningRate * error[i] - l2Lambda * paramsMap.get("p" + sample.cat[j]));
+                        }
+                    }
+
+                }
             }
 
-            for (int j = 0; j < sample.cat.length; j++) {
-                if (sample.cat[j] != -1) {
-                    if (map.get("p" + sample.cat[j]) != null) {
-                        float curGradient = map.get("p" + sample.cat[j]);
-                        curGradient += learningRate * error[i] - l2Lambda * paramsMap.get("p" + sample.cat[j]);
-                        map.put("p" + j, curGradient);
-                    } else {
-                        map.put("p" + sample.cat[j], learningRate * error[i] - l2Lambda * paramsMap.get("p" + sample.cat[j]));
-                    }
-                }
 
-            }
         }
 
         for (String key : map.keySet()) {
@@ -273,20 +283,25 @@ public class LogisticRegression {
         for (int l = 0; l < value.length; l++) {
             Sample sample = batch.sampleList.get(l);
             // 计算feature的value
-            for (int i = 0; i < sample.feature.length; i++) {
-                if (sample.feature[i] != -1) {
-                    value[l] += sample.feature[i] * paramsMap.get("f" + i);
+            if(sample.feature!=null){
+                for (int i = 0; i < sample.feature.length; i++) {
+                    if (sample.feature[i] != -1) {
+                        value[l] += sample.feature[i] * paramsMap.get("f" + i);
+                    }
                 }
             }
-            for (int i = 0; i < sample.cat.length; i++) {
-                if (sample.cat[i] != -1) {
+            if(sample.cat!=null){
+                for (int i = 0; i < sample.cat.length; i++) {
+                    if (sample.cat[i] != -1) {
 //                    System.out.println(sample.cat[i]);
 //                    if(paramsMap.get("catParam" + sample.cat[i])==null){
 //                        System.out.println("hakong");
 //                    }
-                    value[l] += paramsMap.get("p" + sample.cat[i]);
+                        value[l] += paramsMap.get("p" + sample.cat[i]);
+                    }
                 }
             }
+
 
             // 下面对value做处理
             if (value[l] >= 10) {

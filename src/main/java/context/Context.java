@@ -84,12 +84,12 @@ public class Context {
     public static AtomicInteger trainRoundNum = new AtomicInteger(0);
 
     public static final float alpha_WSP = 0.01f;
-    public static float minGain = 5f;
+    public static float minGain;
 
     /**
      * 最大磁盘划分的大小
      */
-    public static int maxDiskPartitionNum = 5;
+    public static int maxDiskPartitionNum;
 
     /**
      * 做对比实验，是否进行磁盘优化
@@ -107,7 +107,7 @@ public class Context {
      */
     public static float TimeMulWSP = 10f;
 
-    public static int K_mergeIndex = 50;
+    public static int K_mergeIndex;
 
     public static boolean isUseOptimalIndex;
 
@@ -154,16 +154,34 @@ public class Context {
         isOptimizeDisk = QuickSetting.isOptimizeDisk;
         isUseOptimalIndex = QuickSetting.isUseOptimalIndex;
         isOptimizeNetTraffic = QuickSetting.isOptimizeNetTraffic;
+        minGain=QuickSetting.minGain;
 
-        serverIp.put(0, "202.199.13.120");
-        serverIp.put(1, "202.199.13.120");
-        serverIp.put(2, "202.199.13.120");
-        serverPort.put(0, 9010);
-        serverPort.put(1, 9011);
-        serverPort.put(2, 9012);
+        if(QuickSetting.cluster==1){
+            serverIp.put(0, "202.199.13.120");
+            serverIp.put(1, "202.199.13.120");
+            serverIp.put(2, "202.199.13.120");
+            serverPort.put(0, 9010);
+            serverPort.put(1, 9011);
+            serverPort.put(2, 9012);
+        }else if(QuickSetting.cluster==2){
+            serverIp.put(0,"219.216.64.103");
+            serverPort.put(0,9010);
+            for(int i=1;i<13;i++){
+                if(i<9){
+                    serverIp.put(i, "192.168.111.10"+(i+1));
+                    serverPort.put(i, 9010);
+                }else {
+                    serverIp.put(i, "192.168.111.1"+(i+1));
+                    serverPort.put(i, 9010);
+                }
+
+            }
+
+
+        }
 
         boundForSSP = 2;
-
+        K_mergeIndex=QuickSetting.K_mergeIndex;
         setParamBaseSize_bytes = 128;
         singleParamOfSetSize_bytes = 22;
 
@@ -186,7 +204,7 @@ public class Context {
         inited = true;
 
         diskSeekTime = 1f;
-        diskAccessTime = 0.01f;
+        diskAccessTime = 0.001f;
 //        netTrafficTime=0.0000095f;
         netTrafficTime = 0.00000095f;
         floatSize_bytes = 79;

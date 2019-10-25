@@ -12,7 +12,7 @@ public class RandomUtil {
 
     // 在指定数中产生随机数
     public static float random(float[] index){
-        return index[random.nextInt(index.length-1)];
+        return index[random.nextInt(index.length)];
     }
 
 

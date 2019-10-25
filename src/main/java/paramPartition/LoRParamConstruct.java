@@ -1,39 +1,52 @@
-import Algotithm.LinearRegression;
-import Algotithm.SVM;
-import Util.CurrentTimeUtil;
-import Util.DataProcessUtil;
-import Util.MemoryUtil;
+package paramPartition;
+
+import Util.TypeExchangeUtil;
 import context.Context;
 import context.ServerContext;
 import context.WorkerContext;
-import net.BMessage;
 import net.LSetListArrayMessage;
 import net.PServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import paramPartition.ParamPartition;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WorkerForSVM {
-    public static void main(String[] args) throws IOException,ClassNotFoundException,InterruptedException {
-        Logger logger = LoggerFactory.getLogger(WorkerForSVM.class);
+/**
+ * @program: simplePsForModelPartition
+ * @description:
+ * @author: SongZhen
+ * @create: 2019-10-03 15:27
+ */
+public class LoRParamConstruct {
+    public static void main(String[] args)throws IOException,ClassNotFoundException{
+        Logger logger = LoggerFactory.getLogger(LoRParamConstruct.class);
         Context.init();
         ServerContext.init();
         WorkerContext.init();
-
+        AtomicBoolean isFinishParamInit=new AtomicBoolean(false);
 
         // 给server开一个线程
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    System.out.println("start a SVM server thread");
+                    System.out.println("start a LoRParaConstruct server thread");
                     // 当前server的端口号
                     PServer pServer = new PServer(Context.serverPort.get(ServerContext.serverId));
                     pServer.start();
-                    pServer.blockUntilShutdown();
+                    while(true){
+                        if(isFinishParamInit.get()){
+                            System.out.println("LoR finish param init");
+                            pServer.stop();
+                            ServerContext.kvStoreForLevelDB.getDb().close();
+                            WorkerContext.kvStoreForLevelDB.getDb().close();
+                            break;
+                        }else {
+                            Thread.sleep(1000);
+                        }
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
@@ -52,33 +65,18 @@ public class WorkerForSVM {
         // 这个位置需要全局等一等，也就是所有server都准备好的之后才进行后面的工作
         Context.psRouterClient.getPsWorkers().get(Context.masterId).serverSynchronization();
 
-//        DataProcessUtil.metaToDB(WorkerContext.myDataPath, Context.featureSize, WorkerContext.catSize);
-//
-//
-//        // 获取稀疏的维度个数，并发送给自己的本地服务器
-//        if (Context.masterId == WorkerContext.workerId) {
-//            Context.sparseDimSize = WorkerContext.psRouterClient.getLocalhostPSWorker().getSparseDimSize();
-//        } else {
-//            Context.sparseDimSize = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getSparseDimSize();
-//        }
-//
-//        logger.info("sparseDimSize:" + Context.sparseDimSize);
-//
-//
-//        // 规范化连续feature属性
-//        logger.info("linearNormalization start");
-//        DataProcessUtil.linerNormalization();
-//        logger.info("linearNormalization end");
 
 
         // 上面的函数是参数在server的kvStore初始化的，但是在初始化前，应该先进行参数的划分
-//        Set[] vSet = PartitionUtil.partitionV();
         long start=System.currentTimeMillis();
         Set[] vSet=ParamPartition.partitionV();
-        long end =System.currentTimeMillis();
+        long end=System.currentTimeMillis();
+
+        WorkerContext.kvStoreForLevelDB.getDb().put("vSet".getBytes(),TypeExchangeUtil.toByteArray(vSet));
 
 
-//        Set[] vSet=SetUtil.initSetArray(Context.serverNum);
+
+
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
         if (WorkerContext.workerId != Context.masterId) {
             LSetListArrayMessage ls_partitionedVSet = WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).getLsPartitionedVSet();
@@ -99,19 +97,7 @@ public class WorkerForSVM {
 
 
         WorkerContext.psRouterClient.getPsWorkers().get(Context.masterId).barrier();
-
-        // 开始训练
-        SVM svm = new SVM(0.011f,0.0001f, 10);
-        MemoryUtil.releaseMemory();
-
-        long start_train=System.currentTimeMillis();
-        svm.train();
-        long end_train=System.currentTimeMillis();
-        logger.info("训练时间："+(end_train-start_train));
-
-        logger.info("索引建立时间为"+(end-start));
-        WorkerContext.psRouterClient.getLocalhostPSWorker().getBlockingStub().showSomeStatisticAfterTrain(BMessage.newBuilder().setB(true).build());
-        WorkerContext.psRouterClient.shutdownAll();
-        WorkerContext.kvStoreForLevelDB.getDb().close();
+        logger.info("建立索引的时间为"+(end-start));
+        isFinishParamInit.set(true);
     }
 }
